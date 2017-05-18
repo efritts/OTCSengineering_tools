@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>Simple Shear</title>
+		<meta name="description" content="Calculates BOP shear pressure given BOP and pipe variables">
+		<meta name="author" content="David Hanks">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script src="shear.js"></script>
+		<script type="text/javascript" src="test.js"></script>
+		<style>
+			.wrapper{ 
+				width: 800px;
+				}
+			.boxed {
+				width: auto;
+			    border: 1px solid red;
+			    text-align: left;
+			}
+			.summary_old {
+				float: right;
+    			max-width: 400px;
+   				height: auto;
+    			border: 1px solid red;
+    			margin: 0 0 15px 20px;
+    			padding: 10px;
+    		}
+    		.summary {
+    			position: fixed;
+    			top: 60px;
+    			right: 0;
+    			width: 300px;
+    			border: 1px solid red;
+    		}
+    		td.values {
+    			width: 100px;
+    		}
+    		tr.answer {
+    			height: 80px;
+    			color: blue;
+    		
+    		/*-- topmenu style --*/
+    		}
+    		ul.topMenu {
+    			list-style-type: none;
+    			margin: 0;
+    			padding: 0;
+    			overflow: hidden;
+    			background-color: #f3f3f3;
+			}
+
+			ul.topMenu li {
+    			float: left;
+			}
+
+			ul.topMenu li a {
+    			display: block;
+    			color: #666;
+    			text-align: center;
+    			padding: 14px 16px;
+    			text-decoration: none;
+			}
+
+			ul.topMenu li a:hover:not(.active) {
+    			background-color: #ddd;
+			}
+
+			ul.topMenu .active {
+    			background-color: #4CAF50;
+    			color: white;
+			}
+		</style>
+	</head>
+
+	<body>
+		<ul class="topMenu">
+			<li><a class="active" href="#Shear">Shear Calculator</a></li>
+			<li><a href="#BOP">BOP index</a></li>
+			<li><a href="#Pipe">Pipe index</a></li>
+			<li><a href="#Project">Project builder</a></li>
+		</ul>
+		<div>
+			<h1>Simple Shear Calculator</h1>
+			<div>
+				<div class="summary" id='float_shear_summary'><h1>Summary</h1>
+					<table>
+						<tr><td>Well Pressure</td><td id="P_mud" class="values"></td><td>psi</td></tr>
+						<tr><td>Dominate Well Pressure</td><td id="WellP_type"></td><td>psi</td></tr>
+						<tr><td>Seawater head pressure</td><td id="P_head_sw"></td><td>psi</td></tr>
+						<tr><td>Control fluid head pressure</td><td id="P_head_cf"></td><td>psi</td></tr>
+						<tr><td>Force to shear pipe</td><td id="Shear_force"></td><td>kips</td></tr>
+						<tr><td>Closing Pressure adjustment</td><td id="P_adj"></td><td>psi</td></tr>
+						<tr><td>Shear Method</td><td id="shear_method">........</td><td></td></tr>
+						<tr class="answer"><td><b>SHEAR PRESSURE</b></td><td id="final_pressure"></td><td>psi</td></tr>
+					</table>
+					<div id='test'></div>
+				</div>
+				<div id="form">
+				<form action="" id="sheardata">
+									
+				<h2>Pipe</h2>
+				<input type="radio" name="Pipe_select" value="select" onclick="pipe_fields()"/>Select
+				<input type="radio" name="Pipe_select" value="specify" onclick="pipe_fields()" checked/>Specify
+				<div id='pipe_values'></div>
+				<table>
+					<tr><th>Outside diameter</th><th>Wall thickness</th><th>Area</th><th>UTS (ksi)</th><th>% Elongation</th></tr>
+					<tr><td><input type="text" name="pipe_od" id="pipe_od" onkeyup="display_results()"></td>
+					<td><input type="text" name="pipe_wall" id="pipe_wall" value="0" onkeyup="display_results()"></td><td id="pipe_area">0.00</td><td><input type="text" id="pipe_ys" onkeyup="display_results()" /></td><td><input type="text" id="pipe_elong" onkeyup="display_results()"/></td></tr>
+				</table>
+				<div id="pipe_shear"><br /></div>
+				
+				<h2>Well</h2>
+				<div id="gr_mud"></div>
+				<table>
+					<tr><td>MAWHP</td><td><input type="text" name="MAWHP" id="mawhp" onkeyup="display_results()"/></td><td>psi</td></tr>
+					<tr><td>Height of Riser</td><td><input type="text" name="h_riser" id="h_riser" value="80" onkeyup="display_results()" /></td><td>feet</td></tr>
+					<tr><td>Water Depth</td><td><input type="text" name="h_sw" id="h_sw" value="8000" onkeyup="display_results()"/></td><td>feet</td></tr>
+					<tr><td>Height of HPU</td><td><input type="text" name="h_hpu" id="h_hpu" value="40" onkeyup="display_results()"/></td><td>feet</td></tr>
+					<tr><td>Height of BOP above sea floor</td><td><input type="text" name="h_bop" id="h_bop" value="20" onkeyup="display_results()"/></td><td>feet</td></tr>
+					<tr><td>Mud weight</td><td><input type="text" name="w_mud" id="mudweight" value="12" onkeyup="display_results()"/></td><td>ppg</td></tr>
+					<tr><td>Control fluid gradient</td><td><input type="text" name="grad_cf" id="g_cf" value=".432" onkeyup="display_results()"/></td><td>psi/ft</td></tr>
+					<tr><td>seawater gradient</td><td><input type="text" name="grad_sw" id="g_sw" value=".447" onkeyup="display_results()"/></td><td>psi/ft</td></tr>
+				</table>
+								
+				<h2>BOP</h2>
+				<!-- The user will select the BOP OEM, model, blades or input generic values -->
+				<input type="radio" name="BOP_select" value="select" onclick="BOP_fields()"/>Select
+				<input type="radio" name="BOP_select" value="specify" onclick="BOP_fields()" checked/>Specify
+				<div id="BOP_values"><table>
+					<tr><td>Closing Area</td><td><input type="text" id="bop_closingarea" onkeyup="display_results()"/></td><td>in<sup>2</sup></td></tr><tr>
+					<td>Closing Ratio</td><td><input type="text" id="bop_closingratio" onkeyup="display_results()"/></td><td></td></tr>
+					<tr><td>Tailrod Area</td><td><input type="text" id="bop_trarea" onkeyup="display_results()"/></td><td>in<sup>2</sup></td></tr>
+				</table></div>
+				<br />
+<!--				
+				<div id="p_summary">X psi in the wellbore due to X<br />X psi seawater head pressue <br />X psi control fluid head pressure.<br /><br />The above configuration requires a shear pressure adjustment of X psi.</div>
+			
+				<h2>Calculation Method</h2>
+				+ West 1<br />
+				+ West 2<br />
+				+ West 3<br />
+				+ Cameron<br />
+				+ direct shear<br />
+				
+				<h2>Shear Estimate</h2>
+
+				<div id="shear_press_final">{100,000 psi}</div>
+-->				
+				</form>
+			</div>
+			</div>
+
+			<footer>
+				<p>
+					modified Jan. 14, 2016, David Hanks
+				</p>
+			</footer>
+		</div>
+	</body>
+</html>

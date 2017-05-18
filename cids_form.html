@@ -1,0 +1,421 @@
+			<!--START WRAPPER CELL-->
+			<div class="w3-cell-row" style="width:100%">
+			<!--START LEFT MARGIN-->
+			<div class="w3-cell w3-mobile w3-container w3-light-grey" style="width:25%">
+				<div class="w3-row w3-hide w3-light-grey w3-animate-left" id="about_cids">
+					<div class="w3-col w3-margin w3-card w3-white">
+					<p>The Client Input Data Sheet (CIDS) collects your information about your well and rig setup.  It checks that the content entered was appropriate, then sends the information to NWTS to evaluate.</p>
+					</div>
+				</div>
+			</div>
+			<!--END LEFT MARGIN-->
+			
+			<!--START MIDDLE CONTENT-->
+			<div class="w3-cell w3-mobile w3-container">
+				<div class="w3-row">
+					<div class="w3-col w3-margin">
+						<h1>Client Input Data Sheet</h1>
+						<button onclick="toggle_accordian('about_cids')" class="w3-btn w3-tiny">About</button>
+					</div>
+				</div>
+
+				<div class="w3-row">
+				<div class="w3-col w3-container" id="form">			
+					<form action="" id="cids" method="post">
+					<h3>Contact</h3>					
+					<div class="w3-row">
+						<label for="fm_first" class="w3-col m4">First Name</label>
+						<div class="w3-col m8"><input type="text" name="fm_first" id="fm_first" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_last" class="w3-col m4">Last Name</label>
+						<div class="w3-col m8"><input type="text" name="fm_last" id="fm_last" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_comp" class="w3-col m4">Company</label>
+						<div class="w3-col m8"><input type="text" name="fm_comp" id="fm_comp" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_phone" class="w3-col m4">Phone number</label>
+						<div class="w3-col m8"><input type="text" name="fm_phone" id="fm_phone" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_email" class="w3-col m4">Email</label>
+						<div class="w3-col m8"><input type="email" name="fm_email" id="fm_email" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_email2" class="w3-col m4">Confirm Email</label>
+						<div class="w3-col m8"><input type="email" name="fm_email2" id="fm_email2" class="w3-input w3-padding-0"/></div>
+					</div>
+					<!------------------------------------------
+						RIG
+					------------------------------------------->
+					<h3>Rig</h3>
+					<div class="w3-row">
+						<label for="fm_rig" class="w3-col m4">Rig Name</label>
+						<div class="w3-col m8"><input type="text" name="fm_rig" id="fm_rig" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_rig_owner" class="w3-col m4">Rig Owner</label>
+						<div class="w3-col m8"><input type="text" name="fm_rig_owner" id="fm_rig_owner" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_bop_loc" class="w3-col m4">BOP location</label>
+						<div class="w3-col m8">
+							<select name="fm_bop_loc" id="fm_bop_loc" onchange="hideshow('surface','form_surface','form_subsea'); hideshow('subsea','form_subsea','form_surface'); hideshow('select','','form_surface,form_subsea')" class="w3-select w3-padding-0">
+								<option value="select" selected>[SELECT]</option>
+								<option value="surface">Surface</option>
+								<option value="subsea">Subsea</option>
+							</select>
+						</div>
+					</div>
+					<!-------------------------------------------
+						WELL
+					--------------------------------------------->						
+					<h3>Well</h3>
+					<div class="w3-row">
+						<label for="fm_well_name" class="w3-col m4">Well name</label>
+						<div class="w3-col m8"><input type="text" name="fm_well_name" id="fm_well_name" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_well_loc" class="w3-col m4">Location</label>
+						<div class="w3-col m8"><input type="text" name="fm_well_loc" id="fm_well_loc" class="w3-input w3-padding-0"/></div>
+					</div>
+					<div class="w3-row">
+						<label for="fm_h2s" class="w3-col m4">Contains H<sub>2</sub>S?<span title="Does the well contain hydrogen sulfide?"><span class="fa fa-info-circle w3-small"></span></span></label>
+						<div class="w3-col m8">
+							<select name="fm_h2s" id="fm_h2s" class="w3-select w3-padding-0">
+								<option value="select">[SELECT]</option>
+								<option value="yes">YES</option>
+								<option value="no">NO</option>
+							</select>
+						</div>
+					</div>
+					<div id="form_subsea" class="w3-hide">
+					<div class="w3-row">
+						<label for="mawhp" id="label_mawhp" class="w3-col m4">MAWHP  <span title="Maximum Anticipated Well Head Pressure"><span class="fa fa-info-circle w3-small"></span></span></label>
+						<div class="w3-col m6 s10"><input type="text" name="MAWHP" id="mawhp" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col m2 s2">psi</div>
+					</div>
+					<div class="w3-row">
+						<label for="h_riser" id="label_h_riser" class="w3-col m4">Height of Riser  <span title="Distance from sea level to the top of the riser."><span class="fa fa-info-circle w3-small"></span></span></label>
+						<div class="w3-col m6 s10"><input type="text" name="h_riser" id="h_riser" class="w3-input w3-padding-0"/></div> <!--onclick="show_accordian('diagram_h_riser')"-->
+						<div class="w3-col m2 s2">feet</div>
+					</div>
+					<div class="w3-row">
+						<label for="h_sw" id="label_h_sw" class="w3-col m4">Water Depth</label>
+						<div class="w3-col m6 s10"><input type="text" name="h_sw" id="h_sw" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col s2">feet</div>
+					</div>
+					<div class="w3-row">
+						<label for="h_hpu" id="label_h_hpu" class="w3-col m4">Height of HPU <span title="Elevation of the HPU above the water line"><span class="fa fa-info-circle w3-small"></span></span></label>
+						<div class="w3-col m6 s10"><input type="text" name="h_hpu" id="h_hpu" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col s2">feet</div>
+					</div>
+					<div class="w3-row">
+						<label for="h_bop" id="label_h_bop" class="w3-col m4">Height of BOP <span title="Elevation of the BOP operator above the sea floor"><span class="fa fa-info-circle w3-small"></span></span></label>
+						<div class="w3-col m6 s10"><input type="text" name="h_bop" id="h_bop" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col s2">feet</div>
+					</div>
+					<div class="w3-row">
+						<label for="mudweight" id="label_mudweight" class="w3-col m4">Mud weight</label>
+						<div class="w3-col m6 s10"><input type="text" name="w_mud" id="mudweight"  class="w3-input w3-padding-0"/></div>
+						<div class="w3-col s2">ppg</div>
+					</div>
+					<div class="w3-row">
+						<label for="g_cf" id="label_g_cf" class="w3-col m4">Control fluid gradient</label>
+						<div class="w3-col m6 s10"><input type="text" name="grad_cf" id="g_cf" value=".432" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col s2">psi/ft</div>
+					</div>
+					</div>
+					<div id="form_surface" class="w3-hide">
+						<div class="w3-row">
+							<label for="masp" id="label_masp" class="w3-col m4">MASP  <span title="Maximum Anticipated Surface Pressure"><span class="fa fa-info-circle w3-small"></span></span></label>
+							<div class="w3-col m6 s10"><input type="text" name="MAWHP" id="masp" class="w3-input w3-padding-0"/></div>
+							<div class="w3-col m2 s2">psi</div>
+						</div>
+					</div>
+					<!-------------------------------------------
+						STACK CONFIGURATION
+					--------------------------------------------->										
+					<h3>Stack configuration</h3>
+					<div class="w3-row">
+						
+						<table id="fm_StackEquip" class="w3-table-all w3-col">
+							<tr class="w3-row">						
+								<th class="w3-col s2">Position</th>
+								<th class="w3-col s3">type</th>
+								<th class="w3-col s7">Description</th>
+							</tr>
+							<tr class="w3-row">
+								<td class="w3-col s2 w3-padding-0">1<span title="This is the upper most control element.  Typically your upper annular"><span class="fa fa-info-circle w3-small"></span></span></td>
+								<td class="w3-col s3 w3-padding-0">
+								<label for="fm_stk_type1" class="w3-hide">Type</label>
+									<select name="fm_stk_type1" id="fm_stk_type1" class="w3-select w3-padding-0">
+										<option value="select">[SELECT]</option>
+										<option value="annular">Annular</option>
+										<option value="bop">BOP cavity</option>
+									</select>
+								</td>
+								<td class="w3-col s7 w3-padding-0"><input type="text" name="fm_stk_desc1" id="fm_stk_desc1" class="w3_input w3-padding-0" style="display:table-cell; width:100%"/></td>
+							</tr>
+						</table>
+						<input type="hidden" value="1" name="Totstkeqp_rows" id="Totstkeqp_rows"/>
+					</div>
+					<div class="w3-row w3-container w3-margin">
+						<span id="eqp_add" onclick="cids_add_equipment()" title="add well control device" class="fa fa-plus w3-small w3-button w3-light-blue"></span>
+						<span id="eqp_rm" onclick="cids_rm_equipment()" title="remove the last row" class="fa fa-minus w3-small w3-button w3-blue-grey"></span>		
+					</div>
+					<!-------------------------------------------
+						BOP PARAMETERS
+					--------------------------------------------->		
+					<div class="w3-row"><h3>Shear Ram or Valve</h3></div>
+	                <!-- The user will select the BOP OEM, model, blades or input generic values -->
+	                <div class="w3-row ">				
+						<div class="w3-col m6 w3-light-grey"><input type="radio" name="BOP_select" value="select" onclick="BOP_fields()" checked class="w3-radio w3-border-bottom"/><label>Select from list</label></div>
+						<div class="w3-col m6 w3-light-grey"><input type="radio" name="BOP_select" value="specify" onclick="BOP_fields()"  class="w3-radio w3-border-bottom"/><label>Specify new</label></div>
+	                </div>
+					<div class="w3-row" id="BOP_values"></div>
+					<!-------------------------------------------
+						PIPE LIST
+					--------------------------------------------->		
+					<div class="w3-row"><h3>Pipe, Tubes, and Wirelines</h3></div>
+	                <!-- The user will select the BOP OEM, model, blades or input generic values -->
+	                <!--START PIPE TABLE -->
+	                <div id="pipe_table">
+		                <div class="w3-row w3-border w3-center">
+		                	<div class="w3-col s2 w3-border-right">Type</div>
+							<div class="w3-col s4 w3-border-right">Strength</div>
+							<div class="w3-col s6">Specifications</div>
+		                </div>
+		                <div class="w3-row w3-light-grey w3-small w3-margin-top" id="pipe_row1">
+	                	<div class="w3-col s2">
+	                		<select name="fm_pipetype-1" id="fm_pipetype-1" class="w3-select w3-padding-0" onchange="hideshow('select','','pipe_field1,wire_field1,combo_field1'); hideshow('pipe,tube','pipe_field1','wire_field1,combo_field1'); hideshow('wireline,slickline,eline','wire_field1','pipe_field1,combo_field1'); hideshow('combo','combo_field1','pipe_field1,wire_field1');">
+								<option value="select">[SELECT]</option>
+								<option value="pipe">Pipe</option>
+								<option value="tube">Tube</option>
+								<option value="wireline">Wireline</option>
+								<option value="slickline">Slickline</option>
+								<option value="eline">E-line</option>
+								<option value="combo">Combo</option>
+							</select>
+	                	</div>
+	                	<div class="w3-col s10 w3-hide" id="pipe_field1">
+	                		<div class="w3-row">
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s4">
+	                						<select name="fm_pipestrtype-1" id="fm_pipestrtype-1" class="w3-select w3-padding-0">
+												<option value="select">[SELECT]</option>
+												<option value="uts">UTS</option>
+												<option value="yield">Yield</option>
+												<option value="grade">grade</option>
+											</select>
+	                					</div>
+	                					<div class="w3-col s4">
+	                						<input type="text" name="fm_pipestr-1" id="fm_pipestr-1" class="w3-input w3-padding-0">
+	                					</div>
+	                					<div class="w3-col s4">
+	                						psi
+	                					</div>
+	                				</div>
+	                			</div>
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s3">
+	                						<input type="text" name="pipe_od1" id="pipe_od1" class="w3-input w3-padding-0 inputhint" value="od">
+	                					</div>
+	                					<div class="w3-col s3">
+	                						in
+	                					</div>
+	                					<div class="w3-col s3">
+	                						<input type="text" name="pipe_id1" id="pipe_id1" class="w3-input w3-padding-0 inputhint" value="id">
+	                					</div>
+	                					<div class="w3-col s3">
+	                						in
+	                					</div>
+	                				</div>
+	                			</div>
+	                		</div>
+	                	</div>
+	                	<div class="w3-col s10 w3-hide" id="wire_field1">
+	                		<div class="w3-row">
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s4">
+	                						Breaking
+	                					</div>
+	                					<div class="w3-col s4">
+	                						<input type="text" name="fm_pipebrstr-1" id="fm_pipebrstr-1" class="w3-input w3-padding-0">
+	                					</div>
+	                					<div clas="w3-col s4">
+	                						lbs
+	                					</div>
+	                				</div>
+	                			</div>
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s3 w3-right-align">
+	                						qty.
+	                					</div>
+	                					<div class="w3-rest">
+	                						<input type="text" name="fm_pipe_qty1" id="fm_pipe_qty1" class="w3-input w3-padding-0" value=1>
+	                					</div>
+	                				</div>
+	                			</div>
+	                		</div>
+	                	</div>
+	                	<div class="w3-col s10 w3-hide" id="combo_field1">
+	                		combo stuff here in the future
+	                	</div>
+	                </div>
+					</div>
+					<div class="w3-row w3-container w3-margin">
+						<span id="addPiperow" title="add another pipe" class="fa fa-plus w3-small w3-button w3-light-blue"></span>
+						<span id="rmPiperow" title="remove the last row" class="fa fa-minus w3-small w3-button w3-blue-grey"></span>		
+					</div>
+					<!--END PIPE TABLE -->
+
+					<div class="w3-row" id="BOP_values"></div>	
+					
+					<br />
+					<!--<input type="submit" class="w3-button w3-blue" value="send"/>-->
+					<div id="frm_submit" class="w3-button w3-blue w3-padding">Submit</div>
+					</form>
+					<div id="test"></div><br /><br />
+				</div>
+
+				</div>
+			</div>
+			<!--END MIDDLE CONTENT-->
+			<!--START RIGHT MARGIN-->
+			<div class="w3-cell w3-mobile w3-container w3-light-grey w3-cell-middle" style="width:25%">
+				
+				<div class="w3-col m4 w3-container w3-hide w3-animate-right w3-card w3-white" id="diagram_h_riser">
+					Diagram of Riser Height
+				</div>
+				<div class="w3-col m4 w3-container w3-hide w3-animate-right w3-card w3-white" id="diagram_h_sw">
+					Diagram of seawater depth
+				</div>
+				<div class="w3-col m4 w3-container w3-hide w3-animate-right w3-card w3-white" id="diagram_h_bop">
+					Diagram of BOP Height
+				</div>
+				<div class="w3-col m4 w3-container w3-hide w3-animate-right w3-card w3-white" id="diagram_h_hpu">
+					Diagram of HPU Height
+				</div>
+			</div>
+			<!--END RIGHT MARGIN-->
+			</div>
+			<!--END WRAPPER CELL-->
+			<script src="include/cids.js"></script>
+			<!--Warning/success Modal-->
+			<div id="warn_validate" class="w3-modal" onclick="this.style.display='none'">
+				<div class="w3-modal-content w3-animate-zoom">
+					<header class="w3-container w3-red">
+						<span class="w3-closebtn">&times;</span>
+						<h2>Warning</h2>
+					</header>
+					<div class="w3-container" id="warn_validate_msg">{warnings here}</div>
+					<footer class="w3-red w3-panel">
+						<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">OK</button>						
+					</footer>
+				</div>
+			</div>
+			<div id="modal_success" class="w3-modal" onclick="this.style.display='none'">
+				<div class="w3-modal-content w3-animate-zoom">
+					<header class="w3-container w3-green">
+						<span class="w3-closebtn">&times;</span>
+						<h2>Success</h2>
+					</header>
+					<div class="w3-container" id="modal_success_msg">{info here}</div>
+					<footer class="w3-green w3-panel">
+						<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">OK</button>						
+					</footer>
+				</div>
+			</div>
+			<!--END Warning/success Modal-->
+			<!--Start pipe Row Template-->
+			<div class="w3-row w3-light-grey w3-small w3-margin-top w3-hide" id="pipe_row_template">
+	                	<div class="w3-col s2">
+	                		<select name="fm_pipetype-1" id="fm_pipetype-1" class="w3-select w3-padding-0" onchange="hideshow('select','','pipe_field1,wire_field1,combo_field1'); hideshow('pipe,tube','pipe_field1','wire_field1,combo_field1'); hideshow('wireline,slickline,eline','wire_field1','pipe_field1,combo_field1'); hideshow('combo','combo_field1','pipe_field1,wire_field1');">
+								<option value="select">[SELECT]</option>
+								<option value="pipe">Pipe</option>
+								<option value="tube">Tube</option>
+								<option value="wireline">Wireline</option>
+								<option value="slickline">Slickline</option>
+								<option value="eline">E-line</option>
+								<option value="combo">Combo</option>
+							</select>
+	                	</div>
+	                	<div class="w3-col s10 w3-hide" id="pipe_field1">
+	                		<div class="w3-row">
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s4">
+	                						<select name="fm_pipestrtype-1" id="fm_pipestrtype-1" class="w3-select w3-padding-0">
+												<option value="select">[SELECT]</option>
+												<option value="uts">UTS</option>
+												<option value="yield">Yield</option>
+												<option value="grade">grade</option>
+											</select>
+	                					</div>
+	                					<div class="w3-col s4">
+	                						<input type="text" name="fm_pipestr-1" id="fm_pipestr-1" class="w3-input w3-padding-0">
+	                					</div>
+	                					<div class="w3-col s4">
+	                						psi
+	                					</div>
+	                				</div>
+	                			</div>
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s3">
+	                						<input type="text" name="pipe_od1" id="pipe_od1" class="w3-input w3-padding-0 inputhint" value="od">
+	                					</div>
+	                					<div class="w3-col s3">
+	                						in
+	                					</div>
+	                					<div class="w3-col s3">
+	                						<input type="text" name="pipe_id1" id="pipe_id1" class="w3-input w3-padding-0 inputhint" value="id">
+	                					</div>
+	                					<div class="w3-col s3">
+	                						in
+	                					</div>
+	                				</div>
+	                			</div>
+	                		</div>
+	                	</div>
+	                	<div class="w3-col s10 w3-hide" id="wire_field1">
+	                		<div class="w3-row">
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s4">
+	                						Breaking
+	                					</div>
+	                					<div class="w3-col s4">
+	                						<input type="text" name="fm_pipebrstr-1" id="fm_pipebrstr-1" class="w3-input w3-padding-0">
+	                					</div>
+	                					<div clas="w3-col s4">
+	                						lbs
+	                					</div>
+	                				</div>
+	                			</div>
+	                			<div class="w3-col s6">
+	                				<div class="w3-row">
+	                					<div class="w3-col s3 w3-right-align">
+	                						qty.
+	                					</div>
+	                					<div class="w3-rest">
+	                						<input type="text" name="fm_pipe_qty1" id="fm_pipe_qty1" class="w3-input w3-padding-0" value=1>
+	                					</div>
+	                				</div>
+	                			</div>
+	                		</div>
+	                	</div>
+	                	<div class="w3-col s10 w3-hide" id="combo_field1">
+	                		combo stuff here in the future
+	                	</div>
+	                </div>
+
+			
+			
