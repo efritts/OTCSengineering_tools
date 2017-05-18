@@ -72,17 +72,7 @@ function setCheckedValue(radioObj, newValue) {
 		}
 	}
 }
-/* DELETE 4/10
-function old_show_accordian(id) {
-	//this funciton provides will show/hide a container of class="w3-hide"
-    var x = document.getElementById(id);
-    if (x.className.indexOf("w3-show") == -1) {
-        x.className += " w3-show";
-    } else { 
-        x.className = x.className.replace(" w3-show", "");
-    }
-}
-*/
+
 function toggle_accordian(id) {
 	//this funciton provides will hide a container of class="w3-show"
 	//the id listed should always have w3-hide or w3-show classes

@@ -136,7 +136,7 @@ function ProcessForm(){
 	
 	//if an error occurs send a message to the user
 	if(!FormGood){
-		$('#warn_validate_msg').html('<p>You messed something up</p><p> '+errormsg+' <p>Check the <span class="w3-red">red text</span></p> ');
+		$('#warn_validate_msg').html('<p>You messed something up</p><p> '+errormsg+' <p>Fields in <span class="w3-red">red text</span> are required.</p> ');
 		$('#warn_validate').css("display","block");
 		//document.getElementById('warn_validate').style.display='block';
 		
@@ -154,7 +154,8 @@ function ProcessForm(){
 		//on successful email
 		request.done(function(data){
 			console.log("cids_emailer complete" + data);
-			$('#modal_success_msg').html('<p>Looks good</p><p>Emailed group</p><p>CC:'+data+'</p>');
+			$('#modal_success h2').text("Form Submitted");
+			$('#modal_success_msg').html('<p>Well data sent to OTC - Solutions</p><p>Emailed group</p><p>Status:'+data+'</p>');
 			$('#modal_success').css("display","block");
 		});
 		
