@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<body>
+<section class="w3-panel">
+<h2>UPDATES:</h2>
+4/13/2017 - created hideshow(); started add_pipe_row() <br />
+4/6/2017  - Began an online CIDS <br />
+4/5/2017  - Simple Shear Calculator - Added remaining fields to be recalled from the database save. <br />
+3/28/2017 - the Control fluid and seawater gradients were included in the database save.  A file was created (load_ssc_save.php) to load the database save.  It has not yet been implemented <br />
+3/27/2017 - The "Get Sharable Link" button now updates the db with all the paramaters that were entered. <br />
+3/14/2017 - added placeholder for ABOUT section in SSC.  setup AJAX function that sends POST vars to PHP scripts and gets reponse.  Next step to process the POST in save_ssc_form.php <br />
+3/13/2017 - added updates page to viewable site.  change Get Saveable link warning to w3-modal class.  Added variable to a js string which will be used in the AJAX function to insert a new row to the db<br />
+3/9/2017  - adjusted spacing on SSC form.  Began the foundations for creating a button that will create link to store the results.<br />
+2/15/2017 - Aligned inputs on Simple shear calculator using w3-col.  Added title to Simple Shear Calculator page.<br />
+5/16/2016 - Added info icons to all Summary rows.  Info shows equation values used on Force and pressure calculation.  West Force now requires Area to compute. <br />
+		 	Fixed Pipe grade selection in evaluation_YS();<br />
+5/13/2016 - Added SELECT option to BOP manufacturer.  Added info to a few parameters to demonstrate the look and benefit.<br />
+5/09/2016 - Moved database connections to one location functions.php<br />
+5/03/2016 - Summary box now includes Distortion Energy Force <br />
+4/28/2016 - Summary box now includes Cameron Force!<br />
+4/26/2016 - moved footer to bottom using wrapper, content, footer class.  See example.html<br />
+4/21/2016 - Located an issue when using an AJAX call for ppf to perform other calculations.  Having trouble passing the returned value to calculate Cameron Shear.<br />
+4/14/2016 - SSC; modified Calculate_shear() to show any of the force approximations that were available. (WEST, Cameron, Distortion Energy)<br />
+4/12/2016 - finished C3.php.  This scripts gets the emperical constant c3 derived by Cameron for their BOPs.<br />
+4/11/2016 - Created a table to lookup C3 values for Cameron BOPs. Fixed NaN showing for Area.  Corrected Shear Pressure output. <br />
+			Started C3.php<br />
+4/08/2016 - Added ability to calculate pipe weight based on if pipe appears in API 5DP. <br />
+4/07/2016 - Added Pipe Table to db and created a sample set. <br />	
+4/06/2016 - Included nominal YS field, removed UTS in SSC when Cameron BOP is selected. <br />
+4/01/2016 - Included Pipe weight field in SSC when Cameron BOP is selected		<br />
+2/26/2016 - Added Note section to database and entry form.  Updated Detail pg to show Note only if not empty. <br />
+2/25/2016 - updated BOP detailed page. <br />
+2/18/2016 - Updated BOP summary page. Clicking on the model passes the BOP id page to the detailed view.  <br />
+2/15/2016 - Added BOP selector to Shear calculator. <br />
+</section>
+<section class="w3-panel">
+<h2>To Do:</h2>
+<h3>Simple Shear calculator:</h3>
+<ul class="w3-ul">
+	<li>Correct pipe weight.  Incorrect pipe weight for 6.625 x .362 and others.  Try API 5DP values.</li>
+	<li>Use Distortion energy if pipe is less than certain size.</li>
+	<li>Incorporate pipe selector.</li>
+	<li>Use AJAX for BOP selection rather than pulling full query to javascript table.</li>
+	<li>highlight fields required to give result. see w3-validate css class.</li>
+	<li>add graphic below summary showing dimensions</li>
+	<li>add infomation button to explain inputs and outputs.</li>
+	<li>Begin form on a blank option for Pipe Grade</li>
+	<li>Footer covers SHEAR PRESSURE result on mobile devices	</li>
+	<li>Add save option</li>
+	<li>Include sealing pressure in calculations and BOP Index</li>
+</ul>
+
+<h3>Shear calculator:</h3>
+<ul class="w3-ul">
+	<li>Add tool to calculate Shear of multiple lines of various breaking strengths.</li>
+	<li>Add tool to recommend shear test.</li> 
+</ul>
+
+<h3>Accumulator Sizing</h3>
+<ul class="w3-ul">
+	<li>Given bottle count, estimate precharge range &amp; temp.</li>
+</ul>
+
+<h3>Other</h3>
+<ul class="w3-ul">
+	<li>Process form_bop.php</li>
+	<li>Show HTML 5 banner</li>
+	<li>Add an about page describing what the page does</li>	
+</ul>
+
+<h3>Project builder...?</h3>
+
+</section>
+<section class="w3-panel">
+<h2>COMPLETED:</h2>
+	<ul class="w3-ul">
+	<li>Simple Shear Calculator:
+		<ul class="w3-ul">
+		<li>Selecting an OEM removes Ultimate Tensile and %Elong if already entered.</li>
+		<li>ERROR ppf will not calculate when also making a request for C3.(4/28/2016)<br />
+			+Consider a callback function.  NOTE: I had to call one from inside the other to ensure both values were present.</li>
+	 	<li>Create Distortion Energy Force in Calculate_shear() (5/3/2016) </li>
+	 	<li>When BOP select is initally toggled only OEM shows.  Add a select option for default. (5/13/2016)</li>
+	 	<li>F-DE does not recompute when changing Pipe Grade.  It will change when modifiying Ultimate, then Yield. (5/16/2016)</li>
+	 	<li>Use Cameron EB to determine pressure if Cameron BOP is selected.(5/16/2016)</li>
+	 	</ul>
+	 </li>
+	<li>Footer should always be at bottom of page even if the content doesn't fill the page.(4/26/2016)</li> 
+	<li>Complete Pipe table with API 5DP.50(5/3/2016)</li>
+	<li>Move all database connections to one file. (5/9/2016)</li>
+	<li>Add a page to show the changelog(3/13/2017)</li>
+	</ul>
+</section>
