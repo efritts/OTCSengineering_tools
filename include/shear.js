@@ -3,9 +3,46 @@
  * This file contains no php statements and is left as a js file to reduce load time of the cached file for the user.  
  * Functions within are only utilized during shear calculations, so this file does not need to be loaded on other pages. 
  * 
- * author David Hanks Feb 5, 2016
+ * author David Hanks 
+ * Inital release Feb 5, 2016
  *
  */
+$(function() {
+	
+	//disable the link until a shear pressure is calculated.
+	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
+	//$("#test").html("<h1>hi</h1>");	
+	
+	
+	//Expandable tool tips
+	//UPDATE - these can be consolidated into a function
+	$("#about_ssc_expand").click(function(){
+		$("#about_ssc").toggleClass("w3-show");
+		$("#about_ssc").toggleClass("w3-hide");
+		if($("#about_ssc_expand").text()==">"){
+			$("#about_ssc_expand").text("v");
+		}
+		else{$("#about_ssc_expand").text(">");}
+	});
+	$("#about_pipe_expand").click(function(){
+		$("#about_pipe").toggleClass("w3-show");
+		$("#about_pipe").toggleClass("w3-hide");
+		if($("#about_pipe_expand").text()==">"){
+			$("#about_pipe_expand").text("v");
+		}
+		else{$("#about_pipe_expand").text(">");}
+	});
+	$("#about_well_expand").click(function(){
+		$("#about_well").toggleClass("w3-show");
+		$("#about_well").toggleClass("w3-hide");
+		if($("#about_well_expand").text()==">"){
+			$("#about_well_expand").text("v");
+		}
+		else{$("#about_well_expand").text(">");}
+	});
+	
+});
+
 
 function display_ssc_save(xhttp) {
 	var response = xhttp.responseText;
@@ -276,9 +313,11 @@ function display_results(){
 	document.getElementById("final_pressure").innerHTML = check_value_isNumber(calc_adj_shear());
 	document.getElementById('final_pressure_row').className = ""; //clear any error notification
 	
+	
 	if(bop_closingarea && Calculate_shear().Recommended_force){	
 	//Shear Pressure info
 	document.getElementById("final_P_info").title= "= ("+check_value_isNumber(Calculate_shear().Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(Calc_all().Press_adj,2);
+	$("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
 	}
 	//TEST
 	//document.getElementById("test").innerHTML = check_value_isNumber(evaluation_YS());
@@ -650,6 +689,8 @@ function validateForm() {
                 
         //change class on shear pressure to show missing info;
         document.getElementById('final_pressure_row').className += "w3-border-red w3-leftbar";
+        //disable button
+        $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
         return false;
     }
     return true;
