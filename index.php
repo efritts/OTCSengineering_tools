@@ -2,9 +2,9 @@
 /* index.php
  * 
  *
- /*ADD CONTENT
-  * Check user credentials
-  */
+ * ADD CONTENT
+ * Check user credentials
+ */
 ?>
 <!DOCTYPE html>
 <html>
