@@ -8,7 +8,19 @@
 			<h3>Please select one of the available calculators</h3>	
 			<section class="w3-panel w3-light-grey">
 				<h4><a href="?page=calcs&sub=ssc">Simple Shear Calculator</a></h4>
-				<p>The Simple Shear Calculator evalates one pipe for user specified well conditions.  The program looks at several evaluation methods and recommends the most appropriate shear value</p>
+				<div class="w3-container">The Simple Shear Calculator tool was created to assist myself and other engineers determine the shear pressure required to cut a pipe using a subsea shearing valve while working on an oil well</div>
+				<div class="w3-container">Features and limitations:
+					<ul class="w3-container">
+						<li><i>Single page</i> – Front end javascript calculations and AJAX calls to the database allow the user to work in the same page without reloading the screen.</li>
+						<li><i>Save</i> – once a shear pressure is generated, the user is given the option to get a sharable link.  This button enters the user inputs into the database and provides a link that can be shared/bookmarked to review or work with the data in the future.</li>
+						<li><i>Multiple evaluation methods</i> – This type of evaluations can (depending on the situation) required 2-5 evaluations.  This tool looks at 3 of the most popular ones and selects the “best” force approximation.</li>
+						<li><i>Clean interface</i> – Unnecessary text and graphics have been removed to present only the necessary fields.  If the user desires more information, info boxes (i) and accordion style explanations are provided.  This allows novices to the tool to understand the inner workings while at the same time experts can just “get to the point.”</li>
+						<li><i>Mobile friendly</i> – The interface automatically resizes for mobile devices.</li>
+						<li><i>One pipe</i> – This page was titled “simple” because the tool only looks at one pipe.  An actual drilling rig utilizes various sizes of pipes all of which need to be sheared.  While this tool is not designed to perform analysis on all pipe sizes on one screen, it provides a simplified approach to perform a double check on one (e.g. the most severe) case.</li>
+						<li><i>Limited Form checks</i> – While the form does some basic checks for the correct input type and avoids html injection, there was limited emphasis on form validation.  Because it was designed for a particular user group (me), efforts were directed toward functionality, rather than validation.</li>
+					</ul>
+					
+				</div>
 			</section>
 			<section class="w3-panel w3-light-grey">
 				<h4><a href="?page=calcs&sub=atest">Accumulator Test</a></h4>
