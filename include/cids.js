@@ -136,10 +136,9 @@ function ProcessForm(){
 	
 	//if an error occurs send a message to the user
 	if(!FormGood){
-		$('#warn_validate_msg').html('<p>You messed something up</p><p> '+errormsg+' <p>Fields in <span class="w3-red">red text</span> are required.</p> ');
+		$('#warn_validate_msg').html('<p><b>You messed something up</b></p><p> '+errormsg+' <p>Fields in <span class="w3-red">red text</span> are required.</p> ');
 		$('#warn_validate').css("display","block");
-		//document.getElementById('warn_validate').style.display='block';
-		
+				
 		//unlock the form
 		$('#cids').find("input, select, button, textarea").prop("disabled", false);
 		return false;

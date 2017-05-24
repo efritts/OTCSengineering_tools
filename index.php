@@ -114,7 +114,36 @@ switch ($_GET["page"]) {
 ?>
 </div>
 </div>
-
+			<div id="login-modal" class="w3-modal">
+				<div class="w3-modal-content w3-animate-zoom">
+					<header class="w3-container w3-black">
+						<span class="w3-closebtn">&times;</span>	
+						<h2>Login</h2>
+					</header>
+					<div id="login-modal-msg" class="w3-padding">
+						<div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div>
+						<div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div>
+					</div>
+					<footer class="w3-black w3-panel w3-padding">
+						<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">Login</button>
+						<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">Sign-up</button>
+					</footer>
+				</div>
+			</div>
 <footer class="w3-container w3-black w3-right-align w3-tiny footer"><a href="?page=updates">last modified</a> April 27, 2017 by David Hanks</footer>	<!-- inline style corrects shear pressure overlap, but hides footer below initial area.  style="margin-top:10px;" -->
+<!--SCRIPTS-->
+	<script>
+	  // Initialize Firebase
+	  var config = {
+	    apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
+	    authDomain: "otcsolutions-d2f8c.firebaseapp.com",
+	    databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
+	    projectId: "otcsolutions-d2f8c",
+	    storageBucket: "otcsolutions-d2f8c.appspot.com",
+	    messagingSenderId: "808288712006"
+	  };
+	  firebase.initializeApp(config);
+	</script>
+<!--END SCRIPTS -->
 </body>
 </html>

@@ -2,7 +2,7 @@
 /* header.php
  * this file contains the <head> tag and the main navigation menu.
  * 
- * ADD CONTENT:
+ * TODO:
  * Change page title based on page
  * Change where "class=active_page" is located.
  * include js based on page
@@ -100,7 +100,8 @@ switch ($_GET["page"]) {
 	//this will be the homepage case
 
 }
-$onloadscript = "onload=\"".$loadscript."\"";
+//TODO: MOVE TO jQuery section of jfunctions.js
+$onloadscript = "onload=\"".$loadscript."\"";  
 ?>
 
 <head>
@@ -112,88 +113,85 @@ $onloadscript = "onload=\"".$loadscript."\"";
 	<meta name="author" content="David Hanks">
 	
 	<!--HEADER SCRIPTS-->
+	<script src="https://www.gstatic.com/firebasejs/4.0.0/firebase.js"></script>
+
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="include/jfunctions.js"></script>
-	<script src="include/shear.js"></script><!-- FUTURE UPDATE - only include when doing Shear calculator to improve load time -->
+	<script src="include/shear.js"></script><!-- TODO - only include when doing Shear calculator to improve load time -->
 	<script src="include/accum.js"></script> 
-	
 	<!--END HEADER SCRIPTS-->
-	<!--STYLE SHEETS-->
-	<style>
 
-	</style>
+	<!--STYLE SHEETS-->
 	<link rel="stylesheet" href="https://www.w3schools.com/lib/w3.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
 	<link rel="stylesheet" type="text/css" href="CSS/style.css">
+	<!--END STYLE SHEETS -->
 </head>
 
 <body <?php echo $onloadscript;?>>
+
 <div class="wrapper">
-<div class="w3-topnav w3-small w3-black">
-  <a href="/Compliance" <?php echo $home_page_active; ?>><i class="fa fa-home w3-small"></i></a>
+	
+<div class="w3-bar w3-black">
+  <a href="/Compliance" <?php echo $home_page_active; ?> class="w3-bar-item w3-button w3-mobile"><i class="fa fa-home w3-small"></i></a>
   <div class="w3-dropdown-hover">
-  <a href="?page=calcs"<?php echo $basiccalcs_page_active; ?>>Calculators</a>
-  	<div class="w3-dropdown-content w3-card-4 w3-black">
-	    <a href="?page=calcs&sub=ssc">Shear Calculator</a>
-	    <a href="?page=calcs&sub=atest">Accumulator Test</a>
-  	</div>
+  	<a href="?page=calcs" <?php echo $basiccalcs_page_active; ?> class="w3-button">Calculators</a>
+  	<div class="w3-dropdown-content w3-bar-block w3-card-4">
+      <a href="?page=calcs"<?php echo $basiccalcs_page_active; ?> class="w3-bar-item w3-button">About</a>
+      <a href="?page=calcs&sub=ssc" class="w3-bar-item w3-button">Shear Calculator</a>
+      <a href="?page=calcs&sub=atest" class="w3-bar-item w3-button">Accumulator Test</a>
+    </div>
   </div>
   <div class="w3-dropdown-hover">
-  <a href="?page=bop" <?php echo $BOPindex_page_active; ?>>BOP Index</a>
-    <div class="w3-dropdown-content w3-card-4 w3-black">
-	    <a href="?page=bop&sub=Browse">Browse all</a>
-	    <a href="?page=bop&sub=Detail">Detailed view</a>
-	    <a href="?page=bop&sub=Add">Add new</a>
-  	</div>
+  	<a href="?page=bop" <?php echo $BOPindex_page_active; ?> class="w3-button">BOP Index</a>
+  	<div class="w3-dropdown-content w3-bar-block w3-card-4">
+      <a href="?page=bop&sub=Browse" class="w3-bar-item w3-button">Browse all</a>
+      <a href="?page=bop&sub=Detail" class="w3-bar-item w3-button">Detailed view</a>
+      <a href="?page=bop&sub=Add" class="w3-bar-item w3-button">Add new</a>
+    </div>
   </div>
-   <div class="w3-dropdown-hover">
-  <a href="?page=forms" <?php echo $forms_page_active; ?>>Forms</a>
-    <div class="w3-dropdown-content w3-card-4 w3-black">
-	    <a href="?page=forms&sub=cids">Client Input Data Sheet</a>
-  	</div>
+  <div class="w3-dropdown-hover">
+  	<a href="?page=forms" <?php echo $forms_page_active; ?> class="w3-button">Forms</a>
+  	<div class="w3-dropdown-content w3-bar-block w3-card-4">
+      <a href="?page=forms&sub=cids" class="w3-bar-item w3-button">CIDS</a>
+    </div>
   </div>
-  <!--<a href="?page=pipe" <?php echo $pipe_page_active; ?>>Pipe Index</a>-->
-  <!--<a href="?page=project" <?php echo $project_page_active; ?>>Project Builder</a>-->
+  <a href="#" class="w3-bar-item w3-button w3-mobile w3-right" id="nav_login">Login</a>
+  <a href="#" class="w3-bar-item w3-button w3-mobile w3-right w3-hide" id="nav_logout">Logout</a>
+  
 </div>
 
+	<!-- TODO: w3-topnav depreciated.  use w3-bar
+	<div class="w3-topnav w3-small w3-black"> 
+		
+	  	<a href="/Compliance" <?php echo $home_page_active; ?>><i class="fa fa-home w3-small"></i></a>
+	  	<div class="w3-dropdown-hover">
+		  	<a href="?page=calcs"<?php echo $basiccalcs_page_active; ?>>Calculators</a>
+		  	<div class="w3-dropdown-content w3-card-4 w3-black">
+			    <a href="?page=calcs&sub=ssc">Shear Calculator</a>
+			    <a href="?page=calcs&sub=atest">Accumulator Test</a>
+		  	</div>
+	  	</div>
+	  	<div class="w3-dropdown-hover">
+		  	<a href="?page=bop" <?php echo $BOPindex_page_active; ?>>BOP Index</a>
+		    <div class="w3-dropdown-content w3-card-4 w3-black">
+			    <a href="?page=bop&sub=Browse">Browse all</a>
+			    <a href="?page=bop&sub=Detail">Detailed view</a>
+			    <a href="?page=bop&sub=Add">Add new</a>
+		  	</div>
+	  	</div>
+	   	<div class="w3-dropdown-hover">
+		  	<a href="?page=forms" <?php echo $forms_page_active; ?>>Forms</a>
+		    <div class="w3-dropdown-content w3-card-4 w3-black">
+			    <a href="?page=forms&sub=cids">Client Input Data Sheet</a>
+		  	</div>
+	 	 </div>
+	</div>
+	-->
+
 <?php 
-/*
- *Example of a one tier drop down in the top menu
- *     <li> 
-      <!-- First Tier Drop Down -->
-      <label for="drop-1" class="toggle">Service +</label>
-      <a href="#">Service</a>
-      <input type="checkbox" id="drop-1"/>
-      <ul>
-        <li><a href="#">Service 1</a></li>
-        <li><a href="#">Service 2</a></li>
-        <li><a href="#">Service 3</a></li>
-      </ul>
-    </li>
- 
- *  
- * 2 tier drop down
- * <li>
-      <!-- First Tier Drop Down -->
-      <label for="drop-2" class="toggle">Portfolio +</label>
-      <a href="#">Portfolio</a>
-      <input type="checkbox" id="drop-2"/>
-      <ul>
-        <li><a href="#">Portfolio 1</a></li>
-        <li><a href="#">Portfolio 2</a></li>
-        <li> 
-          
-          <!-- Second Tier Drop Down -->
-          <label for="drop-3" class="toggle">Works +</label>
-          <a href="#">Works</a>
-          <input type="checkbox" id="drop-3"/>
-          <ul>
-            <li><a href="#">HTML/CSS</a></li>
-            <li><a href="#">jQuery</a></li>
-            <li><a href="#">Python</a></li>
-          </ul>
-        </li>
-      </ul>
-    </li>
+/* Nav bar reference
+ * https://www.w3schools.com/w3css/w3css_navigation.asp
+ *
  * 
  */?>

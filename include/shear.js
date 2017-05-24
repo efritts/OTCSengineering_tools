@@ -15,7 +15,7 @@ $(function() {
 	
 	
 	//Expandable tool tips
-	//UPDATE - these can be consolidated into a function
+	//TODO - these can be consolidated into a function
 	$("#about_ssc_expand").click(function(){
 		$("#about_ssc").toggleClass("w3-show");
 		$("#about_ssc").toggleClass("w3-hide");

@@ -1,3 +1,69 @@
+$(function() {
+	//When login is clicked, unhide modal
+	$("#nav_login").click(function(){
+		$('#login-modal').css("display","block");	
+	});
+	
+	//When login modal close is clicked close the modal
+	$("#login-modal .w3-closebtn").click(function(){
+		$('#login-modal').css("display","none");
+	});
+	
+	
+	//When modal login is clicked, use firebase.auth().signInWithEmailAndPassword(email, password)
+	$("#login-modal button:contains('Login')").click(function(){
+		//TODO: VALIDATE EMAIL
+		var email = $("#login-email").val();
+		var pass = $("#login-password").val();
+		
+		const login_promise = firebase.auth().signInWithEmailAndPassword(email, pass);
+		
+		login_promise.catch(function(e){
+			console.log(e.message);
+		});
+	});
+	
+	//When modal sign-up is clicked use firebase.auth().createUserWithEmailAndPassword(email, password)
+	$("#login-modal button:contains('Sign-up')").click(function(){
+		//TODO: VALIDATE EMAIL, 6 char password
+		var email = $("#login-email").val();
+		var pass = $("#login-password").val();
+		
+		const login_promise = firebase.auth().createUserWithEmailAndPassword(email, pass);
+		
+		login_promise.catch(function(e){
+			console.log(e.message);
+		});
+		
+		//TODO: on success signup, send email verification with firebase.auth().sendEmailVerification()
+	});	
+	
+	firebase.auth().onAuthStateChanged(function(firebaseUser) {
+		if(firebaseUser){
+			var user = firebase.auth().currentUser;
+			var name, email, uid, emailVerified;
+			name = user.displayName;
+			email = user.email;
+			console.log(firebaseUser);
+			$("#nav_login").addClass("w3-hide");
+			$("#nav_logout").text("Logout " + email);
+			$("#nav_logout").removeClass("w3-hide");
+		}
+		else{
+			console.log('Logged out');
+			$("#nav_logout").addClass("w3-hide");
+			$("#nav_login").removeClass("w3-hide");
+			
+		}
+	});
+	
+	//Logout user
+	$("#nav_logout").click(function(){
+		firebase.auth().signOut();	
+	});
+	
+});
+
 function GetElementInsideContainer(containerID, childID) {
     var elm = document.getElementById(childID);
     var parent = elm ? elm.parentNode : {};
