@@ -123,10 +123,12 @@ switch ($_GET["page"]) {
 					<div id="login-modal-msg" class="w3-padding">
 						<div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div>
 						<div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div>
+						<div id="login-error" class="w3-margin w3-text-red"></div>
 					</div>
-					<footer class="w3-black w3-panel w3-padding">
-						<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">Login</button>
-						<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">Sign-up</button>
+					<footer class="w3-black w3-panel w3-padding w3-right-align">
+						<a href="" class="">Create account</a>
+						<button class="w3-button w3-white w3-medium">Login</button>
+						<!--<button class="w3-button w3-white w3-medium">Sign-up</button>-->
 					</footer>
 				</div>
 			</div>

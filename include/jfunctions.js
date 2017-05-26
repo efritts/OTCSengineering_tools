@@ -1,17 +1,20 @@
 $(function() {
+	//Store original login-modal
+	var loginmodal_original = $('#login-modal').clone();
+	
 	//When login is clicked, unhide modal
 	$("#nav_login").click(function(){
+		$("#login-modal").replaceWith(loginmodal_original.clone());
 		$('#login-modal').css("display","block");	
 	});
 	
 	//When login modal close is clicked close the modal
-	$("#login-modal .w3-closebtn").click(function(){
+	$(document).on('click','#login-modal .w3-closebtn',function(){
 		$('#login-modal').css("display","none");
 	});
 	
-	
 	//When modal login is clicked, use firebase.auth().signInWithEmailAndPassword(email, password)
-	$("#login-modal button:contains('Login')").click(function(){
+	$(document).on('click',"#login-modal button:contains('Login')", function(){
 		//TODO: VALIDATE EMAIL
 		var email = $("#login-email").val();
 		var pass = $("#login-password").val();
@@ -20,10 +23,29 @@ $(function() {
 		
 		login_promise.catch(function(e){
 			console.log(e.message);
+			
+			$('#login-error').text(e.code + ": " + e.message);
 		});
+
+	});
+	
+	//When modal create account is clicked, the modal is changed to include additional password and a sign-up button
+	//TODO: does not appear to work.
+	$(document).on('click', "#login-modal a:contains('Create account)" , function(){
+		//change the header
+		$("#login-modal h2").text('Create Account');
+		
+		//change the form
+		var fm_signup = '<div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div><div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div><div><input type="password" name="login-password" id="login-password2" class="w3-input" placeholder="password"></div>';
+		$("#login-modal-msg").html(fm_signup);
+		
+		//change the buttons
+		var fm_signup_btn ='<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">Sign-up</button>';
+		$("#login-modal footer").html(fm_signup_btn);
 	});
 	
 	//When modal sign-up is clicked use firebase.auth().createUserWithEmailAndPassword(email, password)
+	//TODO: initate with .on or .delegate
 	$("#login-modal button:contains('Sign-up')").click(function(){
 		//TODO: VALIDATE EMAIL, 6 char password
 		var email = $("#login-email").val();
@@ -45,6 +67,7 @@ $(function() {
 			name = user.displayName;
 			email = user.email;
 			console.log(firebaseUser);
+			$('#login-modal').css("display","none");
 			$("#nav_login").addClass("w3-hide");
 			$("#nav_logout").text("Logout " + email);
 			$("#nav_logout").removeClass("w3-hide");
