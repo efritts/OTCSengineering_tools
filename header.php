@@ -13,6 +13,7 @@
  */
 
 //change the title and highlighted menu item based on page selection 
+include 'include/config.php';
 $active_config= "style=\"border-bottom:3px solid #fff\"";
 $loadscript = "";
 
