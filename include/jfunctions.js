@@ -15,12 +15,12 @@ $(function() {
 	
 	//When modal login is clicked, use firebase.auth().signInWithEmailAndPassword(email, password)
 	$(document).on('click',"#login-modal button:contains('Login')", function(){
-		//TODO: VALIDATE EMAIL
 		var email = $("#login-email").val();
 		var pass = $("#login-password").val();
 		
 		const login_promise = firebase.auth().signInWithEmailAndPassword(email, pass);
 		
+		//TODO: throw error if email is not verified.
 		login_promise.catch(function(e){
 			console.log(e.message);
 			
@@ -30,34 +30,46 @@ $(function() {
 	});
 	
 	//When modal create account is clicked, the modal is changed to include additional password and a sign-up button
-	//TODO: does not appear to work.
-	$(document).on('click', "#login-modal a:contains('Create account)" , function(){
+	$(document).on('click', "#login-modal button:contains('Create account')" , function(){
 		//change the header
 		$("#login-modal h2").text('Create Account');
 		
 		//change the form
-		var fm_signup = '<div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div><div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div><div><input type="password" name="login-password" id="login-password2" class="w3-input" placeholder="password"></div>';
+		var fm_signup = '<div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div><div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div><div><input type="password" name="login-password2" id="login-password2" class="w3-input" placeholder="password"><div id="login-error" class="w3-margin w3-text-red"></div></div>';
 		$("#login-modal-msg").html(fm_signup);
 		
 		//change the buttons
-		var fm_signup_btn ='<button class="w3-button w3-white w3-closebtn w3-medium w3-left-align">Sign-up</button>';
+		var fm_signup_btn ='<button class="w3-button w3-white w3-medium">Sign-up</button>';
 		$("#login-modal footer").html(fm_signup_btn);
 	});
 	
 	//When modal sign-up is clicked use firebase.auth().createUserWithEmailAndPassword(email, password)
-	//TODO: initate with .on or .delegate
-	$("#login-modal button:contains('Sign-up')").click(function(){
-		//TODO: VALIDATE EMAIL, 6 char password
+	$(document).on('click', "#login-modal button:contains('Sign-up')", function(){
+		
 		var email = $("#login-email").val();
 		var pass = $("#login-password").val();
+		var pass2 = $("#login-password2").val();
 		
-		const login_promise = firebase.auth().createUserWithEmailAndPassword(email, pass);
+		if (pass == pass2){
+			const login_promise = firebase.auth().createUserWithEmailAndPassword(email, pass);
 		
-		login_promise.catch(function(e){
-			console.log(e.message);
-		});
+			login_promise
+				.then(function(){
+					//TODO: on success signup, send email verification with firebase.auth().sendEmailVerification()
+					console.log('Account created for '+email);
+				})
+				.catch(function(e){
+				console.log(e.message);
+				
+				$('#login-error').text(e.code + ": " + e.message);
+			});
+			
+			
+		}
+		else{
+			$('#login-error').text('Passwords don\'t match!');
+		}
 		
-		//TODO: on success signup, send email verification with firebase.auth().sendEmailVerification()
 	});	
 	
 	firebase.auth().onAuthStateChanged(function(firebaseUser) {
@@ -66,11 +78,16 @@ $(function() {
 			var name, email, uid, emailVerified;
 			name = user.displayName;
 			email = user.email;
-			console.log(firebaseUser);
-			$('#login-modal').css("display","none");
-			$("#nav_login").addClass("w3-hide");
-			$("#nav_logout").text("Logout " + email);
-			$("#nav_logout").removeClass("w3-hide");
+			emailVerified = user.emailVerified;
+			console.log(firebaseUser+" used login modal");
+			//TODO: enable after email verification is active.  
+			//if(emailVerified){
+				$('#login-modal').css("display","none");
+				$("#nav_login").addClass("w3-hide");
+				$("#nav_logout").text("Logout " + email);
+				$("#nav_logout").removeClass("w3-hide");
+			//}
+			//else(alert('Check your Email to verify your account'));  //TODO: Open modal to send verification email.
 		}
 		else{
 			console.log('Logged out');
@@ -82,6 +99,7 @@ $(function() {
 	
 	//Logout user
 	$("#nav_logout").click(function(){
+		console.log('user clicked Logout button');
 		firebase.auth().signOut();	
 	});
 	

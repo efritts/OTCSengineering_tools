@@ -16,7 +16,7 @@
 //change the page content based on page selection.  Page clicked on is given by $_GET["page"] 
 switch ($_GET["page"]) {
 	case "calcs":
-		if (empty($_GET["sub"])){ include ("calculators_home.html");}
+		//REMOVE: if (empty($_GET["sub"])){ include ("calculators_home.html");}
 		switch ($_GET["sub"]) {
 			case "ssc":
 		        include 'include/functions.php';
@@ -31,6 +31,8 @@ switch ($_GET["page"]) {
 				//include 'include/functions.php';
 				include 'form_accum_test.php';
 				break;
+            default:
+                include 'calculators_home.html';
 		}
 		break;
 	case "bop":
@@ -74,8 +76,6 @@ switch ($_GET["page"]) {
 		<?php
 		break;
 	case "forms":
-		if (empty($_GET["sub"])){ include ("forms_home.html");}
-		else{
 			switch ($_GET["sub"]) {
 				case "cids":
 					include 'include/functions.php';
@@ -83,18 +83,9 @@ switch ($_GET["page"]) {
 					include "cids_form.html";
 					break;	
 				default:	
-					?>
-					<div class="w3-container">
-					<div class="w3-col m8 l8">
-						<h3>Form not found</h3>
-						<p>There is no form named <?php echo $_GET["sub"]; ?></p>
-					</div> 
-					<div class="w3-col m4 l4"></div>
-					</div>
-					<?php
+					include ("forms_home.html");
 					break;
 			}
-		}
 		break;
 	default:
 		//this will be the homepage case
@@ -126,9 +117,8 @@ switch ($_GET["page"]) {
 						<div id="login-error" class="w3-margin w3-text-red"></div>
 					</div>
 					<footer class="w3-black w3-panel w3-padding w3-right-align">
-						<a href="" class="">Create account</a>
+						<button class="w3-button w3-white w3-small">Create account</button>
 						<button class="w3-button w3-white w3-medium">Login</button>
-						<!--<button class="w3-button w3-white w3-medium">Sign-up</button>-->
 					</footer>
 				</div>
 			</div>
