@@ -114,7 +114,7 @@ switch ($_GET["page"]) {
 						<div id="login-error" class="w3-margin w3-text-red"></div>
 					</div>
 					<footer class="w3-black w3-panel w3-padding w3-right-align">
-						<button class="w3-button w3-white w3-small">Create account</button>
+						<button class="w3-button w3-white w3-medium">Create account</button>
 						<button class="w3-button w3-white w3-medium">Login</button>
 					</footer>
 				</div>

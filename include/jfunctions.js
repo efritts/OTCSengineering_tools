@@ -2,11 +2,39 @@ $(function() {
 	//Store original login-modal
 	var loginmodal_original = $('#login-modal').clone();
 	
+	//Send verification email when button is pressed.
+	$(document).on('click',"#login-modal button:contains('Send verification email')", function(){
+		var user = firebase.auth().currentUser;
+		user.sendEmailVerification().then(function() {
+		  console.log('Verification sent to '+user.email);
+		  $('#verifyemail-error').text('A message has been sent, please check your email.');
+		  $('#login-modal footer').html('<button class="w3-button w3-white w3-medium">OK</button>');
+		}, function(error) {
+		  console.log('Problem sending email to '+email+': '+error);
+		});	
+	});
+	
+	$(document).on('click',"#login-modal button:contains('OK')", function(){
+		//logout
+		console.log('user clicked Logout button');
+		firebase.auth().signOut();
+		//hide modal
+		$('#login-modal').css("display","none");
+	});
 	//When login is clicked, unhide modal
 	$("#nav_login").click(function(){
 		$("#login-modal").replaceWith(loginmodal_original.clone());
 		$('#login-modal').css("display","block");	
 	});
+	
+	//When enter is hit for the login-modal, login.
+	$(document).on('keypress', "#login-modal input", function (e) {
+	 var key = e.which;
+	 if(key == 13){  // the enter key code
+	    $("#login-modal button:contains('Login')").trigger("click");
+	    return false;  
+	  }
+	});   
 	
 	//When login modal close is clicked close the modal
 	$(document).on('click','#login-modal .w3-closebtn',function(){
@@ -19,11 +47,8 @@ $(function() {
 		var pass = $("#login-password").val();
 		
 		const login_promise = firebase.auth().signInWithEmailAndPassword(email, pass);
-		
-		//TODO: throw error if email is not verified.
 		login_promise.catch(function(e){
 			console.log(e.message);
-			
 			$('#login-error').text(e.code + ": " + e.message);
 		});
 
@@ -35,7 +60,7 @@ $(function() {
 		$("#login-modal h2").text('Create Account');
 		
 		//change the form
-		var fm_signup = '<div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div><div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div><div><input type="password" name="login-password2" id="login-password2" class="w3-input" placeholder="password"><div id="login-error" class="w3-margin w3-text-red"></div></div>';
+		var fm_signup = '<div><input type="text" name="login-first" id="login-first" class="w3-input" placeholder="First Name"></div><div><input type="text" name="login-last" id="login-last" class="w3-input" placeholder="Last Name"></div><div><input type="text" name="login-email" id="login-email" class="w3-input" placeholder="Email"></div><div><input type="password" name="login-password" id="login-password" class="w3-input" placeholder="password"></div><div><input type="password" name="login-password2" id="login-password2" class="w3-input" placeholder="password"><div id="login-error" class="w3-margin w3-text-red"></div></div>';
 		$("#login-modal-msg").html(fm_signup);
 		
 		//change the buttons
@@ -55,8 +80,15 @@ $(function() {
 		
 			login_promise
 				.then(function(){
-					//TODO: on success signup, send email verification with firebase.auth().sendEmailVerification()
 					console.log('Account created for '+email);
+					//TODO: on success signup, send email verification with 
+					firebase.auth().currrentUser.sendEmailVerification().then(function() {
+					  // Email sent.
+					  console.log('Verification sent to '+email);
+					}, function(error) {
+					  console.log('Problem sending email to '+email+': '+error);
+					});
+					
 				})
 				.catch(function(e){
 				console.log(e.message);
@@ -81,13 +113,22 @@ $(function() {
 			emailVerified = user.emailVerified;
 			console.log(firebaseUser+" used login modal");
 			//TODO: enable after email verification is active.  
-			//if(emailVerified){
+			if(emailVerified){
 				$('#login-modal').css("display","none");
 				$("#nav_login").addClass("w3-hide");
 				$("#nav_logout").text("Logout " + email);
 				$("#nav_logout").removeClass("w3-hide");
-			//}
-			//else(alert('Check your Email to verify your account'));  //TODO: Open modal to send verification email.
+			}
+			else{
+				//TODO: Open modal to send verification email.
+				//Ask user to verify email address
+				$("#login-modal").replaceWith(loginmodal_original.clone());
+				$("#login-modal h2").text('Verify Email');
+				var fm_verify = '<div><p>'+email+', You gots to validate that email</p><div id="verifyemail-error" class="w3-margin w3-text-red"></div></div>'; 
+				$("#login-modal-msg").html(fm_verify);
+				$("#login-modal footer").html('<button class="w3-button w3-white w3-medium">Send verification email</button>');
+				$('#login-modal').css("display","block");
+			}
 		}
 		else{
 			console.log('Logged out');
