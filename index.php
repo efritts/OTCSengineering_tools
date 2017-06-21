@@ -65,9 +65,6 @@ switch ($_GET["page"]) {
 		</div>
 		<?php
 		break;
-	case "project":
-		echo "<div class=\"maincontent content\">Project something</div>";
-		break;
 	case "updates":
 		?>
 		<div class="w3-container">
@@ -125,17 +122,17 @@ switch ($_GET["page"]) {
 <footer class="w3-container w3-black w3-right-align w3-tiny footer"><a href="?page=updates">last modified</a> June 19, 2017 by David Hanks</footer>	<!-- inline style corrects shear pressure overlap, but hides footer below initial area.  style="margin-top:10px;" -->
 <!--SCRIPTS-->
 	<script>
-	  // Initialize Firebase
-	  var config = {
-	    apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
-	    authDomain: "otcsolutions-d2f8c.firebaseapp.com",
-	    databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
-	    projectId: "otcsolutions-d2f8c",
-	    storageBucket: "otcsolutions-d2f8c.appspot.com",
-	    messagingSenderId: "808288712006"
-	  };
-	  firebase.initializeApp(config);
-	</script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
+        authDomain: "otcsolutions-d2f8c.firebaseapp.com",
+        databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
+        projectId: "otcsolutions-d2f8c",
+        storageBucket: "otcsolutions-d2f8c.appspot.com",
+        messagingSenderId: "808288712006"
+      };
+      firebase.initializeApp(config);
+    </script>
 <!--END SCRIPTS -->
 </body>
 </html>
