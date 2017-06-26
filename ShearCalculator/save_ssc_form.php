@@ -26,7 +26,7 @@
  * 		// tr area => decimal (6,2)
  * 
  */
- include('../include/functions.php');
+ include('../include/config.php');
  
  //Setup which fields and data are to be inserted to mySQL table
  $fields = "";
