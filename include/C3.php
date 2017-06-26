@@ -35,7 +35,7 @@
  * 
  */
  
- include "functions.php";
+ include "config.php";
  
 
  $bop_id = (!IsNullOrEmptyString($_GET["bop_id"])?$_GET["bop_id"]:"");

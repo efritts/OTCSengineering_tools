@@ -17,7 +17,7 @@
  * 
  */
 
- include "functions.php";
+ include "config.php";
  
  $OD = (!IsNullOrEmptyString($_GET["od"])?$_GET["od"]:"");
  $Wall = (!IsNullOrEmptyString($_GET["wall"])?$_GET["wall"]:"");
