@@ -33,9 +33,12 @@
  * 
  * EX: ".28"
  * 
+ * TODO: UPDATE to match Cameron E702D Rev F1
+ * 
  */
  
  include "config.php";
+ include "functions.php";
  
 
  $bop_id = (!IsNullOrEmptyString($_GET["bop_id"])?$_GET["bop_id"]:"");

@@ -14,10 +14,11 @@
  * If the pipe is not in API 5DP, calculate the pipe weight given the OD & ID.
  * 
  * 
- * 
+ * TODO: Add weights for casing & tubing from API SPEC 5CT
  */
 
  include "config.php";
+ include "functions.php";
  
  $OD = (!IsNullOrEmptyString($_GET["od"])?$_GET["od"]:"");
  $Wall = (!IsNullOrEmptyString($_GET["wall"])?$_GET["wall"]:"");
