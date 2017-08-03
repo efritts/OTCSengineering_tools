@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Firebase Login Test Page</title>
+	</head>
+		<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
+		<script>
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
+		    authDomain: "otcsolutions-d2f8c.firebaseapp.com",
+		    databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
+		    projectId: "otcsolutions-d2f8c",
+		    storageBucket: "otcsolutions-d2f8c.appspot.com",
+		    messagingSenderId: "808288712006"
+		  };
+		  firebase.initializeApp(config);
+		</script>
+		<!--Sign-in widget from FirebaseUI web -->
+		<script src="https://cdn.firebase.com/libs/firebaseui/2.3.0/firebaseui.js"></script>
+		<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.3.0/firebaseui.css" />
+	    <script type="text/javascript">
+	      // FirebaseUI config.
+	      var uiConfig = {
+	        signInSuccessUrl: './',
+	        signInOptions: [
+	          // Specify the providers you want to offer your users.
+	          firebase.auth.EmailAuthProvider.PROVIDER_ID
+	        ],
+	        // Terms of service url.
+	        tosUrl: '<your-tos-url>'
+	      };
+	
+	      // Initialize the FirebaseUI Widget using Firebase.
+	      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+	      // The start method will wait until the DOM is loaded.
+	      ui.start('#firebaseui-auth-container', uiConfig);
+		</script>
+	<body>
+		<div>
+			<div id="firebaseui-auth-container"></div>
+				
+		</div>
+		
+		
+	</body>
+</html>
