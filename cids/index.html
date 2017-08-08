@@ -1,10 +1,21 @@
-<!DOCTYPE >
+<!DOCTYPE html>
 <html lang='eng'>
 	<head>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+		
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+        <!-- handlebars -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
+ 
+        <!-- alpaca -->
+        <link type="text/css" href="https://code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.css" rel="stylesheet" />
+        <script type="text/javascript" src="https://code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.js"></script>
+
+		<title>Client Input Data Sheet</title>
 	</head>
 	<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
 	<script>
@@ -22,19 +33,13 @@
 	<body class="w3-grey">
 		<div class="row w3-black">
 			<div class="col-lg-10"></div>
-			<div class="col-lg-2 w3-right-align"><button id="logout" class="btn btn-default">logout</button></div>
+			<div class="col-lg-2 w3-right-align"><button id="logout" class="btn btn-default w3-margin">logout</button></div>
 		</div> 
 		<div class="row">
 			<div class="col-md-3"></div>
 			<div class="col-md-6 w3-round-large w3-margin w3-white">
 				<h1>Client Input Data Sheet</h1>
-				<p>
-					Contact info<br />
-					blah<br />
-					blah<br />
-					blah<br />
-					blah<br />
-				</p>
+				<div id="form_info"></div>
 				<div class="w3-right-align"><i class="fa fa-chevron-right" aria-hidden="true"></i></div>
 			</div>
 			<div class="col-md-3"></div>	
@@ -48,8 +53,9 @@
 					console.log(email + ' logged in');
 					$('#logout').removeClass('hidden');
 				}else if (user && !user.emailVerified){
-					//Send the user validate email message
-					alert('validate yo');
+					//TODO: Give the user the option to resend their email.
+					
+					alert('Please validate your email by visiting the link in your email.');
 				}
 				else{
 					//kick the user to the login page
@@ -58,9 +64,43 @@
 					$('#logout').addClass('hidden');
 				}
 			});
-			$('#logout').click(function() {
-				firebase.auth().signOut();
-			});
+
+			/*TODO: 
+			* on load, populate form with appropriate page from json
+			* on click, error check, record values, populate next page of form
+			* 
+			* 
+			*/	
+			 $(document).ready(function() {
+			 	$('#logout').click(function() {
+					firebase.auth().signOut();
+				});
+				
+                $("#form_info").alpaca({
+                    "schema": {
+                        "title":"User Feedback",
+                        "description":"What do you think about Alpaca?",
+                        "type":"object",
+                        "properties": {
+                            "name": {
+                                "type":"string",
+                                "title":"Name"
+                            },
+                            "feedback": {
+                                "type":"string",
+                                "title":"Feedback"
+                            },
+                            "ranking": {
+                                "type":"string",
+                                "title":"Ranking",
+                                "enum":['excellent','ok','so so']
+                            }
+                        }
+                    }
+                });
+            });
+
+			
 		</script>
 	</body>
 </html>
