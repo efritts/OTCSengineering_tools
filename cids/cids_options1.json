@@ -1,0 +1,16 @@
+{
+	"fields":{
+		"name":{
+			"type": "text"
+		},
+		"company": {
+			"type": "text"
+		},
+		"email": {
+			"type": ""
+		},
+		"page_no": {
+			"type": "hidden"
+		}
+	}
+}

@@ -1,0 +1,32 @@
+{
+    "title":"Contact Info",
+    "description":"Collects user info.",
+    "type":"object",
+    "properties": {
+        "name": {
+            "type":"string",
+            "title":"Name"
+        },
+        "company": {
+            "type":"string",
+            "title":"Company"
+        },
+        "phone": {
+            "type":"string",
+            "title":"Phone"
+        },
+        "email": {
+            "type":"string",
+            "format": "email",
+            "title":"Email"
+        },
+        "email2": {
+            "type":"string",
+            "format": "email",
+            "title":"Confirm Email"
+        },
+        "page_no":{
+        	"type":"string"
+        }
+    }
+}
