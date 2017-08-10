@@ -42,7 +42,7 @@
 				<div id="form_info"></div>
 				  <ul class="pager">
 					<li class="previous hidden"><a href="#">Previous</a></li>
-					<li class="next"><a href="#" id="cids_nextPage">Next</a></li>
+					<li class="next" id="cids_nextPage"><a href="#">Next</a></li>
 				  </ul>
 			</div>
 			<div class="col-md-3"></div>	
@@ -92,27 +92,30 @@
               	//verify form data based on page.
               	//Record info.
               	//if page 1, load page 2
+              	console.log("Go to next page");
               	load_cids2();
               });
             });
 			function load_cids2(){
 				$("#form_info").alpaca({
                     "schema": {
-                        "title":"User Feedback",
+                        "title":"Well Information",
                         "description":"What do you think about Alpaca?",
                         "type":"object",
                         "properties": {
-                            "name": {
+                            "rigName": {
                                 "type":"string",
-                                "title":"Name"
+                                "title":"Rig Name"
                             },
-                            "company": {
+                            "rigOwner": {
                                 "type":"string",
-                                "title":"Company"
+                                "title":"Rig Owner"
                             },
-                            "phone": {
+                            "BOPloc": {
                                 "type":"string",
-                                "title":"Phone"
+                                "title":"BOP location",
+                                "enum": ["surface","subsea"],
+                                "required":true
                             },
                             "email": {
                                 "type":"string",
@@ -121,8 +124,17 @@
                             "email2": {
                                 "type":"string",
                                 "title":"Confirm Email"
+                                
                             }
                         }
+                    },
+                    "options": {
+                    	"fields": {
+                    		"BOPloc":{
+                    			"type":"select",
+                    			"helper": "tell us your BOP location on the rig"
+                    		}
+                    	}
                     }
                 });
 			}
