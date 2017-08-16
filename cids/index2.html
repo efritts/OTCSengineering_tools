@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang='eng'>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+		
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+        <!-- handlebars -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
+ 
+        <!-- alpaca -->
+        <link type="text/css" href="https://code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.css" rel="stylesheet" />
+        <script type="text/javascript" src="https://code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.js"></script>
+
+		<title>Client Input Data Sheet</title>
+	</head>
+	<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
+	<script>
+	  // Initialize Firebase
+	  var config = {
+	    apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
+	    authDomain: "otcsolutions-d2f8c.firebaseapp.com",
+	    databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
+	    projectId: "otcsolutions-d2f8c",
+	    storageBucket: "otcsolutions-d2f8c.appspot.com",
+	    messagingSenderId: "808288712006"
+	  };
+	  firebase.initializeApp(config);
+	</script>
+	<body class="w3-grey">
+		<div class="row w3-black">
+			<div class="col-lg-10"></div>
+			<div class="col-lg-2 w3-right-align"><button id="logout" class="btn btn-default w3-margin">logout</button></div>
+		</div> 
+		<div class="row">
+			<div class="col-md-2"></div>
+			<div class="col-md-8 w3-round-large w3-margin w3-white">
+				<div id="form_info"></div>
+			</div>
+			<div class="col-md-2"></div>	
+		</div>
+		
+		
+		<script>
+			firebase.auth().onAuthStateChanged(function(user) {
+				if(user && user.emailVerified){
+					var email = user.email;
+					console.log(email + ' logged in');
+					$('#logout').removeClass('hidden');
+				}else if (user && !user.emailVerified){
+					//TODO: Give the user the option to resend their email.
+					
+					alert('Please validate your email by visiting the link in your email.');
+				}
+				else{
+					//kick the user to the login page
+					window.location.replace("login.html");
+					console.log('not logged in.  Redirect');
+					$('#logout').addClass('hidden');
+				}
+			});
+
+			/*TODO: 
+			* on load, populate form with appropriate page from json
+			* on click, error check, record values, populate next page of form
+			* 
+			* 
+			*/	
+			 $(document).ready(function() {
+			 	$('#logout').click(function() {
+					firebase.auth().signOut();
+				});
+				
+                $("#form_info").alpaca({
+                	"optionsSource": "./cids_options1.json",
+                	"schemaSource": "./cids_schema1.json",
+                	"dataSource": "./cids_data1.json",
+                	"options":{
+                		"form": {
+                			"buttons": {
+                				"submit": {
+                					"title": "Show Results",
+                					"click": function() {
+                						alert(JSON.stringify(this.getValue()));
+                					}
+                				}
+                			}
+                		}
+                	},
+                    "view": {
+                    	"parent": "bootstrap-edit-horizontal",
+                    	"wizard": {
+                    		"title":"Welcome to the Wizard",
+                    		"description": "Fill it out",
+                    		"bindings": {
+                    			"name": 1,
+                    			"company": 1,
+                    			"phone": 1,
+                    			"email": 1,
+                    			"email2": 1,
+                    			"rigName": 2,
+                    			"rigOwner": 2,
+                    			"bopLocation": 2,
+                    			"heightRiser": 2,
+                    			"heightHPU": 2,
+                    			"wellName": 3,
+                    			"wellLocation": 3,
+                    			"MAWHP": 3,
+                    			"MASP": 3,
+                    			"depth": 3,
+                    			"mudWeight": 3                   			
+                    		},
+                    		"steps": [{
+                    			"title": "Operator",
+                    			"description": "Contact information"
+                    		}, {
+                    			"title": "Rig Info"
+                    		}, {
+                    			"title": "Well Parameters"
+                    		}, {
+                    			"title": "BOP",
+                    			"description": "Stack Configuation"
+                    		}]
+                    	}
+                    }
+				});
+            });
+			
+		</script>
+	</body>
+</html>

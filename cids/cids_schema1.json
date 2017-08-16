@@ -1,32 +1,99 @@
 {
-    "title":"Contact Info",
-    "description":"Collects user info.",
+    "title":"Client Input Data Form",
+    "description":"Collects Operator Data to initiate shear calculations.",
     "type":"object",
     "properties": {
         "name": {
             "type":"string",
-            "title":"Name"
+            "title":"Name",
+            "description": "Enter your full name",
+            "required": true
         },
         "company": {
-            "type":"string",
-            "title":"Company"
+            "type": "string",
+            "title": "Company"
         },
         "phone": {
-            "type":"string",
-            "title":"Phone"
+            "title": "Phone",
+            "type": "string",
+            "format": "phone"
         },
         "email": {
             "type":"string",
             "format": "email",
-            "title":"Email"
+            "title":"Email",
+            "required": true
         },
         "email2": {
             "type":"string",
             "format": "email",
-            "title":"Confirm Email"
+            "title": "Confirm Email",
+            "required": true
         },
-        "page_no":{
-        	"type":"string"
+        "rigName": {
+        	"type": "string",
+        	"title": "Rig Name"
+        },
+        "rigOwner": {
+        	"type": "string",
+        	"title": "Rig Owner"
+        },
+        "bopLocation": {
+        	"type": "string",
+        	"title": "BOP Location",
+        	"description": "During operations, where is the BOP located",
+        	"enum":[ "Surface", "Subsea"],
+        	"required": true
+        },
+        "wellName": {
+        	"type": "string",
+        	"title": "Well Name"
+        },
+        "wellLocation": {
+        	"type": "string",
+        	"title": "Location"
+        },
+        "heightRiser": {
+        	"type": "string",
+        	"title": "Riser Gap (ft)",
+        	"description": "Distance between sealevel to the top of the riser"
+        },
+        "heightHPU": {
+        	"type": "string",
+        	"title": "Elevation of HPU (ft)",
+        	"description": "Elevation of HPU above sealevel"
+        },
+        "MAWHP": {
+        	"type": "string",
+        	"title": "MAWHP",
+        	"description": "Maximum Anticipated Well Head Pressure @ BOP"
+        },
+        "MASP": {
+        	"type": "string",
+        	"title": "MASP",
+        	"description": "Maximum Anticipated Surface Pressure at BOP"
+        },
+        "depth": {
+        	"type": "string",
+        	"title": "Water Depth (ft)"
+        },
+        "heightBOP": {
+        	"type": "string",
+        	"title": "Elevation of BOP",
+        	"description": "Elevation of BOP above mud line"
+        },
+        "mudWeight": {
+        	"type": "string",
+        	"title": "MUD weight (ppg)"
         }
+    },
+    "dependencies": {
+    	"MAWHP": ["bopLocation"],
+    	"MASP": ["bopLocation"],
+    	"depth": ["bopLocation"],
+    	"heightRiser": ["bopLocation"],
+    	"heightHPU": ["bopLocation"],
+    	"heightBOP": ["bopLocation"],
+    	"mudWeight": ["bopLocation"] 
     }
 }

@@ -9,8 +9,47 @@
 		"email": {
 			"type": ""
 		},
-		"page_no": {
-			"type": "hidden"
+		"MASP":{
+			"type": "integer",
+			"dependencies": {
+				"bopLocation": "Surface"
+			}
+		},
+		"MAWHP":{
+			"type": "integer",
+			"dependencies": {
+				"bopLocation": "Subsea"
+			}
+		},
+		"heightHPU":{
+			"type": "integer",
+			"dependencies": {
+				"bopLocation": "Subsea"
+			}
+		},
+		"heightRiser":{
+			"type": "integer",
+			"dependencies": {
+				"bopLocation": "Subsea"
+			}
+		},
+		"mudWeight":{
+			"type": "number",
+			"dependencies": {
+				"bopLocation": "Subsea"
+			}
+		},
+		"depth": {
+			"type": "integer",
+			"dependencies": {
+				"bopLocation": "Subsea"
+			}
+		},
+		"heightBOP": {
+			"type": "integer",
+			"dependencies": {
+				"bopLocation": "Subsea"
+			}
 		}
 	}
 }
