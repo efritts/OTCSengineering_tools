@@ -7,8 +7,14 @@
 			"type": "text"
 		},
 		"email": {
-			"type": ""
+			"type": "text",
+			"hideInitValidationError": true
 		},
+		"email2": {
+            "type": "text",
+            "hideInitValidationError": true,
+            "showMessages": true
+        },
 		"MASP":{
 			"type": "integer",
 			"dependencies": {
@@ -50,6 +56,63 @@
 			"dependencies": {
 				"bopLocation": "Subsea"
 			}
+		},
+		"bopLocation": {
+			"type": "select"
+		},
+		"BOP_Stack": {
+			"toolbarSticky": true,
+			"hideToolbarWithChildren": false,
+			"helper": "List the BOPs that make up your stack",
+			"items": { "$ref": "#/definitions/bop_details" },
+			"actionbar": {
+				"actions": [{
+					"action": "add",
+					"enabled": false
+				}]
+			}
+				
+		},
+		"tubulars": {
+			"toolbarSticky": true,
+			"hideToolbarWithChildren": false,
+			"helper": "list tubulars, wireline, slicklines, e-lines to be sheared",
+			"items": { "$ref": "#/definitions/tubular_fields" },
+			"actionbar": {
+				"actions": [{
+					"action": "add",
+					"enabled": false
+				}]
+			}
 		}
+	},
+	"definitions": {
+		"bop_details":{
+			"fields":{
+				"BOP_type": {
+					"type": "select",
+					"noneLabel": "Other"
+				},
+				"BOP_description": {
+					"helper": "include OEM, model, size, pressure rating, ram type"
+				}
+			}
+		},
+		"tubular_fields": {
+		  "fields": {
+		      "strengthBreaking":{
+		          "type": "integer",
+		          "dependencies": {
+		              "lineType": ["wireline", "slickline", "e-line"]
+		           }
+		      },
+		      "strengthYield": {
+		          "type": "integer",
+                  "dependencies": {
+                      "lineType": ["casing", "pipe", "tube"]
+                   }
+		      }
+		  }
+	   }
 	}
 }

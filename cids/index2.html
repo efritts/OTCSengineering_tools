@@ -64,12 +64,32 @@
 			});
 
 			/*TODO: 
-			* on load, populate form with appropriate page from json
-			* on click, error check, record values, populate next page of form
+			* allow user to upload files
+			* add comments field
+			* add review info field
+			* add tubulars field
 			* 
+			* Clean up BOP stack format
+			* prepopulate Contact info
+			* Send data to firebase database
+			*  
+			* Allow user to request shear or accumulator calcs
 			* 
 			*/	
 			 $(document).ready(function() {
+			    var user = firebase.auth().currentUser;
+                var name, email, photoUrl, uid, emailVerified;
+                
+                if (user != null) {
+                  name = user.displayName;
+                  email = user.email;
+                  //photoUrl = user.photoURL;
+                  emailVerified = user.emailVerified;
+                  uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
+                                   // this value to authenticate with your backend server, if
+                                   // you have one. Use User.getToken() instead.
+                }
+                
 			 	$('#logout').click(function() {
 					firebase.auth().signOut();
 				});
@@ -78,7 +98,29 @@
                 	"optionsSource": "./cids_options1.json",
                 	"schemaSource": "./cids_schema1.json",
                 	"dataSource": "./cids_data1.json",
+                	"data":  {
+                	       "email": [email]
+                	},
                 	"options":{
+                		"fields": {
+                			"email2":{
+                				"validator": function(callback) {
+				                    var value2 = this.getValue();
+				                    var value1 = this.getParent().childrenByPropertyId["email"].getValue();
+				                    if (value2 == value1){
+				                        callback({
+				                            "status": true,
+				                            "message": "Words match"
+				                        });
+				                    } else{
+				                        callback({
+				                            "status": false,
+				                            "message": "Emails do not match"
+				                        });
+				                    }
+				                }
+                			}
+                		},
                 		"form": {
                 			"buttons": {
                 				"submit": {
@@ -106,12 +148,14 @@
                     			"bopLocation": 2,
                     			"heightRiser": 2,
                     			"heightHPU": 2,
-                    			"wellName": 3,
-                    			"wellLocation": 3,
-                    			"MAWHP": 3,
-                    			"MASP": 3,
-                    			"depth": 3,
-                    			"mudWeight": 3                   			
+                    			"BOP_Stack": 3,
+                    			"wellName": 4,
+                    			"wellLocation": 4,
+                    			"MAWHP": 4,
+                    			"MASP": 4,
+                    			"depth": 4,
+                    			"mudWeight": 4,
+                    			"tubulars": 5                   			
                     		},
                     		"steps": [{
                     			"title": "Operator",
@@ -119,10 +163,12 @@
                     		}, {
                     			"title": "Rig Info"
                     		}, {
-                    			"title": "Well Parameters"
-                    		}, {
                     			"title": "BOP",
                     			"description": "Stack Configuation"
+                    		}, {
+                    			"title": "Well Parameters"
+                    		}, {
+                    			"title": "Tubulars"
                     		}]
                     	}
                     }

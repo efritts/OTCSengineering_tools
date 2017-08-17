@@ -85,15 +85,64 @@
         "mudWeight": {
         	"type": "string",
         	"title": "MUD weight (ppg)"
-        }
+        },
+        "BOP_Stack": {
+        	"type": "array",
+        	"title": "Stack configuration",
+        	"items": {"$ref": "#/definitions/bop_details"},
+        	"maxItems": 10
+        },
+        "tubulars": {
+        	"type": "array",
+        	"title": "Workstrings",
+        	"items": {"$ref": "#/definitions/tubular_fields"}
+        }   
     },
     "dependencies": {
-    	"MAWHP": ["bopLocation"],
-    	"MASP": ["bopLocation"],
-    	"depth": ["bopLocation"],
-    	"heightRiser": ["bopLocation"],
-    	"heightHPU": ["bopLocation"],
-    	"heightBOP": ["bopLocation"],
-    	"mudWeight": ["bopLocation"] 
+        "MAWHP": ["bopLocation"],
+        "MASP": ["bopLocation"],
+        "depth": ["bopLocation"],
+        "heightRiser": ["bopLocation"],
+        "heightHPU": ["bopLocation"],
+        "heightBOP": ["bopLocation"],
+        "mudWeight": ["bopLocation"]
+    },
+    "definitions": {
+    	"bop_details": {
+	    	"type": "object",
+	    	"properties":{
+	    		"BOP_type":{
+	    			"title": "BOP type",
+	    			"type": "string",
+	    			"enum": ["Annular", "Ram", "Gate"]
+	    		},
+	    		"BOP_description": {
+	    			"title": "Description",
+	    			"type": "string"
+	    		}
+	    	}
+	    },
+	    "tubular_fields": {
+	    	"type": "object",
+	    	"properties":{
+	    		"lineType":{ 
+	    			"title": "type",
+	    			"type": "string",
+	    			"enum":[ "casing", "pipe", "tube", "wireline", "slickline", "e-line"]
+	    		},
+	    		"strengthBreaking": {
+	    			"title": "Breaking Strength",
+	    			"type": "string"
+	    		},
+	    		"strengthYield": {
+	    			"title": "Yield Strength",
+	    			"type": "string"
+	    		}
+	    	},
+	       "dependencies": {
+                "strengthBreaking": ["lineType"],
+                "strengthYield": ["lineType"] 
+           }
+	    }
     }
 }
