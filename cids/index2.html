@@ -67,13 +67,16 @@
 			* allow user to upload files
 			* add comments field
 			* add review info field
-			* add tubulars field
+			* show diagram of riser gap, HPU elevation, Subsea depth
+			* add units
 			* 
 			* Clean up BOP stack format
 			* prepopulate Contact info
 			* Send data to firebase database
 			*  
+			* Allow user to delegate section.
 			* Allow user to request shear or accumulator calcs
+			* Allow user to load previous form.
 			* 
 			*/	
 			 $(document).ready(function() {
@@ -155,7 +158,10 @@
                     			"MASP": 4,
                     			"depth": 4,
                     			"mudWeight": 4,
-                    			"tubulars": 5                   			
+                    			"tubulars": 5,
+                    			"comments": 6,
+                    			"files": 6,
+                    			"review": 7                   			
                     		},
                     		"steps": [{
                     			"title": "Operator",
@@ -169,6 +175,10 @@
                     			"title": "Well Parameters"
                     		}, {
                     			"title": "Tubulars"
+                    		}, {
+                    			"title": "Comments"
+                    		}, {
+                    			"title": "Submit"
                     		}]
                     	}
                     }

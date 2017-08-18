@@ -55,13 +55,11 @@
         },
         "heightRiser": {
         	"type": "string",
-        	"title": "Riser Gap (ft)",
-        	"description": "Distance between sealevel to the top of the riser"
+        	"title": "Riser Gap (ft)"
         },
         "heightHPU": {
         	"type": "string",
-        	"title": "Elevation of HPU (ft)",
-        	"description": "Elevation of HPU above sealevel"
+        	"title": "Elevation of HPU (ft)"
         },
         "MAWHP": {
         	"type": "string",
@@ -96,6 +94,18 @@
         	"type": "array",
         	"title": "Workstrings",
         	"items": {"$ref": "#/definitions/tubular_fields"}
+        },
+        "comments": {
+        	"type": "string",
+        	"title": "Comments"
+        },
+        "files": {
+        	"type": "string",
+        	"title": "Files"
+        },
+        "review": {
+        	"type": "string",
+        	"title": "Review Submission"
         }   
     },
     "dependencies": {
