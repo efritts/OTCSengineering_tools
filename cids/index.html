@@ -36,109 +36,13 @@
 			<div class="col-lg-2 w3-right-align"><button id="logout" class="btn btn-default w3-margin">logout</button></div>
 		</div> 
 		<div class="row">
-			<div class="col-md-3"></div>
-			<div class="col-md-6 w3-round-large w3-margin w3-white">
-				<h1>Client Input Data Sheet</h1>
+			<div class="col-md-2" id="left-margin"></div>
+			<div class="col-md-8 w3-round-large w3-margin w3-white">
 				<div id="form_info"></div>
-				  <ul class="pager">
-					<li class="previous hidden"><a href="#">Previous</a></li>
-					<li class="next" id="cids_nextPage"><a href="#">Next</a></li>
-				  </ul>
 			</div>
-			<div class="col-md-3"></div>	
+			<div class="col-md-2" id="right-margin"></div>	
 		</div>
 		
-		
-		<script>
-			firebase.auth().onAuthStateChanged(function(user) {
-				if(user && user.emailVerified){
-					var email = user.email;
-					console.log(email + ' logged in');
-					$('#logout').removeClass('hidden');
-				}else if (user && !user.emailVerified){
-					//TODO: Give the user the option to resend their email.
-					
-					alert('Please validate your email by visiting the link in your email.');
-				}
-				else{
-					//kick the user to the login page
-					window.location.replace("login.html");
-					console.log('not logged in.  Redirect');
-					$('#logout').addClass('hidden');
-				}
-			});
-
-			/*TODO: 
-			* on load, populate form with appropriate page from json
-			* on click, error check, record values, populate next page of form
-			* 
-			* 
-			*/	
-			 $(document).ready(function() {
-			 	$('#logout').click(function() {
-					firebase.auth().signOut();
-				});
-				
-                $("#form_info").alpaca({
-                	"optionsSource": "./cids_options1.json",
-                	"schemaSource": "./cids_schema1.json",
-                    "data": {
-                        	"page_no": "1"
-                    }
-				});
-    
-              $("#cids_nextPage").click(function() {
-              	//determine page.
-              	//verify form data based on page.
-              	//Record info.
-              	//if page 1, load page 2
-              	console.log("Go to next page");
-              	load_cids2();
-              });
-            });
-			function load_cids2(){
-				$("#form_info").alpaca({
-                    "schema": {
-                        "title":"Well Information",
-                        "description":"What do you think about Alpaca?",
-                        "type":"object",
-                        "properties": {
-                            "rigName": {
-                                "type":"string",
-                                "title":"Rig Name"
-                            },
-                            "rigOwner": {
-                                "type":"string",
-                                "title":"Rig Owner"
-                            },
-                            "BOPloc": {
-                                "type":"string",
-                                "title":"BOP location",
-                                "enum": ["surface","subsea"],
-                                "required":true
-                            },
-                            "email": {
-                                "type":"string",
-                                "title":"Email"
-                            },
-                            "email2": {
-                                "type":"string",
-                                "title":"Confirm Email"
-                                
-                            }
-                        }
-                    },
-                    "options": {
-                    	"fields": {
-                    		"BOPloc":{
-                    			"type":"select",
-                    			"helper": "tell us your BOP location on the rig"
-                    		}
-                    	}
-                    }
-                });
-			}
-			
-		</script>
+		<script src="./scripts/cids.js"></script>
 	</body>
 </html>
