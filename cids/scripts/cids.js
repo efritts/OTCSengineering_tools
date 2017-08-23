@@ -32,32 +32,42 @@ firebase.auth().onAuthStateChanged(function(user) {
 * 
 */  
  $(document).ready(function() {
+	 firebase.auth().onAuthStateChanged(function(user) {
+	    if(user && user.emailVerified){
+	    	var email = user.email;
+	    	var emailVerified = user.emailVerified;
+	    	const formdata = {
+		        name: "Logged In",
+		        email: email,
+		        email2: email
+		    };
+		    if (user !== null) {
+		      $('#left-margin').text("hello");
+		    }
+		    else{
+		    	$('#right-margin').text("hello2");
+		    }			        
+	        console.log(email + ' sent to formdata object');
+	        
+	    }
+	    else{
+	    	var formdata = {
+		        name: "Some Guy"
+		    };
+		};
+	});   
     
-    //TODO: BUG - user is not carried over from the onAuthStateChanged in line 1
-    var user = firebase.auth().currentUser;
-    var name, uid, emailVerified;
-    var formdata = {
-        name: "This guy",
-        email: "this@email.com"
-    };
     
-    if (user !== null) {
-      name = user.displayName;
-      email = user.email;
-      emailVerified = user.emailVerified;
-      uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
-                       // this value to authenticate with your backend server, if
-                       // you have one. Use User.getToken() instead.
-      $('#left-margin').text("hello");
-    }
-    else{
-    $('#right-margin').text("hello2");
-    }
-      
+ 
     $('#logout').click(function() {
         firebase.auth().signOut();
     });
-    
+	
+	
+	//TODO: error - Why isn't the formdata defintion carried over from above?
+	var formdata = {
+	    name: "Some Guy"
+	};
     $("#form_info").alpaca({
         "optionsSource": "./cids_options1.json",
         "schemaSource": "./cids_schema1.json",
