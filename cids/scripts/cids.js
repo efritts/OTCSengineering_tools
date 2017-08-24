@@ -32,53 +32,24 @@ firebase.auth().onAuthStateChanged(function(user) {
 * 
 */  
  $(document).ready(function() {
-	 firebase.auth().onAuthStateChanged(function(user) {
-	    if(user && user.emailVerified){
-	    	var email = user.email;
-	    	var emailVerified = user.emailVerified;
-	    	const formdata = {
-		        name: "Logged In",
-		        email: email,
-		        email2: email
-		    };
-		    if (user !== null) {
-		      $('#left-margin').text("hello");
-		    }
-		    else{
-		    	$('#right-margin').text("hello2");
-		    }			        
-	        console.log(email + ' sent to formdata object');
-	        
-	    }
-	    else{
-	    	var formdata = {
-		        name: "Some Guy"
-		    };
-		};
-	});   
-    
-    
  
     $('#logout').click(function() {
         firebase.auth().signOut();
     });
 	
-	
-	//TODO: error - Why isn't the formdata defintion carried over from above?
-	var formdata = {
-	    name: "Some Guy"
-	};
+	//TODO: error - formdata object can't be set in OnAuthState change because .alpaca() executes first.  The object is never updated.
+
     $("#form_info").alpaca({
         "optionsSource": "./cids_options1.json",
         "schemaSource": "./cids_schema1.json",
-        //"dataSource": "./cids_data1.json",
-        "data":  formdata,
+        "dataSource": "./cids_data1.json",
+        //"data":  formdata,
         "options":{
             "fields": {
                 "email2":{
                     "validator": function(callback) {
                         var value2 = this.getValue();
-                        var value1 = this.getParent().childrenByPropertyId["email"].getValue();
+                            value1 = this.getParent().childrenByPropertyId.email.getValue();
                         if (value2 == value1){
                             callback({
                                 "status": true,
