@@ -16,6 +16,9 @@ firebase.auth().onAuthStateChanged(function(user) {
     }
 });
 
+function captureCIDS(obj) {
+  firebase.database().ref('submittedCIDS/').set(obj);
+}
 /*TODO: 
 
 * prepopulate Contact info
@@ -32,7 +35,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 * 
 */  
  $(document).ready(function() {
- 
+ 	var database = firebase.database();
+ 	
     $('#logout').click(function() {
         firebase.auth().signOut();
     });
@@ -63,7 +67,7 @@ firebase.auth().onAuthStateChanged(function(user) {
                         }
                     }
                 }
-            },
+            }/*
             "form": {
                 "buttons": {
                     "submit": {
@@ -74,6 +78,7 @@ firebase.auth().onAuthStateChanged(function(user) {
                     }
                 }
             }
+            */
         },
         "view": {
             "parent": "bootstrap-edit-horizontal",
@@ -119,8 +124,31 @@ firebase.auth().onAuthStateChanged(function(user) {
                     "title": "Comments"
                 }, {
                     "title": "Submit"
-                }]
+                }],
+                "buttons": {
+                    "submit": {
+                        "title": "Submit!",
+                        "validate": function(callback) {
+	                        console.log("Submit validate()");
+	                        callback(true);
+	                    },
+                        "click": function() {
+                            //TODO: disable button
+                            alert(JSON.stringify(this.getValue()));
+                            
+                            //TODO:, check for the last id, then increment this to the next.  Store under submittedCIDS/{newID}
+                            const dbRefSubmitted = database.ref().child('submittedCIDS/lastID');
+                            dbRefSubmitted.once('value', snapshot => console.log(snapshot.val()));
+                            
+                            //send to firebase
+                            var timestamp = Date.now();
+                            database.ref('submittedCIDS/' + timestamp).set(this.getValue());
+                            
+                            //TODO: send success modal.
+                            }
+                        }
+                     }
+                 }
             }
-        }
     });
 });
