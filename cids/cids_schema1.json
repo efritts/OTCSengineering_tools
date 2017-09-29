@@ -145,13 +145,18 @@
 	    			"type": "string"
 	    		},
 	    		"strengthYield": {
-	    			"title": "Yield Strength",
+	    			"title": "Yield Strength (ksi)",
+	    			"type": "string"
+	    		},
+	    		"outsideDiameter": {
+	    			"title": "Outside Diameter (in)",
 	    			"type": "string"
 	    		}
 	    	},
 	       "dependencies": {
                 "strengthBreaking": ["lineType"],
-                "strengthYield": ["lineType"] 
+                "strengthYield": ["lineType"],
+                "outsideDiameter": ["lineType"] 
            }
 	    }
     }

@@ -16,9 +16,6 @@ firebase.auth().onAuthStateChanged(function(user) {
     }
 });
 
-function captureCIDS(obj) {
-  firebase.database().ref('submittedCIDS/').set(obj);
-}
 /*TODO: 
 
 * prepopulate Contact info
@@ -67,18 +64,7 @@ function captureCIDS(obj) {
                         }
                     }
                 }
-            }/*
-            "form": {
-                "buttons": {
-                    "submit": {
-                        "title": "Show Results",
-                        "click": function() {
-                            alert(JSON.stringify(this.getValue()));
-                        }
-                    }
-                }
             }
-            */
         },
         "view": {
             "parent": "bootstrap-edit-horizontal",
@@ -134,7 +120,7 @@ function captureCIDS(obj) {
 	                    },
                         "click": function() {
                             //TODO: disable button
-                            alert(JSON.stringify(this.getValue()));
+                            //alert(JSON.stringify(this.getValue()));
                             
                             //TODO:, check for the last id, then increment this to the next.  Store under submittedCIDS/{newID}
                             const dbRefSubmitted = database.ref().child('submittedCIDS/lastID');
@@ -144,6 +130,20 @@ function captureCIDS(obj) {
                             var timestamp = Date.now();
                             database.ref('submittedCIDS/' + timestamp).set(this.getValue());
                             
+                            //send to mailer
+                            //javascript works, but using jquery instead
+                            //request= new XMLHttpRequest()
+    						//request.open("POST", "scripts/cid_submit_mailer.php", true);
+    						//request.setRequestHeader("Content-type", "application/json");
+    						//request.send(JSON.stringify(this.getValue()));
+							
+							//jquery
+							$.ajax({url: "scripts/cid_submit_mailer.php",
+							type: "application/json",
+							data:  JSON.stringify(this.getValue()),
+							type: "POST",
+							context: document.body});
+							
                             //TODO: send success modal.
                             }
                         }

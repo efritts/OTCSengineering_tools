@@ -121,6 +121,11 @@
                   "dependencies": {
                       "lineType": ["casing", "pipe", "tube"]
                    }
+		      },
+		      "outsideDiameter": {
+		          "dependencies": {
+                      "lineType": ["casing", "pipe", "tube"]
+                   }
 		      }
 		  }
 	   }
