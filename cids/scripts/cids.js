@@ -19,21 +19,21 @@ firebase.auth().onAuthStateChanged(function(user) {
 /*TODO: 
 
 * prepopulate Contact info
-* Send data to firebase database 
 * Clean up BOP stack format
 * add review info field
 * show diagram of riser gap, HPU elevation, Subsea depth
 * add units
-* 
+* Add shear ram to BOP type.
+* If shear ram is selected.  Allow user to select predefined BOP types.
 * Allow user to upload multiple files http://www.alpacajs.org/docs/fields/upload.html and https://github.com/blueimp/jQuery-File-Upload/wiki
-* Allow user to delegate section.
 * Allow user to request shear or accumulator calcs
 * Allow user to load previous form.
+* Allow user to delegate section.
 * 
 */  
  $(document).ready(function() {
- 	var database = firebase.database();
- 	
+     var database = firebase.database();
+    
     $('#logout').click(function() {
         firebase.auth().signOut();
     });
@@ -119,12 +119,12 @@ firebase.auth().onAuthStateChanged(function(user) {
 	                        callback(true);
 	                    },
                         "click": function() {
-                            //TODO: disable button
-                            //alert(JSON.stringify(this.getValue()));
+                            //TODO: disable button on submit
+                            alert(JSON.stringify(this.getValue()));
                             
                             //TODO:, check for the last id, then increment this to the next.  Store under submittedCIDS/{newID}
-                            const dbRefSubmitted = database.ref().child('submittedCIDS/lastID');
-                            dbRefSubmitted.once('value', snapshot => console.log(snapshot.val()));
+                            //const dbRefSubmitted = database.ref().child('submittedCIDS/lastID');
+                            //dbRefSubmitted.once('value', snapshot => console.log(snapshot.val()));
                             
                             //send to firebase
                             var timestamp = Date.now();
@@ -142,7 +142,10 @@ firebase.auth().onAuthStateChanged(function(user) {
 							type: "application/json",
 							data:  JSON.stringify(this.getValue()),
 							type: "POST",
-							context: document.body});
+							context: document.body})
+							.done(function(){console.log("Mail Sent");})
+							.fail(function(){console.log("Mailer failed");});
+							
 							
                             //TODO: send success modal.
                             }

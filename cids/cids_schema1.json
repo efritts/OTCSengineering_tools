@@ -124,9 +124,13 @@
 	    		"BOP_type":{
 	    			"title": "BOP type",
 	    			"type": "string",
-	    			"enum": ["Annular", "Ram", "Gate"]
+	    			"enum": ["Annular", "Shear Ram", "Pipe Ram", "Gate"]
 	    		},
-	    		"BOP_description": {
+	    		"BOP_OEM": {
+                    "title": "Manufacturer",
+                    "type": "string"
+                },
+                "BOP_description": {
 	    			"title": "Description",
 	    			"type": "string"
 	    		}
