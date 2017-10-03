@@ -1,11 +1,14 @@
 <?php
 /*
- * TODO: get appropriate fields for casing, pipe, tube, wireline
+ * TODO: 
+ * get appropriate fields for casing, pipe, tube, wireline
  * casing, pipe: grade, od, wall, nominal weight
  * tube: grade, OD, wall
  * wireline: size, breaking strength.
  * 
  * TODO: Create a table for tubular type: casing, pipe, tube, wireline.
+ * 
+ * TODO: Send appropriate information for Surface only well.
  */
 //get info from $post
 $str_json = file_get_contents('php://input');
@@ -26,6 +29,7 @@ $headers = "From: cids.mailer@otc-solutions.com\r\n";
 $headers .= "MIME-Version: 1.0\r\n";
 $headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
 
+//Create table rows for the BOP stackup
 $message_BOPs ='';
 foreach ($cids['BOP_Stack'] as $component){
 	$message_BOPs .= <<<MSG
@@ -36,6 +40,48 @@ foreach ($cids['BOP_Stack'] as $component){
 	</tr>
 MSG;
 }
+
+//Configure different messages for a subsea and surface BOP
+if($cids['bopLocation']=="Subsea"){
+	$message_SubseaRig = <<<SubseaRig
+		                <tr>
+		                    <td>Riser Elevation</td>
+		                    <td>{$cids['heightRiser']}</td>
+		                </tr>
+		                <tr>
+		                    <td>HPU Elevation</td>
+		                    <td>{$cids['heightHPU']}</td>
+		                </tr>
+SubseaRig;
+	$message_Well = <<<WELL
+	    <tr>
+	        <td>Maximum Anticipated Wellhead Pressure</td>
+	        <td>{$cids['MAWHP']}</td>
+	    </tr>
+	    <tr>
+	        <td>Water depth</td>
+	        <td>{$cids['depth']}</td>
+	    </tr>
+	    <tr>
+	        <td>BOP Elevation above sea floor</td>
+	        <td>40 ft</td>
+	    </tr>
+	    <tr>
+	        <td>Maximum Drilling Fluid Weight</td>
+	        <td>{$cids['mudWeight']}</td>
+	    </tr>
+WELL;
+}
+else{
+	$message_SubseaRig = '';
+	$message_Well = <<<WELL
+	    <tr>
+	        <td>Maximum Anticipated Surface Pressure</td>
+	        <td>{$cids['MASP']}</td>
+	    </tr>
+WELL;
+}
+
 
 $message = <<<FORM
 <!DOCTYPE html>
@@ -84,6 +130,7 @@ $message = <<<FORM
 	                    <td>{$cids['phone']}</td>
 	                </tr>
 	            </table>
+	            <!-- FOR FUTURE USE
 	            <h2>Requested Services</h2>
 	            <table>
 	                <tr>
@@ -103,7 +150,7 @@ $message = <<<FORM
 	                    <td><i class="fa fa-check-square-o" aria-hidden="true"></i></td>
 	                </tr>
 	            </table>
-	            
+	            -->
 	            <h2>Rig</h2>
 	            <table>
 	                <tr>
@@ -130,23 +177,11 @@ $message = <<<FORM
 	                    <td>BOP location</td>
 	                    <td>{$cids['bopLocation']}</td>
 	                </tr>
-	                <tr>
-	                    <td>Riser Elevation</td>
-	                    <td>{$cids['heightRiser']}</td>
-	                </tr>
-	                <tr>
-	                    <td>HPU Elevation</td>
-	                    <td>{$cids['heightHPU']}</td>
-	                </tr>
+	                $message_SubseaRig
 	            </table>
 	            <h2>BOP stackup</h2>
 	            <table>
 	            	$message_BOPs
-	                <!--<tr>
-	                    <td style="width:55%">Annular</td>
-	                    <td style="width:15%">GE</td>
-	                    <td style="width:30%">18-3/4" GX 18-10M</td>
-	                </tr>-->
 	            </table>
 	            <h2>Well</h2>
 	            <table>
@@ -158,27 +193,11 @@ $message = <<<FORM
 	                    <td>Well Location</td>
 	                    <td>{$cids['wellLocation']}</td>
 	                </tr>
-	
 	                <tr>
 	                    <td>Maximum Anticipated Wellbore Temperature</td>
 	                    <td>210 deg F</td>
 	                </tr>
-	                <tr>
-	                    <td>Water depth</td>
-	                    <td>{$cids['depth']}</td>
-	                </tr>
-	                <tr>
-	                    <td>BOP Elevation above sea floor</td>
-	                    <td>40 ft</td>
-	                </tr>
-	                <tr>
-	                    <td>Maximum Anticipated Wellhead Pressure</td>
-	                    <td>{$cids['MAWHP']}</td>
-	                </tr>
-	                <tr>
-	                    <td>Maximum Drilling Fluid Weight</td>
-	                    <td>{$cids['mudWeight']}</td>
-	                </tr>                    
+                    $message_Well
 	            </table>
 	            <h2>Tubulars</h2>
 	            <table >

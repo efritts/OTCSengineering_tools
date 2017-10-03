@@ -1,6 +1,6 @@
 {
     "title":"Client Input Data Form",
-    "description":"Collects Operator Data to initiate shear calculations.",
+    "description":"Provide Stack info to initiate shear calculations.",
     "type":"object",
     "properties": {
         "name": {
@@ -55,7 +55,8 @@
         },
         "heightRiser": {
         	"type": "string",
-        	"title": "Riser Gap (ft)"
+        	"title": "Riser Gap (ft)",
+        	"description": "Height of the riser above the sea level"
         },
         "heightHPU": {
         	"type": "string",
@@ -140,27 +141,49 @@
 	    	"type": "object",
 	    	"properties":{
 	    		"lineType":{ 
-	    			"title": "type",
+	    			"title": "Type",
 	    			"type": "string",
 	    			"enum":[ "casing", "pipe", "tube", "wireline", "slickline", "e-line"]
 	    		},
 	    		"strengthBreaking": {
-	    			"title": "Breaking Strength",
-	    			"type": "string"
+	    			"title": "Breaking Strength (lbs)",
+	    			"type": "string",
+	    			"minimum": 100
 	    		},
 	    		"strengthYield": {
 	    			"title": "Yield Strength (ksi)",
+	    			"minimum": 70,
+	    			"maximum": 200,
 	    			"type": "string"
 	    		},
+                "pipeGrade":{ 
+                    "title": "Grade",
+                    "type": "string",
+                    "enum":[ "E-75", "X-95", "G-105", "S-135", "Z-140", "V-150"]
+                },
 	    		"outsideDiameter": {
 	    			"title": "Outside Diameter (in)",
-	    			"type": "string"
+	    			"type": "string",
+	    			"maximum": 22,
+	    			"minimum": 0
+	    		},
+	    		"wallThickness": {
+	    		     "title": "Wall Thickness (in)",
+	    		     "type": "string",
+	    		     "minimum": 0,
+	    		     "maximum": 6
+	    		},
+	    		"weightFoot": {
+	    		     "title": "Weight Per Foot (ppf)",
+	    		     "type": "string"
 	    		}
 	    	},
 	       "dependencies": {
                 "strengthBreaking": ["lineType"],
                 "strengthYield": ["lineType"],
-                "outsideDiameter": ["lineType"] 
+                "pipeGrade": ["lineType"],
+                "wallThickness": ["lineType"],
+                "weightFoot": ["lineType"] 
            }
 	    }
     }

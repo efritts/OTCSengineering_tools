@@ -116,16 +116,31 @@
 		              "lineType": ["wireline", "slickline", "e-line"]
 		           }
 		      },
-		      "strengthYield": {
-		          "type": "integer",
+		      "pipeGrade":{ 
                   "dependencies": {
-                      "lineType": ["casing", "pipe", "tube"]
+                      "lineType": "pipe"
+                  }
+              },
+		      "strengthYield": {
+		          "type": "number",
+                  "dependencies": {
+                      "lineType": ["casing", "tube"]
                    }
 		      },
 		      "outsideDiameter": {
+		          "type": "number"
+		      },
+		      "wallThickness": {
+		          "type": "number",
 		          "dependencies": {
-                      "lineType": ["casing", "pipe", "tube"]
-                   }
+		              "lineType": ["casing", "pipe", "tube"]
+		          }
+		      },
+		      "weightFoot": {
+		          "type": "number",
+		          "dependencies": {
+		              "lineType": ["casing", "pipe"]
+		          }
 		      }
 		  }
 	   }
