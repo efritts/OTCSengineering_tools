@@ -15,7 +15,7 @@
 include 'include/config.php';
 $active_config= "style=\"border-bottom:3px solid #fff\"";
 $loadscript = "";
-
+$header_scripts ="";
 switch ($_GET["page"]) {
 	case "calcs":
 		$title_name = "Basic_Calculator";
@@ -28,13 +28,23 @@ switch ($_GET["page"]) {
 		$forms_page_active = "";
 		switch ($_GET["sub"]){
 			case "ssc":
-			$title_name = "Simple Shear Calculator";
-			$loadscript .= "load_form_fields();";  //This will preload the BOP selection by default.	
-			//TODO if a save is present then need to run load_save_shear()
-			if(isset($_GET["save"]) && is_numeric($_GET["save"])){
-				$loadscript .=" load_saved_shear();";
-			}	
-			break;
+				$title_name = "Simple Shear Calculator";
+				$loadscript .= "load_form_fields();";  //This will preload the BOP selection by default.	
+				//TODO if a save is present then need to run load_save_shear()
+				if(isset($_GET["save"]) && is_numeric($_GET["save"])){
+					$loadscript .=" load_saved_shear();";
+				}
+				$header_scripts .= "<script src='include/shear.js''></script>";
+				break;
+			case "mtsc":
+				$title_name = "Multi-Tube Shear Calculator";
+				$loadscript .= "load_form_fields();";  //This will preload the BOP selection by default.	
+				//TODO if a save is present then need to run load_save_shear()
+				if(isset($_GET["save"]) && is_numeric($_GET["save"])){
+					$loadscript .=" load_saved_shear();";
+				}
+				$header_scripts .= "<script src='include/shear2.js''></script>";	
+				break;
 		}
 		break;
 	case "pipe":
@@ -113,11 +123,10 @@ $onloadscript = "onload=\"".$loadscript."\"";
 	
 	<!--HEADER SCRIPTS-->
 	<script src="https://www.gstatic.com/firebasejs/4.0.0/firebase.js"></script>
-
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="include/jfunctions.js"></script>
-	<script src="include/shear.js"></script><!-- TODO - only include when doing Shear calculator to improve load time -->
 	<script src="include/accum.js"></script> 
+	<?php echo $header_scripts ?>
 	<!--END HEADER SCRIPTS-->
 
 	<!--STYLE SHEETS-->
@@ -130,7 +139,14 @@ $onloadscript = "onload=\"".$loadscript."\"";
 <body <?php echo $onloadscript;?>>
 
 <div class="wrapper">
-	
+<!--NAVIGATION BAR-->
+<?php 
+/* 
+ * Navigation bar reference
+ * https://www.w3schools.com/w3css/w3css_navigation.asp
+ *
+ * 
+ */?>	
 <div class="w3-bar w3-black">
   <a href="/Compliance" <?php echo $home_page_active; ?> class="w3-bar-item w3-button w3-mobile"><i class="fa fa-home w3-small"></i></a>
   <div class="w3-dropdown-hover">
@@ -138,6 +154,7 @@ $onloadscript = "onload=\"".$loadscript."\"";
   	<div class="w3-dropdown-content w3-bar-block w3-card-4">
       <a href="?page=calcs"<?php echo $basiccalcs_page_active; ?> class="w3-bar-item w3-button">About</a>
       <a href="?page=calcs&sub=ssc" class="w3-bar-item w3-button">Shear Calculator</a>
+      <a href="?page=calcs&sub=mtsc" class="w3-bar-item w3-button">Mulit-Tube Shear Calculator *testing*</a>
       <a href="?page=calcs&sub=atest" class="w3-bar-item w3-button">Accumulator Test</a>
     </div>
   </div>
@@ -159,9 +176,3 @@ $onloadscript = "onload=\"".$loadscript."\"";
   <a href="#" class="w3-bar-item w3-button w3-mobile w3-right w3-hide" id="nav_logout">Logout</a>
   
 </div>
-<?php 
-/* Nav bar reference
- * https://www.w3schools.com/w3css/w3css_navigation.asp
- *
- * 
- */?>

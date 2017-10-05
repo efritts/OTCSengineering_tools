@@ -27,6 +27,16 @@ switch ($_GET["page"]) {
 					include 'ShearCalculator/load_ssc_save.php'; 				
  				}
 				break;
+			case "mtsc":
+		        include 'include/functions.php';
+		        include 'include/shear.js.php';
+				include 'shear_calculator2.html';
+				
+				//if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
+				if(isset($_GET["save"]) && is_numeric($_GET["save"])){
+					include 'ShearCalculator/load_ssc_save.php'; 				
+ 				}
+				break;
 			case "atest":
 				//include 'include/functions.php';
 				include 'form_accum_test.php';
