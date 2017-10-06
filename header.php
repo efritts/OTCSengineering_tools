@@ -45,6 +45,10 @@ switch ($_GET["page"]) {
 				}
 				$header_scripts .= "<script src='include/shear2.js''></script>";	
 				break;
+			case "atest":
+				$title_name = "Accumulator Sizing Verification";
+				$header_scripts .= "<script src='include/accum.js''></script>";
+				break;
 		}
 		break;
 	case "pipe":
@@ -125,7 +129,7 @@ $onloadscript = "onload=\"".$loadscript."\"";
 	<script src="https://www.gstatic.com/firebasejs/4.0.0/firebase.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="include/jfunctions.js"></script>
-	<script src="include/accum.js"></script> 
+
 	<?php echo $header_scripts ?>
 	<!--END HEADER SCRIPTS-->
 
@@ -135,6 +139,7 @@ $onloadscript = "onload=\"".$loadscript."\"";
 	<link rel="stylesheet" type="text/css" href="CSS/style.css">
 	<!--END STYLE SHEETS -->
 </head>
+
 
 <body <?php echo $onloadscript;?>>
 

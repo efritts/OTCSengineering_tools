@@ -111,7 +111,7 @@ $(function() {
 			name = user.displayName;
 			email = user.email;
 			emailVerified = user.emailVerified;
-			console.log(firebaseUser+" used login modal");
+			console.log(email+" used login modal");
 			//TODO: enable after email verification is active.  
 			if(emailVerified){
 				$('#login-modal').css("display","none");

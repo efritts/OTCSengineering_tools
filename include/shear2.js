@@ -7,8 +7,12 @@
  * Inital release Feb 5, 2016
  *
  */
-$(function() {
-	
+$(document).ready(function() {
+	var database = firebase.database();
+	var dbRefWorksheet = database.ref().child('shearWorksheet');
+    dbRefWorksheet.once('value', function (snap) {
+        console.log(snap.val());
+    });
 	//disable the link until a shear pressure is calculated.
 	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
 	//$("#test").html("<h1>hi</h1>");	
@@ -79,11 +83,12 @@ $(function() {
 	       
 	   }
 	   
+	   //Add the values to the database
 	   
 	   //Update the evaluated pipes table
 	   //if it's a pipe,casing,or tube add it to that table
 	   if($('#tube_type').val() === "pipe" || $('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"  ){    
-	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade').val() : $('#pipe_minYS');
+	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : $('#pipe_minYS').val()+" psi";
 	       pipeElongVal = $('#pipe_elong').val();
 	       pipeODval = $('#pipe_od').val();
 	       pipeWallVal = $('#pipe_wall').val();
@@ -99,6 +104,11 @@ $(function() {
 	    
 	});
 	
+	//Remove a row from the table.
+	$('table .fa-times-circle').click(function(){
+	    //Select the tr for the "x" and remove it
+	    $(this).parent().parent().remove();
+	});
 	
 	
 });
@@ -268,7 +278,7 @@ function evaluation_YS(){
 	else{ var pipe_grade = false;}
 		
 	if (UTS){eval_yield=UTS/1000;}
-	else if(ys){eval_yield=ys/(.85 * 1000);}
+	else if(ys){eval_yield=ys/(0.85 * 1000);}
 	else{ //pipe_grade -> E75, L80, X95, G105, P110, Q125, S135, Z140, V150
 		if(pipe_grade == "E75"){eval_yield=105;}
 		else if(pipe_grade == "L80") {eval_yield=110;}  //UPDATE. assumed 110ksi max
