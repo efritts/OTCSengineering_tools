@@ -49,7 +49,7 @@
 							</select>	
 						</div>
 						
-						<div id="tubeGrade" class="w3-show w3-col l3 s4">
+						<div id="tubeGrade" class="w3-col l3 s4">
 							<select id="tube_grade" class="w3-select w3-padding-0">
 								<option value="75000">E75</option>
 								<option value="80000">L80</option>
@@ -62,6 +62,21 @@
 								<option value="150000">V150</option>
 							</select>
 						</div>
+						<div id="casingTubeGrade" class="w3-hide w3-col l3 s4">
+							<select id="tube_grade" class="w3-select w3-padding-0">
+								<option value="40000">H40</option>
+								<option value="55000">J55</option>
+								<option value="55000">K55</option>
+								<option value="65000">M65</option>
+								<option value="80000">N80</option>
+								<option value="80000">L80</option>
+								<option value="90000">C90</option>
+								<option value="95000">T95</option>
+								<option value="110000">C110</option>
+								<option value="110000">P110</option>
+								<option value="125000">Q125</option>
+							</select>
+						</div>
 						<div id="tubeStrength" class="w3-hide">
 							<div class="w3-col l3 s4">
 								<input type="text" id="pipe_minYS" class="w3-input w3-padding-0"/>
@@ -71,17 +86,17 @@
 					</div>
 					<div class="w3-row">
 						<div class="w3-col l3 m4 s4">% Elongation</div>
-						<div class="w3-col l3 m4 s4"><input type="text" id="pipe_elong" onkeyup="display_results()"  class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l3 m4 s4"><input type="number" id="pipe_elong" onkeyup="display_results()"  class="w3-input w3-padding-0"/></div>
 						<div class="w3-col l1 m1 s1 w3-margin-left">%</div>
 					</div>
 					<div class="w3-row">
 						<div class="w3-col l3 m4 s4">Outside Diameter</div>
-						<div class="w3-col l3 m4 s4"><input type="text" name="pipe_od" id="pipe_od" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l3 m4 s4"><input type="number" min="0" max="30"name="pipe_od" id="pipe_od" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col l1 m1 s1 w3-margin-left">in</div>
 					</div>
 					<div class="w3-row">
 						<div class="w3-col l3 s4">Wall Thickness</div>
-						<div class="w3-col l3 s4"><input type="text" name="pipe_wall" id="pipe_wall" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l3 s4"><input type="number" min="0" max="5" name="pipe_wall" id="pipe_wall" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col s1 w3-margin-left">in</div>
 					</div>
 				</div>
@@ -90,63 +105,7 @@
 					<div class="w3-col s1"><div class="w3-btn w3-white w3-border w3-border-blue w3-round w3-padding-4" id="addPipe">Add</div></div>
 				</div>
 				<br />
-				<div id="tblPipe" class="w3-row">
-					<div class="w3-col s7">
-					<h4 style="text-align: center">Pipe/Casing/Tube</h4>
-					<table class="w3-table w3-striped w3-padding-0">
-						<tr>
-							<th>No.</th>
-							<th>Strength</th>
-							<th>Elong</th>
-							<th>OD</th>
-							<th>wall</th>
-							<th></th>
-						</tr>
-						<tr>
-							<td>1</td>
-							<td>S-135</td>
-							<td></td>
-							<td>3.5</td>
-							<td>0.15</td>
-							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
-						</tr>
-						<tr>
-							<td>2</td>
-							<td>165 ksi</td>
-							<td>15%</td>
-							<td>2.75</td>
-							<td>0.375</td>
-							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
-						</tr>
-					</table>
-					</div>
-				</div>
-				<div id="tblWire" class="w3-row">
-					<div class="w3-col s7">
-					<h4 style="text-align: center">Wireline</h4>
-					<table  class="w3-table w3-striped w3-padding-0">
-						<tr>
-							<th>No.</th>
-							<th>Br. Strength</th>
-							<th>OD</th>
-							
-							<th></th>
-						</tr>
-						<tr>
-							<td>1</td>
-							<td>20 kips</td>							
-							<td>0.25</td>
-							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
-						</tr>
-						<tr>
-							<td>2</td>
-							<td>55 kips</td>							
-							<td>0.5</td>
-							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
-						</tr>
-					</table>
-					</div>
-				</div>
+
 				<br />
 				<!--
 				<div class="w3-row"><h3 style="display: inline">Pipe</h3><span id="about_pipe_expand">></span></div>	
@@ -224,6 +183,63 @@
 			</div>
 			
 			<div class="w3-col l4 m4" >
+				<div id="tblPipe" class="w3-row">
+					<div class="w3-col s12">
+					<h4 style="text-align: center">Pipe/Casing/Tube</h4>
+					<table class="w3-table w3-striped w3-padding-0">
+						<tr>
+							<th>No.</th>
+							<th>Strength</th>
+							<th>Elong</th>
+							<th>OD</th>
+							<th>wall</th>
+							<th></th>
+						</tr>
+						<tr>
+							<td>1</td>
+							<td>S-135</td>
+							<td></td>
+							<td>3.5</td>
+							<td>0.15</td>
+							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
+						</tr>
+						<tr>
+							<td>2</td>
+							<td>165 ksi</td>
+							<td>15%</td>
+							<td>2.75</td>
+							<td>0.375</td>
+							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div id="tblWire" class="w3-row">
+					<div class="w3-col s12">
+					<h4 style="text-align: center">Wireline</h4>
+					<table  class="w3-table w3-striped w3-padding-0">
+						<tr>
+							<th>No.</th>
+							<th>Br. Strength</th>
+							<th>OD</th>
+							
+							<th></th>
+						</tr>
+						<tr>
+							<td>1</td>
+							<td>20 kips</td>							
+							<td>0.25</td>
+							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
+						</tr>
+						<tr>
+							<td>2</td>
+							<td>55 kips</td>							
+							<td>0.5</td>
+							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
+						</tr>
+					</table>
+					</div>
+				</div>
 				<div class="w3-card-4">
 				<h3>Summary</h3>
 					<table class="w3-table w3-bordered w3-striped">

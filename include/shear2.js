@@ -10,6 +10,9 @@
 $(document).ready(function() {
 	var database = firebase.database();
 	var dbRefWorksheet = database.ref().child('shearWorksheet');
+	var newWorksheet = dbRefWorksheet.push();
+	console.log('Created key: '+newWorksheet.key);
+		
     dbRefWorksheet.once('value', function (snap) {
         console.log(snap.val());
     });
@@ -19,8 +22,6 @@ $(document).ready(function() {
 	
 	
 	//Expandable tool tips
-	//TODO - these can be consolidated into a function
-	
 	//Hide the div below the #expander arrow
 	$(".expander").click(function(){
 	   $(this).parent().parent().children(":nth-child(2)").toggleClass("w3-show w3-hide");
@@ -38,27 +39,64 @@ $(document).ready(function() {
 		else{$("#about_ssc_expand").text(">");}
 	});
 	
+	/*
+	 * Form Error Checking
+	 */
+	
+	//Wall thickness should be a number and it should not start with "."  
+	// "0.25" is ok ".25" is not
+	//TODO: wall should start with 0 not "."
+	$('#pipe_wall').keyup(function(){
+	    if($('#pipe_wall').val().match("^.")){
+	        //var wall_float = parseFloat('0'+$('pipe_wall').val(),3);
+	        //$('#pipe_wall').val(wall_float);
+	    }
+	});
 	
 	
 	/*
 	 * TUBULAR SECTION
 	 */
+	
+	//Show the correct pipe grade if pipe, tubing, or casing is selected.
 	$("#tubeStrengthType").change(function(){
 	    if($("#tubeStrengthType").val()==="grade"){
-	        $('#tubeGrade').addClass("w3-show").removeClass("w3-hide");
-	        $('#tubeStrength').addClass("w3-hide").removeClass("w3-show");
+	        $('#tubeStrength').addClass("w3-hide");
+	        
+	        if($('#tube_type').val()==="pipe"){
+	           $('#tubeGrade').removeClass("w3-hide");
+	           $('#casingTubeGrade').addClass("w3-hide");
+	         }
+	         else if(($('#tube_type').val()=== "tubing") || ($('#tube_type').val()=== "casing")){
+	           $('#casingTubeGrade').removeClass("w3-hide");
+	           $('#tubeGrade').addClass("w3-hide");
+	         }
 	    }
 	    else{
-            $('#tubeGrade').addClass("w3-hide").removeClass("w3-show");
-            $('#tubeStrength').addClass("w3-show").removeClass("w3-hide");
+            $('#tubeGrade').addClass("w3-hide");
+            $('#casingTubeGrade').addClass("w3-hide");
+            $('#tubeStrength').removeClass("w3-hide");
         }
+	});
+	$("#tube_type").change(function(){
+	   if($("#tubeStrengthType").val()==="grade"){
+	       if ($('#tube_type').val() === "pipe"){
+	           $('#tubeGrade').removeClass('w3-hide');
+	           $('#casingTubeGrade').addClass('w3-hide');
+	       }
+	       else if ($('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"){
+	           $('#casingTubeGrade').removeClass('w3-hide');
+	           $('#tubeGrade').addClass('w3-hide');
+	       }
+	   }
 	});
 	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    //setup some vars
 	    var pipeStrVal, pipeElongVal, pipeODval, pipeWallVal, pipeNo, newPipeRow;
-	    
+	    var tubeType = $('#tube_type').val();
+	    var tubeStrengthType = $('#tubeStrengthType').val();
 	    //reset the errors
 	    var pipeAddError = false;
 	    $('#pipe_wall').removeClass("w3-border-red");
@@ -66,7 +104,7 @@ $(document).ready(function() {
         
         
         //do some error checks
-	   if($('#tube_type').val() === "pipe" || $('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"  ){
+	   if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
 	       //an od shall be included
 	       if($('#pipe_od').val() === ""){
 	           //show error
@@ -83,36 +121,59 @@ $(document).ready(function() {
 	       
 	   }
 	   
-	   //Add the values to the database
-	   
 	   //Update the evaluated pipes table
 	   //if it's a pipe,casing,or tube add it to that table
-	   if($('#tube_type').val() === "pipe" || $('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"  ){    
-	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : $('#pipe_minYS').val()+" psi";
+	   //TODO: listen to the firebase database and update.
+	   if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){    
+	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : $('#pipe_minYS').val()+" ksi";
 	       pipeElongVal = $('#pipe_elong').val();
+	       pipeElong_txt = pipeElongVal.length == 0 ? "" : pipeElongVal+" %";
 	       pipeODval = $('#pipe_od').val();
 	       pipeWallVal = $('#pipe_wall').val();
-	       pipeNo = $('#tblPipe tr').length + 1;
-	       newPipeRow = "<tr><td>"+pipeNo+"</td><td>"+pipeStrVal+"</td><td>"+pipeElongVal+"</td><td>"+pipeODval+"</td><td>"+pipeWallVal+"</td><td><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+	       pipeNo = $('#tblPipe tr').length;
+	       newPipeRow = "<tr><td>"+pipeNo+"</td><td>"+pipeStrVal+"</td><td>"+pipeElong_txt+"</td><td>"+pipeODval+"</td><td>"+pipeWallVal+"</td><td><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
             $('#tblPipe table').append(newPipeRow);
        }
 	   
 	   //if it's a wireline, eline, or slickline
 	   
+	   //Add the values to the database
+	   pipeElongVal = pipeElongVal.length == 0 ? null : pipeElongVal; 
+	   
+        var pipe_data = {
+                diameter: pipeODval,
+                elongation: pipeElongVal,
+                strengthType: tubeStrengthType,
+                type: tubeType,
+                wall: pipeWallVal,
+                yieldstr: pipeStrVal
+        };
+       //var fb_pipeData_str = '{ "tubulars":{"'+pipeNo +'": { "diameter" : '+pipeODval+', "elongation" : '+pipeElongVal+', "strengthType": "'+tubeStrengthType+'", "type": "'+tubeType+'", "wall": '+pipeWallVal+', "yieldstr": "'+pipeStrVal+'"}}}';
+       //var fb_pipeData_obj = JSON.parse(fb_pipeData_str);
+       //newWorksheet.update(fb_pipeData_obj, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+       newWorksheet.child('tubulars/'+pipeNo).update(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+       
 	   //reset the New Pipe Table
 	   
 	    
 	});
 	
-	//Remove a row from the table.
-	$('table .fa-times-circle').click(function(){
+	/*DELETE -  MOVED to $(document) to register new elements
+	//Remove a row from the table
+	$('table .fa-times-circle').on('click',function(){
 	    //Select the tr for the "x" and remove it
 	    $(this).parent().parent().remove();
 	});
-	
+	*/
 	
 });
-
+//Remove a row from the table.  Register for all new .fa-times-circle classes added
+$(document).on('click', 'table .fa-times-circle',function(){
+        //Select the tr for the "x" and remove it
+        $(this).parent().parent().remove();
+        //TODO: remove from firebase
+        //
+    });
 
 function display_ssc_save(xhttp) {
 	var response = xhttp.responseText;
@@ -334,7 +395,7 @@ function display_area(){
 }
 
 function display_results(){
-	document.getElementById("pipe_area").innerHTML = check_value_isNumber(calculateArea(),2,"");
+	$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
 	
 	//if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
 	if(document.contains(document.getElementById("pipe_ppf"))){
@@ -434,15 +495,17 @@ function pipe_fields(){
 		}
 	}
 		
-	if (Pipe_choice[1].checked) { 
+	//CHANGED TO jQUERY - if (Pipe_choice[1].checked) { 
+	if ($('input[name=Pipe_select]:checked').val()=='specify') {
 		//Specify.  
-        divobj.innerHTML = pipe_grade + pipe_form_minYS + pipe_form_yield + pipe_form_uts + pipe_form_el + pipe_form_od + pipe_form_wt + pipe_form_area + pipe_form_ppf;
-        
+        //CHANGED TO jQUERY - divobj.innerHTML = pipe_grade + pipe_form_minYS + pipe_form_yield + pipe_form_uts + pipe_form_el + pipe_form_od + pipe_form_wt + pipe_form_area + pipe_form_ppf;
+        $('#pipe_values').html(pipe_grade + pipe_form_minYS + pipe_form_yield + pipe_form_uts + pipe_form_el + pipe_form_od + pipe_form_wt + pipe_form_area + pipe_form_ppf);
         //maintain the pipe grade
         if(init_pipegrade){document.getElementById("pipe_grade").selectedIndex = init_pipegrade;}
     } 
     else{ //Select
-        divobj.innerHTML = "<div class=\"w3-row\"><div class=\"w3-col l4 m4 s4\">Not yet availabe.</div><div class=\"w3-col l4 m4 s4\">dropdown</div></div>";    
+        //CHANGED TO jQUERY - divobj.innerHTML = "<div class=\"w3-row\"><div class=\"w3-col l4 m4 s4\">Not yet availabe.</div><div class=\"w3-col l4 m4 s4\">dropdown</div></div>";
+        $('#pipe_values').html("<div class=\"w3-row\"><div class=\"w3-col l4 m4 s4\">Not yet availabe.</div><div class=\"w3-col l4 m4 s4\">dropdown</div></div>");    
     }    
 }
 
