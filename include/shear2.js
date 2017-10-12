@@ -8,14 +8,12 @@
  *
  */
 $(document).ready(function() {
+    "use strict";
 	var database = firebase.database();
 	var dbRefWorksheet = database.ref().child('shearWorksheet');
 	var newWorksheet = dbRefWorksheet.push();
 	console.log('Created key: '+newWorksheet.key);
 		
-    dbRefWorksheet.once('value', function (snap) {
-        console.log(snap.val());
-    });
 	//disable the link until a shear pressure is calculated.
 	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
 	//$("#test").html("<h1>hi</h1>");	
@@ -33,7 +31,7 @@ $(document).ready(function() {
 	$("#about_ssc_expand").click(function(){
 		$("#about_ssc").toggleClass("w3-show");
 		$("#about_ssc").toggleClass("w3-hide");
-		if($("#about_ssc_expand").text()==">"){
+		if($("#about_ssc_expand").text()===">"){
 			$("#about_ssc_expand").text("v");
 		}
 		else{$("#about_ssc_expand").text(">");}
@@ -91,10 +89,39 @@ $(document).ready(function() {
 	   }
 	});
 	
+	//TODO: listen to the firebase database and update.
+	//When the tubulars for the page change order them by breaking strength
+    var fb_tubulars = newWorksheet.child('tubulars');
+    fb_tubulars.orderByChild('pipeNo').on("value", function(data){
+        var arry_tubes = data.val();
+        console.log("listener saw ", data.numChildren(), " tubes");
+        console.log(data.val());
+        
+        //if there's pipe's unhide the table
+        if(data.numChildren()>0){ $('#tblPipe').removeClass('w3-hide');}
+        else{$('#tblPipe').addClass('w3-hide');}
+        
+        //Clear the table except the header
+        $('.pipeSummaryRow').remove();
+        
+        var newPipeNo = 1;
+        
+        //TODO: Update the No. 
+        //Generate a new table
+        data.forEach(function(childData){
+            //console.log("Pipe No: "+ childData.child('pipeNo').val() + "; Diameter: " + childData.child('diameter').val());
+            var pipeElong_txt = childData.child('elongation').val() == null ? "" : childData.child('elongation').val()+" %";
+            //childData.ref().update( {pipeNo: newPipeNo});
+            var newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+            $('#tblPipe table').append(newPipeRow);
+            newPipeNo++;
+        });
+    });
+	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    //setup some vars
-	    var pipeStrVal, pipeElongVal, pipeODval, pipeWallVal, pipeNo, newPipeRow;
+	    var pipeStrVal, pipeElongVal, pipeODval, pipeWallVal, pipeNo, newPipeRow, pipeElong_txt;
 	    var tubeType = $('#tube_type').val();
 	    var tubeStrengthType = $('#tubeStrengthType').val();
 	    //reset the errors
@@ -121,9 +148,9 @@ $(document).ready(function() {
 	       
 	   }
 	   
-	   //Update the evaluated pipes table
-	   //if it's a pipe,casing,or tube add it to that table
-	   //TODO: listen to the firebase database and update.
+
+	   //Get the user's new tubular data
+	   //if it's a pipe,casing,or tube assign those values to be stored
 	   if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){    
 	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : $('#pipe_minYS').val()+" ksi";
 	       pipeElongVal = $('#pipe_elong').val();
@@ -131,48 +158,47 @@ $(document).ready(function() {
 	       pipeODval = $('#pipe_od').val();
 	       pipeWallVal = $('#pipe_wall').val();
 	       pipeNo = $('#tblPipe tr').length;
-	       newPipeRow = "<tr><td>"+pipeNo+"</td><td>"+pipeStrVal+"</td><td>"+pipeElong_txt+"</td><td>"+pipeODval+"</td><td>"+pipeWallVal+"</td><td><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
-            $('#tblPipe table').append(newPipeRow);
+	       //newPipeRow = "<tr><td>"+pipeNo+"</td><td>"+pipeStrVal+"</td><td>"+pipeElong_txt+"</td><td>"+pipeODval+"</td><td>"+pipeWallVal+"</td><td><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+           //$('#tblPipe table').append(newPipeRow);
        }
+	  
+	   //TODO: if it's a wireline, eline, or slickline
 	   
-	   //if it's a wireline, eline, or slickline
-	   
-	   //Add the values to the database
+       //add pipe to the database
 	   pipeElongVal = pipeElongVal.length == 0 ? null : pipeElongVal; 
-	   
         var pipe_data = {
+                pipeNo: pipeNo,
+                type: tubeType,
                 diameter: pipeODval,
                 elongation: pipeElongVal,
-                strengthType: tubeStrengthType,
-                type: tubeType,
                 wall: pipeWallVal,
+                strengthType: tubeStrengthType,
                 yieldstr: pipeStrVal
         };
        //var fb_pipeData_str = '{ "tubulars":{"'+pipeNo +'": { "diameter" : '+pipeODval+', "elongation" : '+pipeElongVal+', "strengthType": "'+tubeStrengthType+'", "type": "'+tubeType+'", "wall": '+pipeWallVal+', "yieldstr": "'+pipeStrVal+'"}}}';
        //var fb_pipeData_obj = JSON.parse(fb_pipeData_str);
        //newWorksheet.update(fb_pipeData_obj, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
-       newWorksheet.child('tubulars/'+pipeNo).update(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+       newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
        
-	   //reset the New Pipe Table
+      
+	   //TODO: reset the New Pipe Table
 	   
 	    
 	});
-	
-	/*DELETE -  MOVED to $(document) to register new elements
-	//Remove a row from the table
-	$('table .fa-times-circle').on('click',function(){
-	    //Select the tr for the "x" and remove it
-	    $(this).parent().parent().remove();
-	});
-	*/
-	
-});
+})
 //Remove a row from the table.  Register for all new .fa-times-circle classes added
-$(document).on('click', 'table .fa-times-circle',function(){
-        //Select the tr for the "x" and remove it
-        $(this).parent().parent().remove();
-        //TODO: remove from firebase
-        //
+//TODO: remove from firebase.  Let the table update on it's own.
+.on('click', 'table .fa-times-circle',function(){
+   
+    //Select the tr for the "x" and remove it
+    var key = $(this).parent().attr('data-key');
+    
+    //TODO: get the correct database reference...?
+    newWorksheet.child('tubulars/'+key).remove().then(function(){
+        console.log("removed key:" + key);    
+    });
+        
+    $(this).parent().parent().remove();  //remove this once I can update the database properly
     });
 
 function display_ssc_save(xhttp) {
