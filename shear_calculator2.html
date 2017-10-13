@@ -38,6 +38,7 @@
 							<option value="slickline">Slickline</option>
 							<option value="braidedCable">Braided Cable</option>
 							<option value="eline">E-line</option>
+							<option value="combo" disabled>Combo</option><!--TODO feature not yet available-->
 						</select>
 						</div>
 					</div>
@@ -46,58 +47,66 @@
 							<select id="tubeStrengthType" class="w3-select  w3-border-0 w3-padding-0">
 								<option value="grade" selected>Grade</option>
 								<option value="strength">Strength</option>
+								<option value="brStrength" disabled>Breaking Str.</option>
 							</select>	
 						</div>
-						
+						<div class="tubeOnly">
 						<div id="tubeGrade" class="w3-col l3 s4">
 							<select id="tube_grade" class="w3-select w3-padding-0">
-								<option value="75000">E75</option>
-								<option value="80000">L80</option>
-								<option value="95000">X95</option>
-								<option value="105000">G105</option>
-								<option value="110000">P110</option>
-								<option value="125000">Q125</option>
-								<option value="135000">S135</option>
-								<option value="140000">Z140</option>
-								<option value="150000">V150</option>
+								<option value=75000>E75</option>
+								<option value=80000>L80</option>
+								<option value=95000>X95</option>
+								<option value=105000>G105</option>
+								<option value=110000>P110</option>
+								<option value=125000>Q125</option>
+								<option value=135000>S135</option>
+								<option value=140000>Z140</option>
+								<option value=150000>V150</option>
 							</select>
 						</div>
 						<div id="casingTubeGrade" class="w3-hide w3-col l3 s4">
 							<select id="tube_grade" class="w3-select w3-padding-0">
-								<option value="40000">H40</option>
-								<option value="55000">J55</option>
-								<option value="55000">K55</option>
-								<option value="65000">M65</option>
-								<option value="80000">N80</option>
-								<option value="80000">L80</option>
-								<option value="90000">C90</option>
-								<option value="95000">T95</option>
-								<option value="110000">C110</option>
-								<option value="110000">P110</option>
-								<option value="125000">Q125</option>
+								<option value=40000>H40</option>
+								<option value=55000>J55</option>
+								<option value=55000>K55</option>
+								<option value=65000>M65</option>
+								<option value=80000>N80</option>
+								<option value=80000>L80</option>
+								<option value=90000>C90</option>
+								<option value=95000>T95</option>
+								<option value=110000>C110</option>
+								<option value=110000>P110</option>
+								<option value=125000>Q125</option>
 							</select>
 						</div>
 						<div id="tubeStrength" class="w3-hide">
 							<div class="w3-col l3 s4">
-								<input type="text" id="pipe_minYS" class="w3-input w3-padding-0"/>
+								<input type="number" id="pipe_minYS" class="w3-input w3-padding-0"/>
 							</div>
 							<div class="w3-col l1 m1 s1 w3-margin-left">psi</div>
 						</div>
-					</div>
-					<div class="w3-row">
-						<div class="w3-col l3 m4 s4">% Elongation</div>
-						<div class="w3-col l3 m4 s4"><input type="number" id="pipe_elong" onkeyup="display_results()"  class="w3-input w3-padding-0"/></div>
-						<div class="w3-col l1 m1 s1 w3-margin-left">%</div>
+						</div>
+						<div id="wireStrength" class="w3-hide wireOnly">
+							<div class="w3-col l3 s4">
+								<input type="number" id="brStrength" class="w3-input w3-padding-0"/>
+							</div>
+							<div class="w3-col l1 m1 s1 w3-margin-left">lbs</div>
+						</div>
 					</div>
 					<div class="w3-row">
 						<div class="w3-col l3 m4 s4">Outside Diameter</div>
 						<div class="w3-col l3 m4 s4"><input type="number" min=0 max=30 name="pipe_od" id="pipe_od" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col l1 m1 s1 w3-margin-left">in</div>
 					</div>
-					<div class="w3-row">
+					<div class="w3-row tubeOnly">
 						<div class="w3-col l3 s4">Wall Thickness</div>
 						<div class="w3-col l3 s4"><input type="number" min=0 max=5 name="pipe_wall" id="pipe_wall" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col s1 w3-margin-left">in</div>
+					</div>
+					<div class="w3-row tubeOnly">
+						<div class="w3-col l3 m4 s4">% Elongation</div>
+						<div class="w3-col l3 m4 s4"><input type="number" id="pipe_elong" onkeyup="display_results()"  class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l1 m1 s1 w3-margin-left">%</div>
 					</div>
 				</div>
 				<div class="w3-row w3-padding">
@@ -208,18 +217,6 @@
 							<th>OD</th>
 							
 							<th></th>
-						</tr>
-						<tr>
-							<td>1</td>
-							<td>20 kips</td>							
-							<td>0.25</td>
-							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
-						</tr>
-						<tr>
-							<td>2</td>
-							<td>55 kips</td>							
-							<td>0.5</td>
-							<td><i class="fa fa-times-circle" aria-hidden="true"></i></td>
 						</tr>
 					</table>
 					</div>

@@ -53,7 +53,7 @@ $(document).ready(function() {
 	
 	
 	/*
-	 * TUBULAR SECTION
+	 * TUBULAR FORM 
 	 */
 	
 	//Show the correct pipe grade if pipe, tubing, or casing is selected.
@@ -89,79 +89,147 @@ $(document).ready(function() {
 	   }
 	});
 	
-	//TODO: listen to the firebase database and update.
+	//Show the appropriate inputs for the type fo tublular selected
+	//For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
+	//For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
+	$('#tube_type').change(function(){
+		var tubeType = $('#tube_type').val();
+		if (tubeType == 'casing' | tubeType == 'pipe' | tubeType == 'tubing'){
+			$("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
+			$("#tubeStrengthType>option[value='strength']").prop("disabled",false);
+			$("#tubeStrengthType>option[value='grade']").prop("disabled",false);
+			$("#tubeStrengthType>option[value='grade']").prop("selected",true);
+			
+			//show od, wall, % elongation
+			$('.tubeOnly').removeClass('w3-hide');
+			$('.wireOnly').addClass('w3-hide');
+		}
+		else{
+			$("#tubeStrengthType>option[value='brStrength']").prop("disabled",false);
+			$("#tubeStrengthType>option[value='strength']").prop("disabled",true);
+			$("#tubeStrengthType>option[value='grade']").prop("disabled",true);
+			$("#tubeStrengthType>option[value='brStrength']").prop("selected",true);
+			
+			//show od, wall, % elongation
+			$('.tubeOnly').addClass('w3-hide');		
+			$('.wireOnly').removeClass('w3-hide');	
+		}
+	});
+	
+	/*
+	 * PIPE TABLE DISPLAY
+	 */	
+	 
+	//Listen to the firebase database and update.
 	//When the tubulars for the page change order them by breaking strength
     var fb_tubulars = newWorksheet.child('tubulars');
-    fb_tubulars.orderByChild('pipeNo').on("value", function(data){
+    fb_tubulars.orderByChild('brkStrength_sortDesc').on("value", function(data){
         var arry_tubes = data.val();
-        console.log("listener saw ", data.numChildren(), " tubes");
-        console.log(data.val());
-        
-        //if there's pipe's unhide the table
-        if(data.numChildren()>0){ $('#tblPipe').removeClass('w3-hide');}
-        else{$('#tblPipe').addClass('w3-hide');}
-        
+        var newPipeNo = 1;
+        var newWireNo = 1;
+              
         //Clear the table except the header
         $('.pipeSummaryRow').remove();
-        
-        var newPipeNo = 1;
+        $('.wireSummaryRow').remove();
         
         //TODO: Update the No. 
         //Generate a new table
         data.forEach(function(childData){
             //console.log("Pipe No: "+ childData.child('pipeNo').val() + "; Diameter: " + childData.child('diameter').val());
-            var pipeElong_txt = childData.child('elongation').val() == null ? "" : childData.child('elongation').val()+" %";
-            //childData.ref().update( {pipeNo: newPipeNo});
-            var newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
-            $('#tblPipe table').append(newPipeRow);
-            newPipeNo++;
+            var type = childData.child('type').val();
+            
+            //create the pipe table
+            if(type === 'pipe' | type === 'tubing' === type === 'casing'){
+            	var pipeElong_txt = childData.child('elongation').val() == null ? "" : childData.child('elongation').val()+" %";
+            	//childData.ref().update( {pipeNo: newPipeNo});
+            	var newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+            	$('#tblPipe table').append(newPipeRow);
+            	newPipeNo++;
+            }
+            //create the wireline table
+            else {
+            	var newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+            	$('#tblWire table').append(newWireRow);
+            	newWireNo++;
+            }
         });
+        
+		//if there's pipes unhide the table
+        if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
+        else{$('#tblPipe').addClass('w3-hide');}
+        //if there's wires unhide the table
+        if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
+        else{$('#tblPipe').addClass('w3-hide');}
+        
+		console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
+        console.log(data.val());
     });
 	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    //setup some vars
-	    var pipeStrVal, pipeElongVal, pipeODval, pipeWallVal, pipeNo, newPipeRow, pipeElong_txt;
+	    var pipeStrVal, pipeElongVal, pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, pipeArea, rev_brkStr;
 	    var tubeType = $('#tube_type').val();
 	    var tubeStrengthType = $('#tubeStrengthType').val();
+	    var pipeODval = $('#pipe_od').val();
+	    var pipeElongVal = $('#pipe_elong').val();
+	    var pipeWallVal = $('#pipe_wall').val();
+	    var pipeGrade = $('#tube_grade option:selected').text();
 	    //reset the errors
 	    var pipeAddError = false;
 	    $('#pipe_wall').removeClass("w3-border-red");
         $('#pipe_od').removeClass("w3-border-red");
+        $('#brStrength').removeClass("w3-border-red");
         
-        
-        //do some error checks
-	   if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
-	       //an od shall be included
-	       if($('#pipe_od').val() === ""){
-	           //show error
-	           $('#pipe_od').addClass("w3-border-red");
-	           pipeAddError = true;
-	       }
+        //Error checks on tubular form
+		if(pipeODval === ""){
+	    	//show error
+	        $('#pipe_od').addClass("w3-border-red");
+	        	pipeAddError = true;
+		}
+		if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
+	    
 	       if($('#pipe_wall').val() === ""){
                //show error
                $('#pipe_wall').addClass("w3-border-red");
                pipeAddError = true;
            }
-           //if any errors are seen when adding, then exit the click handler
-           if(pipeAddError){return;}
-	       
-	   }
-	   
+           //TODO: if strength type is selected, then value should exist for yield.
+           
+		}else{
+			if($('#brStrength').val() === ""){
+			       //show error
+			       $('#brStrength').addClass("w3-border-red");
+			       pipeAddError = true;
+			}
+		}
+		//if any errors are seen when adding, then exit the click handler
+		if(pipeAddError){return;}
 
 	   //Get the user's new tubular data
-	   //if it's a pipe,casing,or tube assign those values to be stored
+	   //if it's a pipe,casing,or tube assign those values to be stored	   
 	   if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){    
-	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : $('#pipe_minYS').val()+" ksi";
-	       pipeElongVal = $('#pipe_elong').val();
+	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
 	       pipeElong_txt = pipeElongVal.length == 0 ? "" : pipeElongVal+" %";
-	       pipeODval = $('#pipe_od').val();
-	       pipeWallVal = $('#pipe_wall').val();
 	       pipeNo = $('#tblPipe tr').length;
+	       pipeArea = Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4;
+	       console.log("Area is: ",pipeArea);
+	       console.log(pipeODval, "squared is: ", Math.pow(pipeODval,2));
+	       console.log("ID is: ",pipeODval-(2*pipeWallVal));
+	       console.log("Pi is: ", Math.PI);
+	       wire_brkStr = pipeStrVal * pipeArea;
+	       
+	       //DELETE - this is now being added to the database.
 	       //newPipeRow = "<tr><td>"+pipeNo+"</td><td>"+pipeStrVal+"</td><td>"+pipeElong_txt+"</td><td>"+pipeODval+"</td><td>"+pipeWallVal+"</td><td><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
            //$('#tblPipe table').append(newPipeRow);
+       }else{
+       		pipeNo = $('#tblWire tr').length;
+       		wire_brkStr = $('#brStrength').val();
+       		pipeStrVal = null;
+       		pipeGrade = null;
+       		pipeWallVal = null;
        }
-	  
+		rev_brkStr = 100000000 - wire_brkStr;
 	   //TODO: if it's a wireline, eline, or slickline
 	   
        //add pipe to the database
@@ -173,17 +241,23 @@ $(document).ready(function() {
                 elongation: pipeElongVal,
                 wall: pipeWallVal,
                 strengthType: tubeStrengthType,
-                yieldstr: pipeStrVal
+                grade: pipeGrade,
+                yieldstr: pipeStrVal,
+                brkStrength: wire_brkStr,
+                brkStrength_sortDesc: rev_brkStr
         };
-       //var fb_pipeData_str = '{ "tubulars":{"'+pipeNo +'": { "diameter" : '+pipeODval+', "elongation" : '+pipeElongVal+', "strengthType": "'+tubeStrengthType+'", "type": "'+tubeType+'", "wall": '+pipeWallVal+', "yieldstr": "'+pipeStrVal+'"}}}';
-       //var fb_pipeData_obj = JSON.parse(fb_pipeData_str);
-       //newWorksheet.update(fb_pipeData_obj, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
-       newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+       newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo + pipe_data);});
        
       
-	   //TODO: reset the New Pipe Table
-	   
-	    
+	   //Reset the tubular form
+	   $("#tube_type>option[value='pipe']").prop("selected",true);
+	   $("#tube_grade>option[value='75000']").prop("selected",true);
+	   $("#tube_type").change();
+	   $('#pipe_od').val("");
+	   $('#pipe_wall').val("");
+	   $('#pipe_elong').val("");
+	   $('#brStrength').val("");
+    
 	});
 })
 //Remove a row from the table.  Register for all new .fa-times-circle classes added
