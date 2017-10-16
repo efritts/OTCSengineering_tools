@@ -16,6 +16,7 @@ include 'include/config.php';
 $active_config= "style=\"border-bottom:3px solid #fff\"";
 $loadscript = "";
 $header_scripts ="";
+$body_end_scripts = "";
 switch ($_GET["page"]) {
 	case "calcs":
 		$title_name = "Basic_Calculator";
@@ -43,7 +44,8 @@ switch ($_GET["page"]) {
 				if(isset($_GET["save"]) && is_numeric($_GET["save"])){
 					$loadscript .=" load_saved_shear();";
 				}
-				$header_scripts .= "<script src='include/shear2.js''></script>";	
+				// DELETE - moved to end of body so globals could be declared - $header_scripts .= "<script src='include/shear2.js''></script>";
+				$body_end_scripts .= "<script src='include/shear2.js''></script>";
 				break;
 			case "atest":
 				$title_name = "Accumulator Sizing Verification";

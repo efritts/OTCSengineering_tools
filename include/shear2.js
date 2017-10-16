@@ -7,18 +7,16 @@
  * Inital release Feb 5, 2016
  *
  */
+  var database = firebase.database();
+  var dbRefWorksheet = database.ref().child('shearWorksheet');
+  var newWorksheet = dbRefWorksheet.push();
+  console.log('Created key: '+newWorksheet.key);
 $(document).ready(function() {
     "use strict";
-	var database = firebase.database();
-	var dbRefWorksheet = database.ref().child('shearWorksheet');
-	var newWorksheet = dbRefWorksheet.push();
-	console.log('Created key: '+newWorksheet.key);
-		
-	//disable the link until a shear pressure is calculated.
+	
+	//disable the button to get a sharable link until a shear pressure is calculated.
 	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
-	//$("#test").html("<h1>hi</h1>");	
-	
-	
+
 	//Expandable tool tips
 	//Hide the div below the #expander arrow
 	$(".expander").click(function(){
@@ -28,6 +26,7 @@ $(document).ready(function() {
             }
             else{$(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');}
 	});
+	/*DELETE covered by $('.expander') above
 	$("#about_ssc_expand").click(function(){
 		$("#about_ssc").toggleClass("w3-show");
 		$("#about_ssc").toggleClass("w3-hide");
@@ -36,11 +35,10 @@ $(document).ready(function() {
 		}
 		else{$("#about_ssc_expand").text(">");}
 	});
-	
+	*/
 	/*
 	 * Form Error Checking
 	 */
-	
 	//Wall thickness should be a number and it should not start with "."  
 	// "0.25" is ok ".25" is not
 	//TODO: wall should start with 0 not "."
@@ -50,12 +48,10 @@ $(document).ready(function() {
 	        //$('#pipe_wall').val(wall_float);
 	    }
 	});
-	
-	
+		
 	/*
 	 * TUBULAR FORM 
 	 */
-	
 	//Show the correct pipe grade if pipe, tubing, or casing is selected.
 	$("#tubeStrengthType").change(function(){
 	    if($("#tubeStrengthType").val()==="grade"){
@@ -94,7 +90,7 @@ $(document).ready(function() {
 	//For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
 	$('#tube_type').change(function(){
 		var tubeType = $('#tube_type').val();
-		if (tubeType == 'casing' | tubeType == 'pipe' | tubeType == 'tubing'){
+		if (tubeType === 'casing' || tubeType === 'pipe' || tubeType === 'tubing'){
 			$("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
 			$("#tubeStrengthType>option[value='strength']").prop("disabled",false);
 			$("#tubeStrengthType>option[value='grade']").prop("disabled",false);
@@ -118,40 +114,53 @@ $(document).ready(function() {
 	
 	/*
 	 * PIPE TABLE DISPLAY
+	 * Listen to the firebase database and update the html table
 	 */	
 	 
-	//Listen to the firebase database and update.
-	//When the tubulars for the page change order them by breaking strength
+	//When a tubular is added to the database, order them by breaking strength and renumber
     var fb_tubulars = newWorksheet.child('tubulars');
     fb_tubulars.orderByChild('brkStrength_sortDesc').on("value", function(data){
-        var arry_tubes = data.val();
-        var newPipeNo = 1;
-        var newWireNo = 1;
-              
-        //Clear the table except the header
-        $('.pipeSummaryRow').remove();
-        $('.wireSummaryRow').remove();
+        var newPipeNo = 1, 
+            newWireNo = 1;
         
-        //TODO: Update the No. 
-        //Generate a new table
+        //update the pipe number based on breaking strength
         data.forEach(function(childData){
-            //console.log("Pipe No: "+ childData.child('pipeNo').val() + "; Diameter: " + childData.child('diameter').val());
             var type = childData.child('type').val();
+
+            if(type === 'pipe' || type === 'tubing' || type === 'casing'){
+                childData.ref.update( {pipeNo: newPipeNo});
+                newPipeNo +=1;
+            }else{
+                childData.ref.update( {pipeNo: newWireNo});
+                newWireNo +=1;
+            }
+        });
+        
+        //Generate a new table
+        //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
+        fb_tubulars.orderByChild('pipeNo').once("value", function(newdata){
             
-            //create the pipe table
-            if(type === 'pipe' | type === 'tubing' === type === 'casing'){
-            	var pipeElong_txt = childData.child('elongation').val() == null ? "" : childData.child('elongation').val()+" %";
-            	//childData.ref().update( {pipeNo: newPipeNo});
-            	var newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
-            	$('#tblPipe table').append(newPipeRow);
-            	newPipeNo++;
-            }
-            //create the wireline table
-            else {
-            	var newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
-            	$('#tblWire table').append(newWireRow);
-            	newWireNo++;
-            }
+            //Clear the table except the header
+            $('.pipeSummaryRow').remove();
+            $('.wireSummaryRow').remove();
+            newdata.forEach(function(childData){
+                var type = childData.child('type').val(),
+                    newPipeRow,
+                    newWireRow,
+                    pipeElong_txt;
+                
+                //create the pipe table
+                if(type === 'pipe' || type === 'tubing' || type === 'casing'){
+                    pipeElong_txt = childData.child('elongation').val() === null ? "" : childData.child('elongation').val()+" %";
+                    newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+                    $('#tblPipe table').append(newPipeRow);
+                }
+                //create the wireline table
+                else {
+                    newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+                    $('#tblWire table').append(newWireRow);
+                }
+            });
         });
         
 		//if there's pipes unhide the table
@@ -159,7 +168,7 @@ $(document).ready(function() {
         else{$('#tblPipe').addClass('w3-hide');}
         //if there's wires unhide the table
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
-        else{$('#tblPipe').addClass('w3-hide');}
+        else{$('#tblWire').addClass('w3-hide');}
         
 		console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
         console.log(data.val());
@@ -168,24 +177,24 @@ $(document).ready(function() {
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    //setup some vars
-	    var pipeStrVal, pipeElongVal, pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, pipeArea, rev_brkStr;
-	    var tubeType = $('#tube_type').val();
-	    var tubeStrengthType = $('#tubeStrengthType').val();
-	    var pipeODval = $('#pipe_od').val();
-	    var pipeElongVal = $('#pipe_elong').val();
-	    var pipeWallVal = $('#pipe_wall').val();
-	    var pipeGrade = $('#tube_grade option:selected').text();
+	    var pipeStrVal, pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, pipeArea, rev_brkStr,
+            tubeType = $('#tube_type').val(),
+            tubeStrengthType = $('#tubeStrengthType').val(),
+            pipeODval = $('#pipe_od').val(),
+            pipeElongVal = $('#pipe_elong').val(),
+            pipeWallVal = $('#pipe_wall').val(),
+            pipeGrade = $('#tube_grade option:selected').text(),
+            pipeAddError = false;
 	    //reset the errors
-	    var pipeAddError = false;
 	    $('#pipe_wall').removeClass("w3-border-red");
         $('#pipe_od').removeClass("w3-border-red");
         $('#brStrength').removeClass("w3-border-red");
         
         //Error checks on tubular form
 		if(pipeODval === ""){
-	    	//show error
+            //show error
 	        $('#pipe_od').addClass("w3-border-red");
-	        	pipeAddError = true;
+                pipeAddError = true;
 		}
 		if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
 	    
@@ -208,32 +217,24 @@ $(document).ready(function() {
 
 	   //Get the user's new tubular data
 	   //if it's a pipe,casing,or tube assign those values to be stored	   
-	   if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){    
+        if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){    
 	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
-	       pipeElong_txt = pipeElongVal.length == 0 ? "" : pipeElongVal+" %";
+	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
 	       pipeNo = $('#tblPipe tr').length;
 	       pipeArea = Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4;
 	       console.log("Area is: ",pipeArea);
-	       console.log(pipeODval, "squared is: ", Math.pow(pipeODval,2));
-	       console.log("ID is: ",pipeODval-(2*pipeWallVal));
-	       console.log("Pi is: ", Math.PI);
 	       wire_brkStr = pipeStrVal * pipeArea;
-	       
-	       //DELETE - this is now being added to the database.
-	       //newPipeRow = "<tr><td>"+pipeNo+"</td><td>"+pipeStrVal+"</td><td>"+pipeElong_txt+"</td><td>"+pipeODval+"</td><td>"+pipeWallVal+"</td><td><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
-           //$('#tblPipe table').append(newPipeRow);
-       }else{
-       		pipeNo = $('#tblWire tr').length;
-       		wire_brkStr = $('#brStrength').val();
-       		pipeStrVal = null;
-       		pipeGrade = null;
-       		pipeWallVal = null;
-       }
+        }else{
+            pipeNo = $('#tblWire tr').length;
+            wire_brkStr = $('#brStrength').val();
+            pipeStrVal = null;
+            pipeGrade = null;
+            pipeWallVal = null;
+        }
 		rev_brkStr = 100000000 - wire_brkStr;
-	   //TODO: if it's a wireline, eline, or slickline
-	   
-       //add pipe to the database
-	   pipeElongVal = pipeElongVal.length == 0 ? null : pipeElongVal; 
+			   
+        //add pipe to the database
+        pipeElongVal = pipeElongVal.length === 0 ? null : pipeElongVal; 
         var pipe_data = {
                 pipeNo: pipeNo,
                 type: tubeType,
@@ -248,7 +249,24 @@ $(document).ready(function() {
         };
        newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo + pipe_data);});
        
-      
+        //renumber the pipe list
+        /* DELETE: Do this when the html table is rebuild so I don't have to do it for add and Delete.
+        fb_tubulars.orderByChild('brkStrength_sortDesc').once("value", function(data){
+                    newPipeNo = 1;
+                    newWireNo = 1;
+                    type = childData.child('type').val();                      
+                data.forEach(function(childData){
+                    var type = childData.child('type').val();
+                    if(type === 'pipe' || type === 'tubing' || type === 'casing'){       
+                        childData.ref().update({pipeNo : newPipeNo});
+                        newPipeNo ++;
+                    }else{
+                        childData.ref().update({pipeNo : newWireNo});
+                        newWireNo ++;
+                    } 
+                }); 
+         });  
+         */
 	   //Reset the tubular form
 	   $("#tube_type>option[value='pipe']").prop("selected",true);
 	   $("#tube_grade>option[value='75000']").prop("selected",true);
@@ -258,7 +276,7 @@ $(document).ready(function() {
 	   $('#pipe_elong').val("");
 	   $('#brStrength').val("");
     
-	});
+    });
 })
 //Remove a row from the table.  Register for all new .fa-times-circle classes added
 //TODO: remove from firebase.  Let the table update on it's own.
@@ -291,13 +309,13 @@ function getShareLink(){
 		//create link
 		//read each field and assign it to a variable.
 		//Select or Specify
-		var theForm = document.forms["sheardata"];
-		var Pipe_choice = theForm.elements["Pipe_select"][1].checked == true?"specify":"select";  // 
+		var theForm = document.forms["sheardata"],
+            Pipe_choice = theForm.elements["Pipe_select"][1].checked == true?"specify":"select";
 		//Pipe grade
 		if(document.contains(document.getElementById('pipe_grade'))){  //If a pipe grade has been selected
-			var grade_option = document.getElementById("pipe_grade").options;
-			var grade_index = document.getElementById("pipe_grade").selectedIndex;
-			var pipe_grade = grade_option[grade_index].text;
+			var grade_option = document.getElementById("pipe_grade").options,
+                grade_index = document.getElementById("pipe_grade").selectedIndex,
+                pipe_grade = grade_option[grade_index].text;
 		}
 		else{ var pipe_grade = false;}
 		//Min. Yield Strength

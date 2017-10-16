@@ -142,7 +142,9 @@ switch ($_GET["page"]) {
         messagingSenderId: "808288712006"
       };
       firebase.initializeApp(config);
+
     </script>
+    <?php echo $body_end_scripts; ?>
 <!--END SCRIPTS -->
 </body>
 </html>
