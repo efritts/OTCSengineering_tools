@@ -72,18 +72,6 @@ $(document).ready(function() {
             $('#tubeStrength').removeClass("w3-hide");
         }
 	});
-	$("#tube_type").change(function(){
-	   if($("#tubeStrengthType").val()==="grade"){
-	       if ($('#tube_type').val() === "pipe"){
-	           $('#tubeGrade').removeClass('w3-hide');
-	           $('#casingTubeGrade').addClass('w3-hide');
-	       }
-	       else if ($('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"){
-	           $('#casingTubeGrade').removeClass('w3-hide');
-	           $('#tubeGrade').addClass('w3-hide');
-	       }
-	   }
-	});
 	
 	//Show the appropriate inputs for the type fo tublular selected
 	//For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
@@ -91,16 +79,34 @@ $(document).ready(function() {
 	$('#tube_type').change(function(){
 		var tubeType = $('#tube_type').val();
 		if (tubeType === 'casing' || tubeType === 'pipe' || tubeType === 'tubing'){
-			$("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
-			$("#tubeStrengthType>option[value='strength']").prop("disabled",false);
-			$("#tubeStrengthType>option[value='grade']").prop("disabled",false);
-			$("#tubeStrengthType>option[value='grade']").prop("selected",true);
-			
-			//show od, wall, % elongation
-			$('.tubeOnly').removeClass('w3-hide');
-			$('.wireOnly').addClass('w3-hide');
-		}
-		else{
+		    $("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
+            $("#tubeStrengthType>option[value='strength']").prop("disabled",false);
+            $("#tubeStrengthType>option[value='grade']").prop("disabled",false);
+            
+            //show od, wall, % elongation
+            $('.tubeOnly').removeClass('w3-hide');
+            $('.wireOnly').addClass('w3-hide');
+            
+            //maintain the strength type, but change the grades available if pipe was changed to (casing || tubing) OR vise versa
+		    if($('#tubeStrengthType').val()==="grade"){
+                if ($('#tube_type').val() === "pipe"){
+                   $('#tubeGrade').removeClass('w3-hide');
+                   $('#casingTubeGrade').addClass('w3-hide');
+                   $('#tubeStrength').addClass('w3-hide');
+                }
+                else if ($('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"){
+                    $('#casingTubeGrade').removeClass('w3-hide');
+                    $('#tubeGrade').addClass('w3-hide');
+                    $('#tubeStrength').addClass('w3-hide');
+                }
+            }else if ($("#tubeStrengthType").val()==="strength"){
+                //keep #tubeStrength visible
+                //keep #tubeGrade & #casingTubeGrade hidden
+            }else{ //by default select grade
+                $("#tubeStrengthType>option[value='grade']").prop("selected",true);
+                $('#tubeStrengthType').change();
+            }
+		}else{
 			$("#tubeStrengthType>option[value='brStrength']").prop("disabled",false);
 			$("#tubeStrengthType>option[value='strength']").prop("disabled",true);
 			$("#tubeStrengthType>option[value='grade']").prop("disabled",true);
@@ -269,6 +275,7 @@ $(document).ready(function() {
          */
 	   //Reset the tubular form
 	   $("#tube_type>option[value='pipe']").prop("selected",true);
+	   $("#tubeStrengthType>option[value='grade']").prop("selected",true);
 	   $("#tube_grade>option[value='75000']").prop("selected",true);
 	   $("#tube_type").change();
 	   $('#pipe_od').val("");
@@ -282,16 +289,14 @@ $(document).ready(function() {
 //TODO: remove from firebase.  Let the table update on it's own.
 .on('click', 'table .fa-times-circle',function(){
    
-    //Select the tr for the "x" and remove it
+    //Get the key value from the row attribute.
     var key = $(this).parent().attr('data-key');
     
-    //TODO: get the correct database reference...?
+    //Remove the key for this pipe row from firebase.
     newWorksheet.child('tubulars/'+key).remove().then(function(){
         console.log("removed key:" + key);    
     });
-        
-    $(this).parent().parent().remove();  //remove this once I can update the database properly
-    });
+});
 
 function display_ssc_save(xhttp) {
 	var response = xhttp.responseText;
