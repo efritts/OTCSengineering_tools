@@ -158,12 +158,12 @@ $(document).ready(function() {
                 //create the pipe table
                 if(type === 'pipe' || type === 'tubing' || type === 'casing'){
                     pipeElong_txt = childData.child('elongation').val() === null ? "" : childData.child('elongation').val()+" %";
-                    newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+                    newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td title='remove' data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblPipe table').append(newPipeRow);
                 }
                 //create the wireline table
                 else {
-                    newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-times-circle' aria-hidden='true'></i></td></tr>";
+                    newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblWire table').append(newWireRow);
                 }
             });
@@ -255,24 +255,6 @@ $(document).ready(function() {
         };
        newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo + pipe_data);});
        
-        //renumber the pipe list
-        /* DELETE: Do this when the html table is rebuild so I don't have to do it for add and Delete.
-        fb_tubulars.orderByChild('brkStrength_sortDesc').once("value", function(data){
-                    newPipeNo = 1;
-                    newWireNo = 1;
-                    type = childData.child('type').val();                      
-                data.forEach(function(childData){
-                    var type = childData.child('type').val();
-                    if(type === 'pipe' || type === 'tubing' || type === 'casing'){       
-                        childData.ref().update({pipeNo : newPipeNo});
-                        newPipeNo ++;
-                    }else{
-                        childData.ref().update({pipeNo : newWireNo});
-                        newWireNo ++;
-                    } 
-                }); 
-         });  
-         */
 	   //Reset the tubular form
 	   $("#tube_type>option[value='pipe']").prop("selected",true);
 	   $("#tubeStrengthType>option[value='grade']").prop("selected",true);
@@ -284,10 +266,27 @@ $(document).ready(function() {
 	   $('#brStrength').val("");
     
     });
+    
+    /*
+     * Surface Subsea configuration
+     */
+    $('#rigBOPLoc').change(function(){
+       if($('#rigBOPLoc').val() === 'surface'){
+           $('.rigSurface').removeClass('w3-hide');
+           $('.rigSubsea').addClass('w3-hide');
+       }else{
+           $('.rigSubsea').removeClass('w3-hide');
+           $('.rigSurface').addClass('w3-hide');
+       } 
+    });
+    
+    $('#pipe_od, #pipe_wall, #pipe_elong, #masp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
+        display_results();
+    });
 })
-//Remove a row from the table.  Register for all new .fa-times-circle classes added
+//Remove a row from the table.  Register for all new .fa-trash-o  classes added
 //TODO: remove from firebase.  Let the table update on it's own.
-.on('click', 'table .fa-times-circle',function(){
+.on('click', 'table .fa-trash-o ',function(){
    
     //Get the key value from the row attribute.
     var key = $(this).parent().attr('data-key');
@@ -353,7 +352,7 @@ function getShareLink(){
 		var h_sw = check_form_field('h_sw',"");
 		var POST_h_sw = h_sw ? "h_sw="+h_sw : "";
 		//Height of HPU
-		var h_hpu = check_form_field('h_hpu',"");
+		var h_hpu = check_form_field('rigHPUelevation',"");
 		var POST_h_hpu = h_hpu ? "h_hpu="+h_hpu : "";
 		//Height of BOP
 		var h_bop = check_form_field('h_bop',"");
@@ -760,10 +759,10 @@ function calc_adj_shear(){
 }	
 
 function calc_grad(x) {
-	
+	"use strict";
 	// x value is given in pounds per gallon
 	// y is returned in psi per ft of depth
-	y=x*12/231;
+	var y=x*12/231;
 	return y;
 }
 
@@ -786,54 +785,60 @@ function Calc_all() {
 	
 	//assign variables from user input.
 	/*MISSING  need to add validation of form fields.  Is number.  Not empty*/
-	var mawhp = document.getElementById('mawhp').value;
-	var h_riser = document.getElementById('h_riser').value;
-	var h_sw = document.getElementById('h_sw').value;
-	var h_hpu = document.getElementById('h_hpu').value;
-	var h_bop = document.getElementById('h_bop').value;
-	var mudweight = document.getElementById('mudweight').value;
-	var g_cf = document.getElementById('g_cf').value;
-	var g_sw = document.getElementById('g_sw').value;
-
+	var masp = $('#masp').val(),
+        mawhp = $('#mawhp').val(),
+        h_riser = $('#h_riser').val(),
+        h_sw = $('#h_sw').val(),
+        h_hpu = $('#rigHPUelevation').val(),
+        h_bop = $('#h_bop').val(),
+        mudweight = $('#mudweight').val(),
+        g_cf = $('#g_cf').val(),
+        g_sw = $('#g_sw').val(),
 	//calculate mud pressure at depth
-	var mudPressure = calc_grad( +mudweight ) * (+h_sw + +h_riser - +h_bop);
+	   mudPressure = calc_grad( +mudweight ) * (+h_sw + (+h_riser) - +h_bop);
 	
-	//determine if MUD or MAWHP is greater
-	if (mudPressure > +mawhp) {
-		P_well = mudPressure;
-		Ptype_well = "MUD";
-	} else {
-		P_well = +mawhp;
-		Ptype_well = "MAWHP";
-	}				
+	//determine if MUD or MASP/MAWHP is greater
+	if($('#rigBOPLoc').val()==='subsea'){
+        if (mudPressure > mawhp) {
+            P_well = mudPressure;
+            Ptype_well = "MUD";
+        } else {
+            P_well = mawhp;
+            Ptype_well = "MAWHP";
+        }
+    }else{
+        P_well = masp;
+        Ptype_well = "MASP";
+    }				
 	
 	//calculate fluid head pressure
-	var head_sw = +g_sw * (+h_sw - +h_bop); //seawater head at specified water depth "+" added to convert var to number
-	var head_cf = +g_cf * (+h_sw - +h_bop + +h_hpu); //control fluid head at water depth
+	var head_sw = +g_sw * (+h_sw - +h_bop), //seawater head at specified water depth "+" added to convert var to number
+        head_cf = +g_cf * (+h_sw - +h_bop + (+h_hpu)), //control fluid head at water depth
 	
 	//set the variables for the BOP type
-	var bop_closingarea = check_form_field('bop_closingarea'); // Closing Area = Ac
-	var bop_closingratio = check_form_field('bop_closingratio'); // Closing ratio = Cr
-	var bop_trarea = check_form_field('bop_trarea');
+        bop_closingarea = check_form_field('bop_closingarea'), // Closing Area = Ac
+        bop_closingratio = check_form_field('bop_closingratio'), // Closing ratio = Cr
+        bop_trarea = check_form_field('bop_trarea'),
 	
 	//get Pressure of seawater at depth
 	//calc opening area = Ac + At - Ac/Cr
-	var bop_openingarea = bop_closingarea + bop_trarea - (bop_closingarea/bop_closingratio);
+        bop_openingarea = bop_closingarea + bop_trarea - (bop_closingarea/bop_closingratio),
 	
 	//calculate opening force dues to seawater against operator = Psw x Ao
-	var ForceO_sw = head_sw * bop_openingarea;
+        ForceO_sw = head_sw * bop_openingarea,
 	
 	//get Pressure of control fluid at depth = Pcf
 	//calculate force of control fluid on closing side = Pcf x Ac
-	var ForceC_cf = head_cf * bop_closingarea;
+        ForceC_cf = head_cf * bop_closingarea,
 	
 	//calculate closing force on the tailrod due to seawater = Psw x At
-	var ForceC_tr = head_sw * bop_trarea;
+        ForceC_tr = head_sw * bop_trarea,
 	
 	//determine adjustment in closing force due to hydrostatics
-	var P_adjust_hyd = ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio );
-	//if (isNaN(P_adjust_hyd)) { var str_Padj = "-"; }
-	//else { var str_Padj = P_adjust_hyd.toFixed(0);}
+        P_adjust_hyd = ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio ),
+        //output_str = 'Force0_sw = '+ForceO_sw+', ForceC_cf = '+ForceC_cf+', ForceC_tr = '+ForceC_tr+', bop_closing_area = '+bop_closingarea+', P_well = '+P_well+', bop_closingratio = '+bop_closingratio+', P_adjust_hyd = '+P_adjust_hyd;
+        output_str = 'ForceC_cf = '+ForceC_cf+', head_sw ='+head_sw+', bop_trarea='+bop_trarea+', ForceC_tr = '+ForceC_tr+', P_adjust_hyd = '+P_adjust_hyd;
+        console.log(output_str);
 	
 	//return values to be displayed
 	var Pressures = {};

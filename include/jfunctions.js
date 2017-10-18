@@ -252,13 +252,14 @@ function check_form_field(field, defaultvalue) {
 	//this function only works for id fields where a number is expected.  
 	//also only works for form inputs
 	//Returns defaultvalue if a number wasn't provided.
-	var input;
+	var input = $('#'+field).val(),
 	
 	//test that the field is present.
-	if(document.contains(document.getElementById(field))){input = document.getElementById(field).value;} 
-	deafultvalue = (typeof defaultvalue !== 'undefined') ? defaultvalue : 0;
+	//if(document.contains(document.getElementById(field))){input = document.getElementById(field).value;} 
+	//deafultvalue = (typeof defaultvalue !== 'undefined') ? defaultvalue : 0;
+	newvalue = (defaultvalue) ? defaultvalue : 0;
 	if (input == null || input == "" || input == "undefined" || isNaN(input))  {
-		input = defaultvalue;
+		input = newvalue;
 		return input;
 	}
 	else {

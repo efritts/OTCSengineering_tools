@@ -14,6 +14,9 @@
 			<div class="w3-row">
 			<div class="w3-col l8 m8 w3-container" id="form">			
 				<form action="" id="sheardata" name="shear_inputs">
+<!--
+TUBULARS SECTION
+-->
 				<div class="w3-row">
 					<div ><h3 style="display: inline">Tubulars</h3>&nbsp;&nbsp;<span class="expander"> <i class="fa fa-chevron-down" aria-hidden="true"></i> </span></div>
 					<div class=" w3-hide w3-light-grey w3-animate-left" id="about_tubulars">
@@ -24,7 +27,7 @@
 					<div =class='w3-row'>
 						<div class='w3-col l3 s4'>Type</div>
 						<div class="w3-col l3 s4">
-						<select id="tube_type" class="w3-select w3-padding-0">
+						<select id="tube_type" class="w3-select w3-padding-0" dir="rtl">
 							<option value="pipe">Pipe</option>
 							<option value="casing">Casing</option>
 							<option value="tubing">Tubing</option>
@@ -46,7 +49,7 @@
 						</div>
 						<div class="tubeOnly">
 						<div id="tubeGrade" class="w3-col l3 s4">
-							<select id="tube_grade" class="w3-select w3-padding-0">
+							<select id="tube_grade" class="w3-select w3-padding-0" dir="rtl">
 								<option value=75000>E75</option>
 								<option value=80000>L80</option>
 								<option value=95000>X95</option>
@@ -59,7 +62,7 @@
 							</select>
 						</div>
 						<div id="casingTubeGrade" class="w3-hide w3-col l3 s4">
-							<select id="tube_grade" class="w3-select w3-padding-0">
+							<select id="tube_grade" class="w3-select w3-padding-0" dir="rtl">
 								<option value=40000>H40</option>
 								<option value=55000>J55</option>
 								<option value=55000>K55</option>
@@ -89,87 +92,102 @@
 					</div>
 					<div class="w3-row">
 						<div class="w3-col l3 m4 s4">Outside Diameter</div>
-						<div class="w3-col l3 m4 s4"><input type="number" min=0 max=30 name="pipe_od" id="pipe_od" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l3 m4 s4"><input type="number" min=0 max=30 name="pipe_od" id="pipe_od" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col l1 m1 s1 w3-margin-left">in</div>
 					</div>
 					<div class="w3-row tubeOnly">
 						<div class="w3-col l3 s4">Wall Thickness</div>
-						<div class="w3-col l3 s4"><input type="number" min=0 max=5 name="pipe_wall" id="pipe_wall" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l3 s4"><input type="number" min=0 max=5 name="pipe_wall" id="pipe_wall" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col s1 w3-margin-left">in</div>
 					</div>
 					<div class="w3-row tubeOnly">
-						<div class="w3-col l3 m4 s4">% Elongation</div>
-						<div class="w3-col l3 m4 s4"><input type="number" id="pipe_elong" onkeyup="display_results()"  class="w3-input w3-padding-0"/></div>
+						<div class="w3-col l3 s4">% Elongation</div>
+						<div class="w3-col l3 s4"><input type="number" id="pipe_elong" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col l1 m1 s1 w3-margin-left">%</div>
 					</div>
 				</div>
 				<div class="w3-row w3-padding">
-					<div class="w3-col l6 s8">&nbsp;</div>
-					<div class="w3-col s1"><div class="w3-btn w3-white w3-border w3-border-blue w3-round w3-padding-4" id="addPipe">Add</div></div>
+					<div class="w3-col l3 s4">&nbsp;</div>
+					<div class="w3-col l3 s4"><div class="w3-btn w3-white w3-border w3-border-blue w3-round w3-padding-4" id="addPipe">Add New Pipe</div></div>
 				</div>
-				<br />
 
-				<br />
-				<!--
-				<div class="w3-row"><h3 style="display: inline">Pipe</h3><span id="about_pipe_expand">></span></div>	
-				<div class="w3-row w3-hide w3-light-grey w3-animate-left" id="about_pipe">
-					<p>Required fields: Strength, Outside Diameter</p><p>Multiple values for pipe strength are available. Grade, Min. Yield Strength, Yield Strength, Ultimate Strength can all be used to evaluate the strength of a pipe.  This program prioritizes them as follows: Ultimate Strength > Yield Strength/.85 > Max spec YS.  That is the Ultimate Stength is preferred over the Yield Strength which is preferred over the max yield.  The Max Yield Strength is given by the pipe grade's specification in API 5DP.  Min. Yield Strength is only used  when a Cameron BOP is being utilized. </p>
-				</div>
-								
+<!--
+RIG SECTION
+-->
 				<div class="w3-row">
-					<div class="w3-col l3 m4 w3-light-grey"><input type="radio" name="Pipe_select" value="select" onclick="pipe_fields()" class="w3-radio w3-border-bottom" disabled/> Select </div>
-					<div class="w3-col l4 m5 w3-light-grey"><input type="radio" name="Pipe_select" value="specify" onclick="pipe_fields()" class="w3-radio w3-border-bottom" checked/> Specify</div>
+					<div><h3 style="display: inline">Rig</h3>&nbsp;&nbsp;<span class="expander"> <i class="fa fa-chevron-down" aria-hidden="true"></i> </span></div>
+					<div class="w3-hide w3-light-grey w3-animate-left" id="about_tubulars">
+						<p>Describe the rig</p>
+					</div>
 				</div>
-					
-				<div id='pipe_values'></div>
-				<div id="pipe_shear"></div>
-				<br />
-				-->
+				<div class="w3-row">
+					<div class="w3-col l3 m4 s4">Name</div>
+					<div class="w3-col l3 m4 s4"><input type="text" name="rigName" id="rigName" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l1 m1 s1 w3-margin-left"></div>
+				</div>
+				<div class="w3-row">
+					<div class="w3-col l3 m4 s4">BOP location&nbsp;&nbsp;<span title="Is the BOP on the rig floor or subsea?"><span class="fa fa-info-circle w3-small"></span></span></div>
+					<div class="w3-col l3 m4 s4">
+						<select name="rigBOPLoc" id="rigBOPLoc" class="w3-select w3-padding-0" dir="rtl">
+							<option value='surface' selected>Surface</option>
+							<option value='subsea'>Subsea</option>
+						</select>
+					</div>
+					<div class="w3-col l1 m1 s1 w3-margin-left"></div>
+				</div>
+				<div class="w3-row w3-hide rigSubsea">
+					<div class="w3-col l3 m4 s4">Riser Gap  <span title="Distance from sea level to the top of the riser."><span class="fa fa-info-circle w3-small"></span></span></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="h_riser" id="h_riser" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l1 m1 s1 w3-margin-left">ft</div>
+				</div>
+				<div class="w3-row w3-hide rigSubsea">
+					<div class="w3-col l3 m4 s4">HPU Elevation  <span title="Elevation of the HPU above the water line"><span class="fa fa-info-circle w3-small"></span></span></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="rigHPUelevation" id="rigHPUelevation" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l1 m1 s1 w3-margin-left">ft</div>
+				</div>	
+				<br />				
+<!--
+WELL SECTION
+-->
 				<div>
 					<div><h3 style="display: inline">Well</h3>&nbsp;&nbsp;<span class="expander"> <i class="fa fa-chevron-down" aria-hidden="true"></i> </span></div>
 					<div class="w3-hide w3-light-grey w3-animate-left" id="about_tubulars">
 						<p>Required fields: None</p><p>These fields specify the parameters of the well.  They are required to accurately calculate the well pressure.  Not including them will calculate the shear pressure on surface with no internal well pressure.</p>
 					</div>
 				</div>
-				<div id="gr_mud"></div>
-				<div class="w3-row">
-					<div class="w3-col l3 m4 s4">MAWHP  <span title="Maximum Anticipated Well Head Pressure"><span class="fa fa-info-circle w3-small"></span></span></div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="MAWHP" id="mawhp" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+				<div class="w3-row rigSurface">
+					<div class="w3-col l3 m4 s4">MASP  <span title="Maximum Anticipated Surface Pressure"><span class="fa fa-info-circle w3-small"></span></span></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="MASP" id="masp" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
 					<div class="w3-col l1 m1 s1 w3-margin-left">psi</div>
 				</div>
-				<div class="w3-row">
-					<div class="w3-col l3 m4 s4">Height of Riser  <span title="Distance from sea level to the top of the riser."><span class="fa fa-info-circle w3-small"></span></span></div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="h_riser" id="h_riser" value="80" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
-					<div class="w3-col l1 m1 s1 w3-margin-left">feet</div>
+				<div class="w3-row w3-hide rigSubsea">
+					<div class="w3-col l3 m4 s4">MAWHP  <span title="Maximum Anticipated Well Head Pressure"><span class="fa fa-info-circle w3-small"></span></span></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="MAWHP" id="mawhp" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l1 m1 s1 w3-margin-left">psi</div>
 				</div>
-				<div class="w3-row">
+				<div class="w3-row w3-hide rigSubsea">
 					<div class="w3-col l3 m4 s4">Water Depth</div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="h_sw" id="h_sw" value="8000" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="h_sw" id="h_sw" value="8000" min="0" max="30000" class="w3-input w3-padding-0"/></div>
 					<div class="w3-col l1 m1 s1 w3-margin-left">feet</div>
 				</div>
-				<div class="w3-row">
-					<div class="w3-col l3 m4 s4">Height of HPU <span title="Elevation of the HPU above the water line"><span class="fa fa-info-circle w3-small"></span></span></div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="h_hpu" id="h_hpu" value="40" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
-					<div class="w3-col l1 m1 s1 w3-margin-left">feet</div>
-				</div>
-				<div class="w3-row">
+				<div class="w3-row w3-hide rigSubsea">
 					<div class="w3-col l3 m4 s4">Height of BOP <span title="Elevation of the BOP operator above the sea floor"><span class="fa fa-info-circle w3-small"></span></span></div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="h_bop" id="h_bop" value="20" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="h_bop" id="h_bop" value="20" class="w3-input w3-padding-0"/></div>
 					<div class="w3-col l1 m1 s1 w3-margin-left">feet</div>
 				</div>
-				<div class="w3-row">
+				<div class="w3-row w3-hide rigSubsea">
 					<div class="w3-col l3 m4 s4">Mud weight</div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="w_mud" id="mudweight" value="12" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="w_mud" id="mudweight" value="12" min="1" max="40" class="w3-input w3-padding-0"/></div>
 					<div class="w3-col l1 m1 s1 w3-margin-left">ppg</div>
 				</div>
-				<div class="w3-row">
+				<div class="w3-row w3-hide rigSubsea">
 					<div class="w3-col l3 m4 s4">Control fluid gradient</div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="grad_cf" id="g_cf" value=".432" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="grad_cf" id="g_cf" value=".432" max="1" class="w3-input w3-padding-0"/></div>
 					<div class="w3-col l1 m1 s1 w3-margin-left">psi/ft</div>
 				</div>
-				<div class="w3-row">
+				<div class="w3-row w3-hide rigSubsea">
 					<div class="w3-col l3 m4 s4">Seawater gradient</div>
-					<div class="w3-col l3 m4 s4"><input type="text" name="grad_sw" id="g_sw" value=".447" onkeyup="display_results()" class="w3-input w3-padding-0"/></div>
+					<div class="w3-col l3 m4 s4"><input type="number" name="grad_sw" id="g_sw" value=".447" max="1" class="w3-input w3-padding-0"/></div>
 					<div class="w3-col l1 m1 s1 w3-margin-left">psi/ft</div>
 				</div>
 				<div class="w3-row"><h3>BOP</h3></div>
@@ -218,10 +236,10 @@
 				<div class="w3-card-4">
 				<h3>Summary</h3>
 					<table class="w3-table w3-bordered w3-striped">
-						<tr><td>Well Pressure <span title="The greater of the pressure due to the mud weight at the depth of the BOP or the MAWHP"><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_mud" class="values"></td><td>psi</td></tr>
+						<tr><td>Well Pressure <span title="The greater of the pressure due to the mud weight at the depth of the BOP, the MAWHP, or the MASP on a surface stack"><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_mud" class="values"></td><td>psi</td></tr>
 						<tr><td>Dominate Well Pressure  <span title="Displays which pressure is displayed in the &quot;Well Pressure&quot; row"><span class="fa fa-info-circle w3-small"></span></span></td><td id="WellP_type"></td><td>psi</td></tr>
-						<tr><td>Seawater head pressure <span title="Acts on the opening side and the tailrod if present."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_sw"></td><td>psi</td></tr>
-						<tr><td>Control fluid head pressure <span title="Acts on the closing side."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_cf"></td><td>psi</td></tr>
+						<tr class="w3-hide rigSubsea"><td>Seawater head pressure <span title="Acts on the opening side and the tailrod if present."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_sw"></td><td>psi</td></tr>
+						<tr class="w3-hide rigSubsea"><td>Control fluid head pressure <span title="Acts on the closing side."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_cf"></td><td>psi</td></tr>
                         <tr><td>Closing Pressure adjustment <span title="Added to the shear pressure to account for the Well, Seawater head, and Control fluid head pressures."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_adj"></td><td>psi</td></tr>						
                         <tr><td></td><td></td><td></td></tr>
                         <tr><td colspan="3"><u>Force Approximations</u>  <span title="If enough information is provided the program will provide one to three different methods of shear force approximations."><span class="fa fa-info-circle w3-small"></span></span></td></tr>
