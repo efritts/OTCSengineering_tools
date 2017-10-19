@@ -11,6 +11,7 @@
   var dbRefWorksheet = database.ref().child('shearWorksheet');
   var newWorksheet = dbRefWorksheet.push();
   console.log('Created key: '+newWorksheet.key);
+  
 $(document).ready(function() {
     "use strict";
 	
@@ -26,16 +27,7 @@ $(document).ready(function() {
             }
             else{$(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');}
 	});
-	/*DELETE covered by $('.expander') above
-	$("#about_ssc_expand").click(function(){
-		$("#about_ssc").toggleClass("w3-show");
-		$("#about_ssc").toggleClass("w3-hide");
-		if($("#about_ssc_expand").text()===">"){
-			$("#about_ssc_expand").text("v");
-		}
-		else{$("#about_ssc_expand").text(">");}
-	});
-	*/
+
 	/*
 	 * Form Error Checking
 	 */
@@ -182,14 +174,14 @@ $(document).ready(function() {
 	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
-	    //setup some vars
-	    var pipeStrVal, pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, pipeArea, rev_brkStr,
+	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade,
+            pipeArea = null, pipeStrVal = null, ppf = null, isTube = false,
             tubeType = $('#tube_type').val(),
             tubeStrengthType = $('#tubeStrengthType').val(),
             pipeODval = $('#pipe_od').val(),
             pipeElongVal = $('#pipe_elong').val(),
             pipeWallVal = $('#pipe_wall').val(),
-            pipeGrade = $('#tube_grade option:selected').text(),
+            
             pipeAddError = false;
 	    //reset the errors
 	    $('#pipe_wall').removeClass("w3-border-red");
@@ -203,28 +195,41 @@ $(document).ready(function() {
                 pipeAddError = true;
 		}
 		if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
-	    
+	       isTube = true;
 	       if($('#pipe_wall').val() === ""){
                //show error
                $('#pipe_wall').addClass("w3-border-red");
                pipeAddError = true;
            }
            //TODO: if strength type is selected, then value should exist for yield.
-           
 		}else{
 			if($('#brStrength').val() === ""){
 			       //show error
 			       $('#brStrength').addClass("w3-border-red");
 			       pipeAddError = true;
 			}
+			pipeGrade = null; 
+			pipeWallVal = null;
 		}
 		//if any errors are seen when adding, then exit the click handler
 		if(pipeAddError){return;}
 
 	   //Get the user's new tubular data
 	   //if it's a pipe,casing,or tube assign those values to be stored	   
-        if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){    
-	       pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
+        if(isTube){
+            
+            //if it's pipe use a pipe grade
+            if(tubeType === "pipe"){
+                pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
+                pipeGrade = $('#tube_grade option:selected').text();    
+            }else{
+                pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').val() : $('#pipe_minYS').val();
+                pipeGrade = $('#casing_grade option:selected').text();
+            }    
+	       
+	       
+	       //if it's casing or tubing use casing/tubing grade
+	       
 	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
 	       pipeNo = $('#tblPipe tr').length;
 	       pipeArea = Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4;
@@ -233,9 +238,7 @@ $(document).ready(function() {
         }else{
             pipeNo = $('#tblWire tr').length;
             wire_brkStr = $('#brStrength').val();
-            pipeStrVal = null;
-            pipeGrade = null;
-            pipeWallVal = null;
+
         }
 		rev_brkStr = 100000000 - wire_brkStr;
 			   
@@ -247,13 +250,21 @@ $(document).ready(function() {
                 diameter: pipeODval,
                 elongation: pipeElongVal,
                 wall: pipeWallVal,
+                area: pipeArea,
                 strengthType: tubeStrengthType,
                 grade: pipeGrade,
                 yieldstr: pipeStrVal,
                 brkStrength: wire_brkStr,
                 brkStrength_sortDesc: rev_brkStr
         };
-       newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo + pipe_data);});
+       newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+       
+       //add the pipe weight for tubes
+       if(isTube){
+           $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&minYS="+pipeStrVal, function(weight){
+               newPipedata.update({ppf: weight});
+           }).fail(function(err){console.log("we got an error: "+err);});
+       }
        
 	   //Reset the tubular form
 	   $("#tube_type>option[value='pipe']").prop("selected",true);
@@ -280,7 +291,7 @@ $(document).ready(function() {
        } 
     });
     
-    $('#pipe_od, #pipe_wall, #pipe_elong, #masp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
+    $('#pipe_od, #pipe_wall, #pipe_elong, #masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
         display_results();
     });
 })
@@ -499,13 +510,13 @@ function get_minYS(){
 }
 
 function calculateArea() {
-	var od = check_form_field('pipe_od',false);
-	var wall = check_form_field('pipe_wall',false);
+	var area, od = check_form_field('pipe_od',false),
+        wall = check_form_field('pipe_wall',false);
 	//if (outside == null || outside == "" || isNaN(outside)) {outside=0;}
 	//if (wall ==null || wall == "" || isNaN(wall)) {wall = 0;}
 	if (od){
 		if (!wall){inside=0;} else{ var inside = od - (2 * wall);}
-		var area = Math.PI * (Math.pow(od,2) - Math.pow(inside,2)) / 4;
+		area = Math.PI * (Math.pow(od,2) - Math.pow(inside,2)) / 4;
 		return area;
 	}
 	else{ return false;}
@@ -517,27 +528,28 @@ function display_area(){
 }
 
 function display_results(){
+    //TODO: this function calls Calculate_shear 6x.  It would be ideal if we only called it once and got all the properties.
 	$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
 	
 	//if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
 	if(document.contains(document.getElementById("pipe_ppf"))){
-		var od = check_form_field('pipe_od',""); 
-		var wall = check_form_field('pipe_wall',"");
-		var ys = get_minYS();
+        var od = check_form_field('pipe_od',""), 
+            wall = check_form_field('pipe_wall',""),
+            ys = get_minYS(),
+            url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
 		
 		if(od && wall && ys){
-		 	var url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
-		 	Call_ajax(url,process_ppf,"GET");  //shows the ppf and the Cameron Force value
+            Call_ajax(url,process_ppf,"GET");  //shows the ppf and the Cameron Force value
 		 }
 	}
 	
 	//Get the closing area
-	var bop_closingarea = check_form_field('bop_closingarea');
+	var bop_closingarea = check_form_field('bop_closingarea'),
 	
 	//If a shear method can be determined write it to the Force Approximations
-	var TableForceApprox = "<tr id=\"Fcam\"></tr>"; //THE row for the Cameron value will always be in here.
-	var West = check_value_isNumber(Calculate_shear().West_force,0,false);
-	var DistEnergy = check_value_isNumber(Calculate_shear().DE_force,0,false);
+        TableForceApprox = "<tr id=\"Fcam\"></tr>", //THE row for the Cameron value will always be in here.
+        West = check_value_isNumber(Calculate_shear().West_force,0,false),
+        DistEnergy = check_value_isNumber(Calculate_shear().DE_force,0,false);
 	
 	
 	if(West){ 
@@ -559,9 +571,9 @@ function display_results(){
 	//Control fluid head pressure
 	document.getElementById("P_head_cf").innerHTML = check_value_isNumber(Calc_all().Press_head_cf);
 	//Force approximations
-	document.getElementById("approx_forces").innerHTML = TableForceApprox;
+	$('#approx_forces').html(TableForceApprox);
 	//Closing Pressure adjustment
-	document.getElementById("P_adj").innerHTML = check_value_isNumber(Calc_all().Press_adj,2);
+	$('#P_adj').text(check_value_isNumber(Calc_all().Press_adj,2));
 	//SHEAR PRESSURE
 	document.getElementById("final_pressure").innerHTML = check_value_isNumber(calc_adj_shear());
 	document.getElementById('final_pressure_row').className = ""; //clear any error notification
@@ -637,16 +649,17 @@ function Calculate_shear() {
 	* The following values are returned:  calculate_shear().West_force & .DE_force
 	* A successful evaluation will return a numerical values.  Unsuccesful evaluation will return false.
 	* 
-	* The Cameron Force is evaluated when the pipe weight is. See process_ppf() which is called in display_results(); 
-	* 	This is done because the Cameron force is dependant on two calls to the database.  One for the ppf of the pipe, the other for the C3 value of the operator/pipe combo.
-	* 	
-	*/ 
-	var method = "";
-	var ForceValues = {};
-	var pipe_elong = check_form_field('pipe_elong',false);
-	var min_YS = check_form_field('pipe_minYS',false);
-	var UTS = check_form_field('pipe_uts',false);
-	var ys = check_form_field('pipe_ys',false);
+	* The Cameron Force is evaluated when the pipe weight is available. See process_ppf() which is called in display_results(); 
+	*  This is done because the Cameron force is dependant on two calls to the database.  One for the ppf of the pipe, the other for the C3 value of the operator/pipe combo.
+    *
+    */
+  
+	var method = "", A, B, C, Stdev, R2,
+        ForceValues = {},
+        pipe_elong = check_form_field('pipe_elong',false),
+        min_YS = check_form_field('pipe_minYS',false),
+        UTS = check_form_field('pipe_uts',false),
+        ys = check_form_field('pipe_ys',false);
 	//var area = calculateArea().toFixed(2); 
 	
 	//get grade
@@ -664,7 +677,7 @@ function Calculate_shear() {
 		var BOP_OEM = BOP_OEM_option[OEM_index].text;
 	}
 	else{ var BOP_OEM = "";}
-	//Is "Wireline BOP" check?
+	//TODO: Is "Wireline BOP" check?
 	
 	//-------WEST------
 	//if %elongation && (UTS or YS  or pipe grade) && area then compute .West_force
@@ -688,32 +701,32 @@ function Calculate_shear() {
 		//if ys >=135 <165ksi use C=-35.11 A=.630 B=4.489 R2=.3 Stdev=76.69
 		//else C=35.28 A=.427 B=6.629 R2=.231 Stdev=75.15
 		if (sel_Yield >= 75 && sel_Yield < 105){
-			var C = -234;
-			var A = -.318;
-			var B = 25.357;
-			var R2 = .359;
-			var Stdev = 62.03;
+			C = -234;
+			A = -.318;
+			B = 25.357;
+			R2 = .359;
+			Stdev = 62.03;
 		}
 		else if (sel_Yield >= 105 & sel_Yield < 135){
-			var C = 181.33;
-			var A = .396;
-			var B = 2.035;
-			var R2 = .121;
-			var Stdev = 62.89;
+			C = 181.33;
+			A = .396;
+			B = 2.035;
+			R2 = .121;
+			Stdev = 62.89;
 		}
 		else if (sel_Yield >= 135 & sel_Yield < 200){
-			var C = -35.11;
-			var A = .630;
-			var B = 4.489;
-			var R2 = .3;
-			var Stdev = 76.69;
+			C = -35.11;
+			A = .630;
+			B = 4.489;
+			R2 = .3;
+			Stdev = 76.69;
 		}
 		else {
-			var C = 35.28;
-			var A = .427;
-			var B = 6.629;
-			var R2 = .231;
-			var Stdev = 75.15;
+			C = 35.28;
+			A = .427;
+			B = 6.629;
+			R2 = .231;
+			Stdev = 75.15;
 		}
 		
 		var WestForce = C + A * .577 * eval_yield * calculateArea() + B * pipe_elong + (2 * Stdev);
@@ -785,7 +798,8 @@ function Calc_all() {
 	
 	//assign variables from user input.
 	/*MISSING  need to add validation of form fields.  Is number.  Not empty*/
-	var masp = $('#masp').val(),
+	var isSubsea = ($('#rigBOPLoc').val()==='subsea') ? true : false, 
+        masp = $('#masp').val(), head_sw, head_cf,
         mawhp = $('#mawhp').val(),
         h_riser = $('#h_riser').val(),
         h_sw = $('#h_sw').val(),
@@ -798,7 +812,10 @@ function Calc_all() {
 	   mudPressure = calc_grad( +mudweight ) * (+h_sw + (+h_riser) - +h_bop);
 	
 	//determine if MUD or MASP/MAWHP is greater
-	if($('#rigBOPLoc').val()==='subsea'){
+	if(isSubsea){
+	    //calculate fluid head pressure
+        head_sw = +g_sw * (+h_sw - +h_bop); //seawater head at specified water depth "+" added to convert var to number
+        head_cf = +g_cf * (+h_sw - +h_bop + (+h_hpu)); //control fluid head at water depth
         if (mudPressure > mawhp) {
             P_well = mudPressure;
             Ptype_well = "MUD";
@@ -807,16 +824,14 @@ function Calc_all() {
             Ptype_well = "MAWHP";
         }
     }else{
+        head_sw = 0; //seawater head at specified water depth "+" added to convert var to number
+        head_cf = 0; //control fluid head at water depth
         P_well = masp;
         Ptype_well = "MASP";
     }				
-	
-	//calculate fluid head pressure
-	var head_sw = +g_sw * (+h_sw - +h_bop), //seawater head at specified water depth "+" added to convert var to number
-        head_cf = +g_cf * (+h_sw - +h_bop + (+h_hpu)), //control fluid head at water depth
-	
+
 	//set the variables for the BOP type
-        bop_closingarea = check_form_field('bop_closingarea'), // Closing Area = Ac
+    var bop_closingarea = check_form_field('bop_closingarea'), // Closing Area = Ac
         bop_closingratio = check_form_field('bop_closingratio'), // Closing ratio = Cr
         bop_trarea = check_form_field('bop_trarea'),
 	
@@ -835,7 +850,7 @@ function Calc_all() {
         ForceC_tr = head_sw * bop_trarea,
 	
 	//determine adjustment in closing force due to hydrostatics
-        P_adjust_hyd = ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio ),
+        P_adjust_hyd = isSubsea ? ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio ): P_well / bop_closingratio,
         //output_str = 'Force0_sw = '+ForceO_sw+', ForceC_cf = '+ForceC_cf+', ForceC_tr = '+ForceC_tr+', bop_closing_area = '+bop_closingarea+', P_well = '+P_well+', bop_closingratio = '+bop_closingratio+', P_adjust_hyd = '+P_adjust_hyd;
         output_str = 'ForceC_cf = '+ForceC_cf+', head_sw ='+head_sw+', bop_trarea='+bop_trarea+', ForceC_tr = '+ForceC_tr+', P_adjust_hyd = '+P_adjust_hyd;
         console.log(output_str);

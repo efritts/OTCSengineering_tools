@@ -23,6 +23,7 @@
  $OD = (!IsNullOrEmptyString($_GET["od"])?$_GET["od"]:"");
  $Wall = (!IsNullOrEmptyString($_GET["wall"])?$_GET["wall"]:"");
  $YS = (!IsNullOrEmptyString($_GET["minYS"])?$_GET["minYS"]:"");
+ $type = (!IsNullOrEmptyString($_GET["type"])?$_GET["type"]:"pipe");
  $ppf = "";
  
 if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall) && !IsNullOrEmptyString($YS))
@@ -33,27 +34,51 @@ if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall) && !IsNullOrEmptyStr
 	
 	//Check pipe table for result in API 5DP
 	//UPDATE NEEDED query will not select WHERE wall=x.xx
-	try {
-	    $stmt_pipe = $conn->prepare("SELECT * FROM Pipe WHERE OD=".$OD." && minYS=".$YS." && wall=".$Wall.";");   //Gets all . 
-	    $stmt_pipe->execute();
-		$count = $stmt_pipe->rowCount();
-		//if rows exists, assign $ppf
-		if($count>0){
-			while( $row = $stmt_pipe->fetch(PDO::FETCH_ASSOC)){
-				$ppf_statement="Found in API 5DP";    
-				$ppf=$row['nom_weight'];
+	if($type == "pipe"){
+		try {
+		    $stmt_pipe = $conn->prepare("SELECT * FROM Pipe WHERE OD=".$OD." && minYS=".$YS." && wall=".$Wall.";");   //Gets all . 
+		    $stmt_pipe->execute();
+			$count = $stmt_pipe->rowCount();
+			//if rows exists, assign $ppf
+			if($count>0){
+				while( $row = $stmt_pipe->fetch(PDO::FETCH_ASSOC)){
+					$ppf_statement="Found in API 5DP";    
+					$ppf=$row['nom_weight'];
+				}
+			}
+			else{//Else calculate the ppf
+			    $ppf_statement="Not found. Calculated.";
+				$ppf=round((pow($OD,2) - pow($OD-2*$Wall, 2))*2.92,2);
 			}
 		}
-		else{//Else calculate the ppf
-		    $ppf_statement="Not found. Calculated.";
-			$ppf=round((pow($OD,2) - pow($OD-2*$Wall, 2))*2.92,2);
+		catch(PDOException $pw) {
+		    echo "Error: " . $pw->getMessage();
+			die();
 		}
 	}
-	catch(PDOException $pw) {
-	    echo "Error: " . $pw->getMessage();
-		die();
+	else{//for tubulars
+		try {
+		    $stmt_pipe = $conn->prepare("SELECT * FROM tubulars WHERE od=".$OD." && type=".$type." && wall=".$Wall.";");   
+		    $stmt_pipe->execute();
+			$count = $stmt_pipe->rowCount();
+			//if rows exists, assign $ppf
+			if($count>0){
+				while( $row = $stmt_pipe->fetch(PDO::FETCH_ASSOC)){
+					$ppf_statement="Found in API 5DP";    
+					$ppf=$row['weight'];
+				}
+			}
+			else{//Else calculate the ppf
+			    $ppf_statement="Not found. Calculated.";
+				$ppf=round((pow($OD,2) - pow($OD-2*$Wall, 2))*2.92,2);
+			}
+		}
+		catch(PDOException $pw) {
+		    echo "Error: " . $pw->getMessage();
+			die();
+		}
+		
 	}
-	
 	$conn = null;
 }
 else{// Nothing to return
