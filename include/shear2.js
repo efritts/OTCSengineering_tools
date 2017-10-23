@@ -27,7 +27,6 @@ $(document).ready(function() {
             }
             else{$(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');}
 	});
-
 	/*
 	 * Form Error Checking
 	 */
@@ -214,22 +213,18 @@ $(document).ready(function() {
 		//if any errors are seen when adding, then exit the click handler
 		if(pipeAddError){return;}
 
-	   //Get the user's new tubular data
-	   //if it's a pipe,casing,or tube assign those values to be stored	   
-        if(isTube){
+	   //Get the user's new tubular data  
+        if(isTube){//if it's a pipe,casing,or tube assign those values to be stored	   
             
             //if it's pipe use a pipe grade
             if(tubeType === "pipe"){
                 pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
                 pipeGrade = $('#tube_grade option:selected').text();    
-            }else{
+            }else{ //if it's casing or tubing use casing/tubing grade
                 pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').val() : $('#pipe_minYS').val();
                 pipeGrade = $('#casing_grade option:selected').text();
             }    
-	       
-	       
-	       //if it's casing or tubing use casing/tubing grade
-	       
+
 	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
 	       pipeNo = $('#tblPipe tr').length;
 	       pipeArea = Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4;
@@ -261,7 +256,7 @@ $(document).ready(function() {
        
        //add the pipe weight for tubes
        if(isTube){
-           $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&minYS="+pipeStrVal, function(weight){
+           $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
                newPipedata.update({ppf: weight});
            }).fail(function(err){console.log("we got an error: "+err);});
        }

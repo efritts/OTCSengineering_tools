@@ -26,7 +26,7 @@
  $type = (!IsNullOrEmptyString($_GET["type"])?$_GET["type"]:"pipe");
  $ppf = "";
  
-if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall) && !IsNullOrEmptyString($YS))
+if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall))
 {
 	 //Setup Connection with MySQL database
 	$conn = connect_db();
@@ -36,7 +36,7 @@ if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall) && !IsNullOrEmptyStr
 	//UPDATE NEEDED query will not select WHERE wall=x.xx
 	if($type == "pipe"){
 		try {
-		    $stmt_pipe = $conn->prepare("SELECT * FROM Pipe WHERE OD=".$OD." && minYS=".$YS." && wall=".$Wall.";");   //Gets all . 
+		    $stmt_pipe = $conn->prepare("SELECT * FROM Pipe WHERE OD=".$OD." && wall=".$Wall.";");   //Gets all . 
 		    $stmt_pipe->execute();
 			$count = $stmt_pipe->rowCount();
 			//if rows exists, assign $ppf
@@ -58,7 +58,7 @@ if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall) && !IsNullOrEmptyStr
 	}
 	else{//for tubulars
 		try {
-		    $stmt_pipe = $conn->prepare("SELECT * FROM tubulars WHERE od=".$OD." && type=".$type." && wall=".$Wall.";");   
+		    $stmt_pipe = $conn->prepare("SELECT * FROM tubulars WHERE od=".$OD." && type='".$type."' && wall=".$Wall.";");   
 		    $stmt_pipe->execute();
 			$count = $stmt_pipe->rowCount();
 			//if rows exists, assign $ppf
@@ -83,9 +83,10 @@ if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall) && !IsNullOrEmptyStr
 }
 else{// Nothing to return
  echo "";
- //$ppf="not enough info";
+ //$ppf="not enough info";  //comment out after testing.
 }
 
-//echo $ppf_statement."<br />Pipe weight is ".$ppf;
+//
+//echo $ppf_statement."<br />Pipe weight is ".$ppf; //comment out after testing
 echo $ppf;
 ?>
