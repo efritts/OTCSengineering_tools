@@ -180,6 +180,7 @@ $(document).ready(function() {
             pipeODval = $('#pipe_od').val(),
             pipeElongVal = $('#pipe_elong').val(),
             pipeWallVal = $('#pipe_wall').val(),
+            pipe_data = {},
             
             pipeAddError = false;
 	    //reset the errors
@@ -200,7 +201,7 @@ $(document).ready(function() {
                $('#pipe_wall').addClass("w3-border-red");
                pipeAddError = true;
            }
-           //TODO: if strength type is selected, then value should exist for yield.
+        //TODO: if strength type is selected, then value should exist for yield.
 		}else{
 			if($('#brStrength').val() === ""){
 			       //show error
@@ -236,10 +237,22 @@ $(document).ready(function() {
 
         }
 		rev_brkStr = 100000000 - wire_brkStr;
+		/*TODO: Calculate the shear force (West, DE, Cameron) and include it.
+		 * 
+		 *add {
+         *   WestForce: x,
+         *   DeForce: x,
+         *   CamForce: x, 
+         *   NOVForce: x,
+         *   }
+		 *
+		 *
+		 *
+		 */
 			   
         //add pipe to the database
         pipeElongVal = pipeElongVal.length === 0 ? null : pipeElongVal; 
-        var pipe_data = {
+        pipe_data = {
                 pipeNo: pipeNo,
                 type: tubeType,
                 diameter: pipeODval,
@@ -290,8 +303,7 @@ $(document).ready(function() {
         display_results();
     });
 })
-//Remove a row from the table.  Register for all new .fa-trash-o  classes added
-//TODO: remove from firebase.  Let the table update on it's own.
+//Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
 .on('click', 'table .fa-trash-o ',function(){
    
     //Get the key value from the row attribute.
@@ -304,10 +316,11 @@ $(document).ready(function() {
 });
 
 function display_ssc_save(xhttp) {
-	var response = xhttp.responseText;
+    "use strict";
+	var response = xhttp.responseText, link;
 	if (isNumeric(response)){
-	var link = "http://50.201.150.115/Compliance/?page=calcs&sub=ssc&save="+response;
-	document.getElementById("save_link").innerHTML = "<a href="+link+">"+link+"</a>";
+	   link = "http://50.201.150.115/Compliance/?page=calcs&sub=ssc&save="+response;
+	   $('#save_link').html("<a href="+link+">"+link+"</a>");
 	}
 	else{//the response may be an error if it is not numeric.
 		alert(response);
@@ -403,8 +416,6 @@ function getShareLink(){
 			post_BOP_info += "bop_closingarea="+closing_area+"&bop_closingratio="+closing_ratio+"&bop_trarea="+tailrod_area+"&bop_choice="+BOP_choice+"&OEM="+OEM_index+"&BOPmodel="+BOP_index;
 		}
 		
-		
-		
 		//create a url to send to a phpscript  It's long, so I'll prob need $_POST var
 		//if pipe is specified
 		if(Pipe_choice=="specify"){
@@ -469,15 +480,15 @@ function evaluation_YS(){
 	if (UTS){eval_yield=UTS/1000;}
 	else if(ys){eval_yield=ys/(0.85 * 1000);}
 	else{ //pipe_grade -> E75, L80, X95, G105, P110, Q125, S135, Z140, V150
-		if(pipe_grade == "E75"){eval_yield=105;}
-		else if(pipe_grade == "L80") {eval_yield=110;}  //UPDATE. assumed 110ksi max
-		else if(pipe_grade == "X95") {eval_yield=125;}
-		else if(pipe_grade == "G105") {eval_yield=135;}
-		else if(pipe_grade == "P110") {eval_yield=140;} //UPDATE. assumed 140ksi max
-		else if(pipe_grade == "Q125") {eval_yield=155;} //UPDATE.  assumed 155ksi max 
-		else if(pipe_grade == "S135") {eval_yield=165;}
-		else if(pipe_grade == "Z140") {eval_yield=160;}  //Ref. Grant Prideco
-		else if(pipe_grade == "V150") {eval_yield=180;} //Ref. Grant Prideco
+		if(pipe_grade === "E75"){eval_yield=105;}
+		else if(pipe_grade === "L80") {eval_yield=110;}  //UPDATE. assumed 110ksi max
+		else if(pipe_grade === "X95") {eval_yield=125;}
+		else if(pipe_grade === "G105") {eval_yield=135;}
+		else if(pipe_grade === "P110") {eval_yield=140;} //UPDATE. assumed 140ksi max
+		else if(pipe_grade === "Q125") {eval_yield=155;} //UPDATE.  assumed 155ksi max 
+		else if(pipe_grade === "S135") {eval_yield=165;}
+		else if(pipe_grade === "Z140") {eval_yield=160;}  //Ref. Grant Prideco
+		else if(pipe_grade === "V150") {eval_yield=180;} //Ref. Grant Prideco
 	}  
 	return eval_yield;
 }
@@ -517,21 +528,19 @@ function calculateArea() {
 	else{ return false;}
 }
 
-function display_area(){
-	//this function may not be necessary.  I moved this line of code to display_results()
-	document.getElementById("pipe_area").innerHTML = check_value_isNumber(calculateArea(),2,"");
-}
-
 function display_results(){
-    //TODO: this function calls Calculate_shear 6x.  It would be ideal if we only called it once and got all the properties.
+    var forceValues = jQuery.extend({},Calculate_shear2()),
+        pressures = jQuery.extend({},Calc_all()),
+        od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
+    
 	$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
 	
 	//if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
 	if(document.contains(document.getElementById("pipe_ppf"))){
-        var od = check_form_field('pipe_od',""), 
-            wall = check_form_field('pipe_wall',""),
-            ys = get_minYS(),
-            url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
+        od = check_form_field('pipe_od',""); 
+        wall = check_form_field('pipe_wall',"");
+        ys = get_minYS();
+        url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
 		
 		if(od && wall && ys){
             Call_ajax(url,process_ppf,"GET");  //shows the ppf and the Cameron Force value
@@ -539,49 +548,49 @@ function display_results(){
 	}
 	
 	//Get the closing area
-	var bop_closingarea = check_form_field('bop_closingarea'),
+	bop_closingarea = check_form_field('bop_closingarea');
 	
 	//If a shear method can be determined write it to the Force Approximations
-        TableForceApprox = "<tr id=\"Fcam\"></tr>", //THE row for the Cameron value will always be in here.
-        West = check_value_isNumber(Calculate_shear().West_force,0,false),
-        DistEnergy = check_value_isNumber(Calculate_shear().DE_force,0,false);
+    TableForceApprox = "<tr id=\"Fcam\"></tr>"; //THE row for the Cameron value will always be in here.
+    West = check_value_isNumber(forceValues.West_force,0,false);
+    DistEnergy = check_value_isNumber(forceValues.DE_force,0,false);
 	
 	
 	if(West){ 
-		West_info = Calculate_shear().West_info+"&#x0D Given by West Engineering document titled Mini Shear Study for MMS (BSEE TAP 455)";
+		West_info = forceValues.West_info+"&#x0D Given by West Engineering document titled Mini Shear Study for MMS (BSEE TAP 455)";
 		TableForceApprox += "<tr><td>F-West <span title=\""+West_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+West+"</td><td>kips</td></tr>";
 	}
 	if(DistEnergy){
-		TableForceApprox += "<tr><td>F-DE <span title=\""+Calculate_shear().DE_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+DistEnergy+"</td><td>kips</td></tr>";
+		TableForceApprox += "<tr><td>F-DE <span title=\""+forceValues.DE_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+DistEnergy+"</td><td>kips</td></tr>";
 	}
-	
+    //Cameron > Recommended force
+    
+    Press_final = (forceValues.Recommended_force * 1000) / bop_closingarea + pressures.Press_adj;
+
 	//Fill SUMMARY BOX
 	
 	//Well Pressure
-	document.getElementById('P_mud').innerHTML = check_value_isNumber(Calc_all().Press_well);
+	$('#P_mud').html(check_value_isNumber(pressures.Press_well));
 	//Dominate Well Pressure
-	document.getElementById('WellP_type').innerHTML = Calc_all().Press_type;
+	$('#WellP_type').html(pressures.Press_type);
 	//Seawater head pressure
-	document.getElementById("P_head_sw").innerHTML = check_value_isNumber(Calc_all().Press_head_sw);
+	$('#P_head_sw').html(check_value_isNumber(pressures.Press_head_sw));
 	//Control fluid head pressure
-	document.getElementById("P_head_cf").innerHTML = check_value_isNumber(Calc_all().Press_head_cf);
+	$('#P_head_cf').html(check_value_isNumber(pressures.Press_head_cf));
 	//Force approximations
 	$('#approx_forces').html(TableForceApprox);
 	//Closing Pressure adjustment
-	$('#P_adj').text(check_value_isNumber(Calc_all().Press_adj,2));
+	$('#P_adj').text(check_value_isNumber(pressures.Press_adj,2));
 	//SHEAR PRESSURE
-	document.getElementById("final_pressure").innerHTML = check_value_isNumber(calc_adj_shear());
+	$('#final_pressure').text(check_value_isNumber(Press_final));
 	document.getElementById('final_pressure_row').className = ""; //clear any error notification
 	
 	
-	if(bop_closingarea && Calculate_shear().Recommended_force){	
+	if(bop_closingarea && forceValues.Recommended_force){	
 	//Shear Pressure info
-	document.getElementById("final_P_info").title= "= ("+check_value_isNumber(Calculate_shear().Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(Calc_all().Press_adj,2);
+	document.getElementById("final_P_info").title= "= ("+check_value_isNumber(forceValues.Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(pressures.Press_adj,2);
 	$("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
 	}
-	//TEST
-	//document.getElementById("test").innerHTML = check_value_isNumber(evaluation_YS());
-
 }
 
 function pipe_fields(){
@@ -638,6 +647,123 @@ function pipe_fields(){
     }    
 }
 
+function Calculate_shear2() {
+    /*Function Calculates the shear force in lbs for a given pipe size.  
+    * It attempts to use 2 different methods: Distortion Energy &  West
+    * The following values are returned:  calculate_shear().West_force & .DE_force
+    * A successful evaluation will return a numerical values.  Unsuccesful evaluation will return false.
+    * 
+    * The Cameron Force is evaluated when the pipe weight is available. See process_ppf() which is called in display_results(); 
+    *  This is done because the Cameron force is dependant on two calls to the database.  One for the ppf of the pipe, the other for the C3 value of the operator/pipe combo.
+    *
+    */
+  
+    var method = "", A, B, C, Stdev, R2,
+        ForceValues = {},
+        pipe_elong = check_form_field('pipe_elong',false),
+        min_YS = check_form_field('pipe_minYS',false),
+        UTS = check_form_field('pipe_uts',false),
+        ys = check_form_field('pipe_ys',false);
+    //var area = calculateArea().toFixed(2); 
+    
+    //get grade
+    if(document.contains(document.getElementById('pipe_grade'))){  //If a pipe grade has been selected
+            var grade_option = document.getElementById("pipe_grade").options;
+            var grade_index = document.getElementById("pipe_grade").selectedIndex;
+            var pipe_grade = grade_option[grade_index].text;
+    }
+    else{ var pipe_grade = false;}
+
+    //Get BOP Manufacturer
+    if(document.contains(document.getElementById('OEM_select'))){  //If an OEM has been selected
+        var BOP_OEM_option = document.getElementById("OEM_select").options;
+        var OEM_index = document.getElementById("OEM_select").selectedIndex;
+        var BOP_OEM = BOP_OEM_option[OEM_index].text;
+    }
+    else{ var BOP_OEM = "";}
+    //TODO: Is "Wireline BOP" check?
+    
+    //-------WEST------
+    //if %elongation && (UTS or YS  or pipe grade) && area then compute .West_force
+    //Selection Yield (use nominal if available, else use pipe grade)  Selection_yield is used to select from the forumlas.
+    //Evaluatioin Yield priority = UTS, YS/.85, max YS.  Evaluation yield is used to calculate the formula
+    if(pipe_elong && (UTS || ys || pipe_grade) && (min_YS || pipe_grade) && calculateArea()){
+        
+        eval_yield = evaluation_YS();
+                        
+        //Determine Select Yield
+        if(min_YS){sel_Yield=min_YS/1000;}
+        else{ //pipe_grade -> E75, L80, X95, G105, P110, Q125, S135, Z140, V150
+            if(pipe_grade == "E75" || pipe_grade == "L80" || pipe_grade == "X95"){sel_Yield = 100;}
+            else if (pipe_grade == "G105" || pipe_grade == "P110" || pipe_grade == "Q125"){sel_Yield = 130;}
+            else if (pipe_grade == "S135" || pipe_grade == "Z140" || pipe_grade == "V150"){sel_Yield = 160;}
+            }
+                        
+        //The following values are given by a WEST engineering report generated for MMS
+        //if ys is >=75ksi <105 use C=-234 A=-0.318 B=25.357 R2=.359 Stdev=62.03
+        //if ys is >=105ksi <135 use C=181.33 A=.396 B=2.035 R2=.121 Stdev=62.89
+        //if ys >=135 <165ksi use C=-35.11 A=.630 B=4.489 R2=.3 Stdev=76.69
+        //else C=35.28 A=.427 B=6.629 R2=.231 Stdev=75.15
+        if (sel_Yield >= 75 && sel_Yield < 105){
+            C = -234;
+            A = -.318;
+            B = 25.357;
+            R2 = .359;
+            Stdev = 62.03;
+        }
+        else if (sel_Yield >= 105 & sel_Yield < 135){
+            C = 181.33;
+            A = .396;
+            B = 2.035;
+            R2 = .121;
+            Stdev = 62.89;
+        }
+        else if (sel_Yield >= 135 & sel_Yield < 200){
+            C = -35.11;
+            A = .630;
+            B = 4.489;
+            R2 = .3;
+            Stdev = 76.69;
+        }
+        else {
+            C = 35.28;
+            A = .427;
+            B = 6.629;
+            R2 = .231;
+            Stdev = 75.15;
+        }
+        
+        var WestForce = C + A * .577 * eval_yield * calculateArea() + B * pipe_elong + (2 * Stdev);
+        var WestEquationStr = C+" + "+A+" * .577 * "+eval_yield+" * "+check_value_isNumber(calculateArea(),2)+" + "+B+" * "+pipe_elong+" + (2 * "+Stdev+")";
+        ForceValues["West_force"]=WestForce;
+        ForceValues["Recommended_force"]=WestForce;  //UPDATE NEEDED - ONLY WHEN RECOMMENDED.
+        ForceValues["West_info"]="West Force = "+WestEquationStr;
+    }
+    else {ForceValues["West_force"]=false;}
+    
+    //----Simple Distortion Energy---
+    // Determines shear force based on distortion energy therory
+    if((UTS || ys || pipe_grade) && calculateArea()){
+                
+        DE_forceValue = .577 * calculateArea() * evaluation_YS();
+        ForceValues["DE_force"]=DE_forceValue;
+        ForceValues["DE_info"]="Distortion Energy Force = .577 * "+check_value_isNumber(calculateArea(),2)+" * "+evaluation_YS();
+            
+        if(!ForceValues["West_force"]){  //Distortion energy should be used to compute the shear pressure if the West force is not available.
+            ForceValues["Recommended_force"]=DE_forceValue;
+            
+        }
+    }
+    else {ForceValues["DE_force"]=false;}
+    //UPDATE
+    //Determine the recommended shear force
+    //ForceValues["recommended_force"]=WestForce??;
+        
+    return ForceValues;
+}
+
+//TODO: delete when Calculate_shear2() works
+/*
 function Calculate_shear() {
 	/*Function Calculates the shear force in lbs for a given pipe size.  
 	* It attempts to use 2 different methods: Distortion Energy &  West
@@ -648,7 +774,7 @@ function Calculate_shear() {
 	*  This is done because the Cameron force is dependant on two calls to the database.  One for the ppf of the pipe, the other for the C3 value of the operator/pipe combo.
     *
     */
-  
+/*  
 	var method = "", A, B, C, Stdev, R2,
         ForceValues = {},
         pipe_elong = check_form_field('pipe_elong',false),
@@ -752,19 +878,7 @@ function Calculate_shear() {
 	 	
 	return ForceValues;
 }
-
-function calc_adj_shear(){
-	var bop_closingarea = check_form_field('bop_closingarea');
-	//Cameron > Recommended force
-	
-	var Press_final = (Calculate_shear().Recommended_force * 1000) / bop_closingarea + Calc_all().Press_adj;
-	
-
-	if (!isNaN(Press_final) && isFinite(Press_final)){
-		return Press_final;
-	}
-	else {return false;}
-}	
+*/
 
 function calc_grad(x) {
 	"use strict";
