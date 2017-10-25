@@ -63,7 +63,17 @@ $(document).ready(function() {
             $('#tubeStrength').removeClass("w3-hide");
         }
 	});
-	
+	$('#testPipe').click(function (){
+	    if($('#testPipe').data('value')){
+	        $('#testPipe').removeClass('w3-blue').addClass('w3-opacity');
+	        $('#testPipe').data('value',false);
+	        $('#testPipe').html('Test Pipe');
+	    }else{
+	       $('#testPipe').addClass('w3-blue').removeClass('w3-opacity');
+	       $('#testPipe').data('value',true);
+	       $('#testPipe').html('Test Pipe <i class="fa fa-check" aria-hidden="true"></i> ');
+	    }
+	});
 	//Show the appropriate inputs for the type fo tublular selected
 	//For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
 	//For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
@@ -173,15 +183,35 @@ $(document).ready(function() {
 	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
-	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade,
-            pipeArea = null, pipeStrVal = null, ppf = null, isTube = false,
+	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe,
+            pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
             tubeType = $('#tube_type').val(),
             tubeStrengthType = $('#tubeStrengthType').val(),
             pipeODval = $('#pipe_od').val(),
             pipeElongVal = $('#pipe_elong').val(),
             pipeWallVal = $('#pipe_wall').val(),
             pipe_data = {},
-            
+            //TODO: finish the grade table
+            gradeObj = { 
+                E75: { min: 75000, max: 105000 },
+                L80: { min: 80000, max: 95000 },
+                X95: { min: 95000, max: 125000 },
+                G105: { min: 105000, max: 135000 },
+                P110: { min: 110000, max: 140000 },
+                Q125: { min: 125000, max: 150000 },
+                S135: { min: 135000, max: 165000 },
+                Z140: { min: 140000, max: 0 }, //Finish
+                V150: { min: 150000, max: 0 }, //Finish
+                H40: { min: 40000, max: 80000 },
+                J55: { min: 55000, max: 80000 },
+                K55: { min: 55000, max: 80000 },
+                M65: { min: 65000, max: 85000 },
+                N80: { min: 80000, max: 110000 },
+                C90: { min: 90000, max: 105000 },
+                R95: { min: 95000, max: 110000},
+                T95: { min: 95000, max: 110000 },
+                C110: { min: 110000, max: 120000 }
+            },
             pipeAddError = false;
 	    //reset the errors
 	    $('#pipe_wall').removeClass("w3-border-red");
@@ -228,7 +258,7 @@ $(document).ready(function() {
 
 	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
 	       pipeNo = $('#tblPipe tr').length;
-	       pipeArea = Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4;
+	       pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4);
 	       console.log("Area is: ",pipeArea);
 	       wire_brkStr = pipeStrVal * pipeArea;
         }else{
@@ -237,6 +267,9 @@ $(document).ready(function() {
 
         }
 		rev_brkStr = 100000000 - wire_brkStr;
+		
+		//determine if it's a test pipe.
+		testPipe = $('#testPipe').data('value');
 		/*TODO: Calculate the shear force (West, DE, Cameron) and include it.
 		 * 
 		 *add {
@@ -249,6 +282,28 @@ $(document).ready(function() {
 		 *
 		 *
 		 */
+		//Determine Evaluation strength
+		//if strength is selected, then use $('#pipe_minYS').val()
+		//if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
+		if($('#tubeStrengthType').val()==='strength'){
+		    evalYS=$('#pipe_minYS').val();
+		}else if($('#tubeStrengthType').val()==='grade'){
+		    if($('#testPipe').data('value')===true){
+		        //min yield for grade
+		        evalYS=gradeObj[$('#tube_grade option:selected').text()].min;
+		    }else{
+		        //max yield for grade
+		        evalYS=gradeObj[$('#tube_grade option:selected').text()].max;
+		    }
+		}
+		if(isTube){
+		    //if elongation is present use west
+		    //else, distor energy & west w/o distortion 
+		    
+		}else{
+		    //calc shear force based on breaking strength
+		    
+		}
 			   
         //add pipe to the database
         pipeElongVal = pipeElongVal.length === 0 ? null : pipeElongVal; 
@@ -263,7 +318,9 @@ $(document).ready(function() {
                 grade: pipeGrade,
                 yieldstr: pipeStrVal,
                 brkStrength: wire_brkStr,
-                brkStrength_sortDesc: rev_brkStr
+                brkStrength_sortDesc: rev_brkStr,
+                testPipe: testPipe,
+                evalStrength: evalYS
         };
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
        
