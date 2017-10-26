@@ -63,6 +63,7 @@ $(document).ready(function() {
             $('#tubeStrength').removeClass("w3-hide");
         }
 	});
+	//Test Pipe Box
 	$('#testPipe').click(function (){
 	    if($('#testPipe').data('value')){
 	        $('#testPipe').removeClass('w3-blue').addClass('w3-opacity');
@@ -183,13 +184,14 @@ $(document).ready(function() {
 	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
-	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe,
+	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
             pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
             tubeType = $('#tube_type').val(),
             tubeStrengthType = $('#tubeStrengthType').val(),
             pipeODval = $('#pipe_od').val(),
             pipeElongVal = $('#pipe_elong').val(),
             pipeWallVal = $('#pipe_wall').val(),
+            forceValues,
             pipe_data = {},
             //TODO: finish the grade table
             gradeObj = { 
@@ -268,20 +270,12 @@ $(document).ready(function() {
         }
 		rev_brkStr = 100000000 - wire_brkStr;
 		
+		
 		//determine if it's a test pipe.
 		testPipe = $('#testPipe').data('value');
-		/*TODO: Calculate the shear force (West, DE, Cameron) and include it.
-		 * 
-		 *add {
-         *   WestForce: x,
-         *   DeForce: x,
-         *   CamForce: x, 
-         *   NOVForce: x,
-         *   }
-		 *
-		 *
-		 *
-		 */
+		
+
+		
 		//Determine Evaluation strength
 		//if strength is selected, then use $('#pipe_minYS').val()
 		//if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
@@ -295,15 +289,13 @@ $(document).ready(function() {
 		        //max yield for grade
 		        evalYS=gradeObj[$('#tube_grade option:selected').text()].max;
 		    }
+		}else{  //for wires
+		    evalYS=$('#brStrength').val();
 		}
-		if(isTube){
-		    //if elongation is present use west
-		    //else, distor energy & west w/o distortion 
-		    
-		}else{
-		    //calc shear force based on breaking strength
-		    
-		}
+		
+		//TODO: Calculate the shear force (West, DE, Cameron) and include it.
+
+        forceValues = jQuery.extend({},Calculate_force(isTube, evalYS, pipeArea, pipeElongVal));
 			   
         //add pipe to the database
         pipeElongVal = pipeElongVal.length === 0 ? null : pipeElongVal; 
@@ -313,18 +305,23 @@ $(document).ready(function() {
                 diameter: pipeODval,
                 elongation: pipeElongVal,
                 wall: pipeWallVal,
-                area: pipeArea,
+                area: pipeArea.toPrecision(4),
                 strengthType: tubeStrengthType,
                 grade: pipeGrade,
                 yieldstr: pipeStrVal,
                 brkStrength: wire_brkStr,
                 brkStrength_sortDesc: rev_brkStr,
                 testPipe: testPipe,
-                evalStrength: evalYS
+                evalStrength: evalYS,
+                WestForce: forceValues.West_force,
+                DeForce: forceValues.DE_force,
+                WestInfo: forceValues.West_info
         };
+       console.log(pipe_data);
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
        
        //add the pipe weight for tubes
+       //TODO: on success, if a cameron BOP is selected calculate the shear force
        if(isTube){
            $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
                newPipedata.update({ppf: weight});
@@ -340,7 +337,7 @@ $(document).ready(function() {
 	   $('#pipe_wall').val("");
 	   $('#pipe_elong').val("");
 	   $('#brStrength').val("");
-    
+	   $('#testPipe').removeClass('w3-blue').addClass('w3-opacity').data('value',false).html('Test Pipe');
     });
     
     /*
@@ -372,6 +369,83 @@ $(document).ready(function() {
     });
 });
 
+function Calculate_force(isTube, strength, area, pipe_elong) {
+    /*Function Calculates the shear force in lbs for a given pipe size.  
+    * It attempts to use 2 different methods: Distortion Energy &  West
+    * The following values are returned:  calculate_shear().West_force & .DE_force
+    * A successful evaluation will return a numerical values.  Unsuccesful evaluation will return false.
+    * 
+    * isTube = true/false ; true if casing, pipe, or tubing
+    * The Cameron Force is evaluated when the pipe weight is available. See process_ppf() which is called in display_results(); 
+    * This is done because the Cameron force is dependant on two calls to the database.  One for the ppf of the pipe, the other for the C3 value of the operator/pipe combo.
+    *
+    */
+    "use strict";
+    area = (typeof area !== 'undefined') ?  area : false;
+    pipe_elong = (typeof pipe_elong !== 'undefined') ?  pipe_elong : false;
+    var method = "", A, B, C, Stdev, R2, WestForce, WestEquationStr,
+        ForceValues = {},
+        min_YS = strength;
+
+    if(isTube && area){
+            //if elongation is present use west
+            if(pipe_elong){
+                //The following values are given by a WEST engineering report generated for MMS
+                //if ys is >=75ksi <105 use C=-234 A=-0.318 B=25.357 R2=.359 Stdev=62.03
+                //if ys is >=105ksi <135 use C=181.33 A=.396 B=2.035 R2=.121 Stdev=62.89
+                //if ys >=135 <165ksi use C=-35.11 A=.630 B=4.489 R2=.3 Stdev=76.69
+                //else C=35.28 A=.427 B=6.629 R2=.231 Stdev=75.15
+                if (strength >= 75000 && strength < 105000){
+                    C = -234;
+                    A = -0.318;
+                    B = 25.357;
+                    R2 = 0.359;
+                    Stdev = 62.03;
+                }
+                else if (strength >= 105000 && strength < 135000){
+                    C = 181.33;
+                    A = 0.396;
+                    B = 2.035;
+                    R2 = 0.121;
+                    Stdev = 62.89;
+                }
+                else if (strength >= 135000 && strength < 200000){
+                    C = -35.11;
+                    A = 0.630;
+                    B = 4.489;
+                    R2 = 0.3;
+                    Stdev = 76.69;
+                }
+                else {
+                    C = 35.28;
+                    A = 0.427;
+                    B = 6.629;
+                    R2 = 0.231;
+                    Stdev = 75.15;
+                }
+                
+                WestForce = C + A * 0.577 * strength * area + B * pipe_elong + (2 * Stdev);
+                WestEquationStr = C+" + "+A+" x 0.577 x "+strength.toPrecision(6)+" x "+area.toPrecision(4)+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
+                ForceValues.West_force=WestForce.toPrecision(6);
+                ForceValues.West_info="West Force = "+WestEquationStr;
+                ForceValues.DE_force = false;    
+            }else{ 
+                //distortion energy & west w/o distortion
+                ForceValues.DE_force = (0.577 * area * strength).toPrecision(6);
+                ForceValues.West_force = (ForceValues.DE_force * 1.045).toPrecision(6);
+                WestEquationStr = " 0.577 x "+area.toPrecision(4)+" x "+strength.toPrecision(6)+" x 1.045";
+                ForceValues.West_info="West Force = "+WestEquationStr;
+            }
+    
+        }else{ //calc shear force based on breaking strength
+            ForceValues.West_force=false;
+            ForceValues.West_info=false;
+            ForceValues.DE_force = (0.577 * strength).toPrecision(6);  //in this case the strength is a breaking force, not a yield (pressure)
+            ForceValues.DE_info = "0.577 x "+strength;
+        }
+    console.log(`isTube: ${isTube}, area: ${area}, strength: ${strength}, pipe_elong: ${pipe_elong}`); 
+    return ForceValues;
+}
 function display_ssc_save(xhttp) {
     "use strict";
 	var response = xhttp.responseText, link;
@@ -443,7 +517,6 @@ function getShareLink(){
 		var grad_sw = check_form_field('g_sw',"");
 		var POST_grad_sw = grad_sw ? "grad_sw="+grad_sw : "";
 		
-	
 		//BOP INFO
 		var post_BOP_info = "";
 		
@@ -586,7 +659,7 @@ function calculateArea() {
 }
 
 function display_results(){
-    var forceValues = jQuery.extend({},Calculate_shear2()),
+    var forceValues = jQuery.extend({},Calculate_force()),
         pressures = jQuery.extend({},Calc_all()),
         od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
     
@@ -704,120 +777,7 @@ function pipe_fields(){
     }    
 }
 
-function Calculate_shear2() {
-    /*Function Calculates the shear force in lbs for a given pipe size.  
-    * It attempts to use 2 different methods: Distortion Energy &  West
-    * The following values are returned:  calculate_shear().West_force & .DE_force
-    * A successful evaluation will return a numerical values.  Unsuccesful evaluation will return false.
-    * 
-    * The Cameron Force is evaluated when the pipe weight is available. See process_ppf() which is called in display_results(); 
-    *  This is done because the Cameron force is dependant on two calls to the database.  One for the ppf of the pipe, the other for the C3 value of the operator/pipe combo.
-    *
-    */
-  
-    var method = "", A, B, C, Stdev, R2,
-        ForceValues = {},
-        pipe_elong = check_form_field('pipe_elong',false),
-        min_YS = check_form_field('pipe_minYS',false),
-        UTS = check_form_field('pipe_uts',false),
-        ys = check_form_field('pipe_ys',false);
-    //var area = calculateArea().toFixed(2); 
-    
-    //get grade
-    if(document.contains(document.getElementById('pipe_grade'))){  //If a pipe grade has been selected
-            var grade_option = document.getElementById("pipe_grade").options;
-            var grade_index = document.getElementById("pipe_grade").selectedIndex;
-            var pipe_grade = grade_option[grade_index].text;
-    }
-    else{ var pipe_grade = false;}
 
-    //Get BOP Manufacturer
-    if(document.contains(document.getElementById('OEM_select'))){  //If an OEM has been selected
-        var BOP_OEM_option = document.getElementById("OEM_select").options;
-        var OEM_index = document.getElementById("OEM_select").selectedIndex;
-        var BOP_OEM = BOP_OEM_option[OEM_index].text;
-    }
-    else{ var BOP_OEM = "";}
-    //TODO: Is "Wireline BOP" check?
-    
-    //-------WEST------
-    //if %elongation && (UTS or YS  or pipe grade) && area then compute .West_force
-    //Selection Yield (use nominal if available, else use pipe grade)  Selection_yield is used to select from the forumlas.
-    //Evaluatioin Yield priority = UTS, YS/.85, max YS.  Evaluation yield is used to calculate the formula
-    if(pipe_elong && (UTS || ys || pipe_grade) && (min_YS || pipe_grade) && calculateArea()){
-        
-        eval_yield = evaluation_YS();
-                        
-        //Determine Select Yield
-        if(min_YS){sel_Yield=min_YS/1000;}
-        else{ //pipe_grade -> E75, L80, X95, G105, P110, Q125, S135, Z140, V150
-            if(pipe_grade == "E75" || pipe_grade == "L80" || pipe_grade == "X95"){sel_Yield = 100;}
-            else if (pipe_grade == "G105" || pipe_grade == "P110" || pipe_grade == "Q125"){sel_Yield = 130;}
-            else if (pipe_grade == "S135" || pipe_grade == "Z140" || pipe_grade == "V150"){sel_Yield = 160;}
-            }
-                        
-        //The following values are given by a WEST engineering report generated for MMS
-        //if ys is >=75ksi <105 use C=-234 A=-0.318 B=25.357 R2=.359 Stdev=62.03
-        //if ys is >=105ksi <135 use C=181.33 A=.396 B=2.035 R2=.121 Stdev=62.89
-        //if ys >=135 <165ksi use C=-35.11 A=.630 B=4.489 R2=.3 Stdev=76.69
-        //else C=35.28 A=.427 B=6.629 R2=.231 Stdev=75.15
-        if (sel_Yield >= 75 && sel_Yield < 105){
-            C = -234;
-            A = -.318;
-            B = 25.357;
-            R2 = .359;
-            Stdev = 62.03;
-        }
-        else if (sel_Yield >= 105 & sel_Yield < 135){
-            C = 181.33;
-            A = .396;
-            B = 2.035;
-            R2 = .121;
-            Stdev = 62.89;
-        }
-        else if (sel_Yield >= 135 & sel_Yield < 200){
-            C = -35.11;
-            A = .630;
-            B = 4.489;
-            R2 = .3;
-            Stdev = 76.69;
-        }
-        else {
-            C = 35.28;
-            A = .427;
-            B = 6.629;
-            R2 = .231;
-            Stdev = 75.15;
-        }
-        
-        var WestForce = C + A * .577 * eval_yield * calculateArea() + B * pipe_elong + (2 * Stdev);
-        var WestEquationStr = C+" + "+A+" * .577 * "+eval_yield+" * "+check_value_isNumber(calculateArea(),2)+" + "+B+" * "+pipe_elong+" + (2 * "+Stdev+")";
-        ForceValues["West_force"]=WestForce;
-        ForceValues["Recommended_force"]=WestForce;  //UPDATE NEEDED - ONLY WHEN RECOMMENDED.
-        ForceValues["West_info"]="West Force = "+WestEquationStr;
-    }
-    else {ForceValues["West_force"]=false;}
-    
-    //----Simple Distortion Energy---
-    // Determines shear force based on distortion energy therory
-    if((UTS || ys || pipe_grade) && calculateArea()){
-                
-        DE_forceValue = .577 * calculateArea() * evaluation_YS();
-        ForceValues["DE_force"]=DE_forceValue;
-        ForceValues["DE_info"]="Distortion Energy Force = .577 * "+check_value_isNumber(calculateArea(),2)+" * "+evaluation_YS();
-            
-        if(!ForceValues["West_force"]){  //Distortion energy should be used to compute the shear pressure if the West force is not available.
-            ForceValues["Recommended_force"]=DE_forceValue;
-            
-        }
-    }
-    else {ForceValues["DE_force"]=false;}
-    //UPDATE
-    //Determine the recommended shear force
-    //ForceValues["recommended_force"]=WestForce??;
-        
-    return ForceValues;
-}
 
 //TODO: delete when Calculate_shear2() works
 /*
