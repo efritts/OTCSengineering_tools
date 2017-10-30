@@ -83,7 +83,7 @@ if(!IsNullOrEmptyString($bop_id) && !IsNullOrEmptyString($pipe_grade) && !IsNull
 		//if BOP group B
 			if($pipe_od>9.625)
 			{
-				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM compliance.CameronC3 WHERE BOP_group='B' AND Tubular_size='+9.625' AND pipe_grade='".$pipe_grade."'");
+				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM compliance.CameronC3 WHERE BOP_group='B' AND Tubular_size='+9.625' AND pipe_grade='$pipe_grade'");
 			}
 			else {
 				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM compliance.CameronC3 WHERE BOP_group='B' AND Tubular_size='-9.625' AND pipe_grade='$pipe_grade'");

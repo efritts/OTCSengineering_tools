@@ -157,11 +157,20 @@ $(document).ready(function() {
                     newWireRow,
                     pipeElong_txt;
                 
-                //create the pipe table
                 if(type === 'pipe' || type === 'tubing' || type === 'casing'){
+                    //Create the list of pipe evaluated
                     pipeElong_txt = childData.child('elongation').val() === null ? "" : childData.child('elongation').val()+" %";
                     newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td title='remove' data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblPipe table').append(newPipeRow);
+                    
+                    //TODO: Construct the Pipe Force Approximation Table
+                    //TODO: figure out the preferred force.  if Cameron is available use that, else West, else DE
+                    
+                    //newPipeForce = "<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>preferredForce*</option><option>availForce2</option><option>availForce3</option></select>
+                    //Use this format
+                    //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
+                    //            <tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
+                    
                 }
                 //create the wireline table
                 else {
@@ -178,6 +187,8 @@ $(document).ready(function() {
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
         else{$('#tblWire').addClass('w3-hide');}
         
+        
+        
 		console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
         console.log(data.val());
     });
@@ -185,6 +196,7 @@ $(document).ready(function() {
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
+            bopID, F_CAM,
             pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
             tubeType = $('#tube_type').val(),
             tubeStrengthType = $('#tubeStrengthType').val(),
@@ -260,22 +272,18 @@ $(document).ready(function() {
 
 	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
 	       pipeNo = $('#tblPipe tr').length;
-	       pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toPrecision(4);
+	       pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toFixed(2);
 	       console.log("Area is: ",pipeArea);
 	       wire_brkStr = pipeStrVal * pipeArea;
         }else{
             pipeNo = $('#tblWire tr').length;
             wire_brkStr = $('#brStrength').val();
-
         }
 		rev_brkStr = 100000000 - wire_brkStr;
-		
-		
+				
 		//determine if it's a test pipe.
 		testPipe = $('#testPipe').data('value');
-		
-
-		
+				
 		//Determine Evaluation strength
 		//if strength is selected, then use $('#pipe_minYS').val()
 		//if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
@@ -293,8 +301,6 @@ $(document).ready(function() {
 		    evalYS=$('#brStrength').val();
 		}
 		
-		//TODO: Calculate the shear force (West, DE, Cameron) and include it.
-
         forceValues = jQuery.extend({},Calculate_force(isTube, evalYS, pipeArea, pipeElongVal));
 			   
         //add pipe to the database
@@ -321,10 +327,19 @@ $(document).ready(function() {
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
        
        //add the pipe weight for tubes
-       //TODO: on success, if a cameron BOP is selected calculate the shear force
        if(isTube){
-           $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
-               newPipedata.update({ppf: weight});
+            $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
+                //if the BOP is a cameron, include the Cameron Force
+                if($('#OEM_select option:selected').text()==='Cameron' && pipeGrade){//TODO: Update to work for casing/tubing grade or for a specified yield
+                    bopID = $('#BOP_select').val();
+                    $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
+                        F_CAM = weight*c3*evalYS;  //force in lbs
+                        newPipedata.update({ppf: weight, CamForce: F_CAM, C3: c3});    
+                    });
+                }else{
+                    newPipedata.update({ppf: weight});
+                    //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
+                }
            }).fail(function(err){console.log("we got an error: "+err);});
        }
        
@@ -359,7 +374,7 @@ $(document).ready(function() {
 })
 //Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
 .on('click', 'table .fa-trash-o ',function(){
-   
+   "use strict";
     //Get the key value from the row attribute.
     var key = $(this).parent().attr('data-key');
     
@@ -388,7 +403,11 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
         min_YS = strength;
 
     if(isTube && area){
-            //if elongation is present use west
+            
+            //Use distortion energy regarless of elongation for comparison
+            ForceValues.DE_force = (0.577 * area * strength).toFixed(0);
+            ForceValues.DE_info =     "0.577 x "+strength.toFixed(0)+" x "+area;
+            //if elongation is present use west w/ elongation
             if(pipe_elong){
                 //The following values are given by a WEST engineering report generated for MMS
                 //if ys is >=75ksi <105 use C=-234 A=-0.318 B=25.357 R2=.359 Stdev=62.03
@@ -423,27 +442,22 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
                     R2 = 0.231;
                     Stdev = 75.15;
                 }
-                
                 WestForce = C + A * 0.577 * strength * area + B * pipe_elong + (2 * Stdev);
-                WestEquationStr = C+" + "+A+" x 0.577 x "+strength.toPrecision(6)+" x "+area+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
-                ForceValues.West_force=WestForce.toPrecision(6);
+                WestEquationStr = C+" + "+A+" x 0.577 x "+strength.toFixed(0)+" x "+area+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
+                ForceValues.West_force=WestForce.toFixed(0);
                 ForceValues.West_info="West Force = "+WestEquationStr;
-                ForceValues.DE_force = false;    
-            }else{ 
-                //distortion energy & west w/o distortion
-                ForceValues.DE_force = (0.577 * area * strength).toPrecision(6);
-                ForceValues.West_force = (ForceValues.DE_force * 1.045).toPrecision(6);
-                WestEquationStr = " 0.577 x "+area +" x "+strength.toPrecision(6)+" x 1.045";
+            }else{ //west w/o distortion 
+                ForceValues.West_force = (ForceValues.DE_force * 1.045).toFixed(0);
+                WestEquationStr = " 0.577 x "+area +" x "+strength.toFixed(0)+" x 1.045";
                 ForceValues.West_info="West Force = "+WestEquationStr;
             }
-    
         }else{ //calc shear force based on breaking strength
             ForceValues.West_force=false;
             ForceValues.West_info=false;
-            ForceValues.DE_force = (0.577 * strength).toPrecision(6);  //in this case the strength is a breaking force, not a yield (pressure)
+            ForceValues.DE_force = (0.577 * strength).toFixed(0);  //in this case the strength is a breaking force, not a yield (pressure)
             ForceValues.DE_info = "0.577 x "+strength;
         }
-    console.log(`isTube: ${isTube}, area: ${area}, strength: ${strength}, pipe_elong: ${pipe_elong}`); 
+    //console.log(`isTube: ${isTube}, area: ${area}, strength: ${strength}, pipe_elong: ${pipe_elong}`); 
     return ForceValues;
 }
 function display_ssc_save(xhttp) {
@@ -661,7 +675,7 @@ function calculateArea() {
 function display_results(){
     var pressures = jQuery.extend({},Calc_all()),
         od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
-    	//forceValues = jQuery.extend({},Calculate_force()),
+        //forceValues = jQuery.extend({},Calculate_force()),
     //TODO: forceValues removed because these will be calculated when a new pipe is added.  display_results should get the Force value for each pipe in the firebase table
     
         
@@ -687,6 +701,12 @@ function display_results(){
     //West = check_value_isNumber(forceValues.West_force,0,false);
     //DistEnergy = check_value_isNumber(forceValues.DE_force,0,false);
 	
+	//Get the list of pipes in the firebase.
+	//for each
+	   //build force approximations table (show recommended method)
+	   //build shear pressure with recommended evaluation method
+
+
 	/*
 	if(West){ 
 		West_info = forceValues.West_info+"&#x0D Given by West Engineering document titled Mini Shear Study for MMS (BSEE TAP 455)";
@@ -716,7 +736,6 @@ function display_results(){
 	//SHEAR PRESSURE
 	//$('#final_pressure').text(check_value_isNumber(Press_final));
 	//document.getElementById('final_pressure_row').className = ""; //clear any error notification
-	
 	
 	//if(bop_closingarea && forceValues.Recommended_force){	
 	//Shear Pressure info
