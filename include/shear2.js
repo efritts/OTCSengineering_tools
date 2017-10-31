@@ -11,7 +11,77 @@
   var dbRefWorksheet = database.ref().child('shearWorksheet');
   var newWorksheet = dbRefWorksheet.push();
   console.log('Created key: '+newWorksheet.key);
-  
+function display_results(){
+    var pressures = jQuery.extend({},Calc_all()),
+        od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
+            
+        
+    //$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
+    
+    //if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
+    /*
+    if(document.contains(document.getElementById("pipe_ppf"))){
+        od = check_form_field('pipe_od',""); 
+        wall = check_form_field('pipe_wall',"");
+        ys = get_minYS();
+        url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
+        
+        if(od && wall && ys){
+            Call_ajax(url,process_ppf,"GET");  //shows the ppf and the Cameron Force value
+         }
+    }
+    */
+    
+    //Get the closing area
+    bop_closingarea = check_form_field('bop_closingarea');
+    
+    //If a shear method can be determined write it to the Force Approximations
+    //TableForceApprox = "<tr id=\"Fcam\"></tr>"; //THE row for the Cameron value will always be in here.
+    //West = check_value_isNumber(forceValues.West_force,0,false);
+    //DistEnergy = check_value_isNumber(forceValues.DE_force,0,false);
+    
+    //Get the list of pipes in the firebase.
+    //for each
+       //build force approximations table (show recommended method)
+       //build shear pressure with recommended evaluation method
+
+
+    /*
+    if(West){ 
+        West_info = forceValues.West_info+"&#x0D Given by West Engineering document titled Mini Shear Study for MMS (BSEE TAP 455)";
+        TableForceApprox += "<tr><td>F-West <span title=\""+West_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+West+"</td><td>kips</td></tr>";
+    }
+    if(DistEnergy){
+        TableForceApprox += "<tr><td>F-DE <span title=\""+forceValues.DE_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+DistEnergy+"</td><td>kips</td></tr>";
+    }
+    //Cameron > Recommended force
+    
+   // Press_final = (forceValues.Recommended_force * 1000) / bop_closingarea + pressures.Press_adj;
+    */
+    //Fill SUMMARY BOX
+    
+    //Well Pressure
+    $('#P_mud').html(check_value_isNumber(pressures.Press_well));
+    //Dominate Well Pressure
+    $('#WellP_type').html(pressures.Press_type);
+    //Seawater head pressure
+    $('#P_head_sw').html(check_value_isNumber(pressures.Press_head_sw));
+    //Control fluid head pressure
+    $('#P_head_cf').html(check_value_isNumber(pressures.Press_head_cf));
+    //Force approximations
+    //$('#approx_forces').html(TableForceApprox);
+    //Closing Pressure adjustment
+    $('#P_adj').text(check_value_isNumber(pressures.Press_adj,2));
+    //SHEAR PRESSURE
+    //$('#final_pressure').text(check_value_isNumber(Press_final));
+    //document.getElementById('final_pressure_row').className = ""; //clear any error notification
+    
+    //if(bop_closingarea && forceValues.Recommended_force){ 
+    //Shear Pressure info
+    //document.getElementById("final_P_info").title= "= ("+check_value_isNumber(forceValues.Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(pressures.Press_adj,2);
+    $("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
+    //}
+}
 $(document).ready(function() {
     "use strict";
 	
@@ -121,7 +191,7 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * PIPE TABLE DISPLAY
+	 * PIPE TABLE DISPLAY & Force approximation display
 	 * Listen to the firebase database and update the html table
 	 */	
 	 
@@ -147,14 +217,14 @@ $(document).ready(function() {
         //Generate a new table
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
         fb_tubulars.orderByChild('pipeNo').once("value", function(newdata){
-            
+            var tbl_forceApprox = "";
             //Clear the table except the header
             $('.pipeSummaryRow').remove();
             $('.wireSummaryRow').remove();
             newdata.forEach(function(childData){
                 var type = childData.child('type').val(),
-                    newPipeRow,
-                    newWireRow,
+                    newPipeRow, newWireRow, newPipeForce, newPipeInfo,
+                    preferredMethod, preferredForce, preferredForce_info,
                     pipeElong_txt;
                 
                 if(type === 'pipe' || type === 'tubing' || type === 'casing'){
@@ -163,20 +233,37 @@ $(document).ready(function() {
                     newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td title='remove' data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblPipe table').append(newPipeRow);
                     
-                    //TODO: Construct the Pipe Force Approximation Table
-                    //TODO: figure out the preferred force.  if Cameron is available use that, else West, else DE
+                    //Construct the Pipe Force Approximation Table
+                    //Figure out the preferred force.  if Cameron is available use that, else West, else DE
+                    //TODO: provide user the ability to select unpreferred forces and update table on change.
+                    if(childData.child('CamForce') && childData.child('CamForce').val() > 0){
+                        preferredMethod = "Cameron";
+                        preferredForce = childData.child('CamForce').val();
+                        preferredForce_info = "<p>Force (Cameron) = ppf x c3 x yield</p><p>"+childData.child('CamInfo').val()+"</p>";
+                    }else if(childData.child('WestForce') && childData.child('WestForce').val() > 0){
+                        preferredMethod = "West";
+                        preferredForce = childData.child('WestForce').val();
+                        preferredForce_info = "<p>"+childData.child('WestDef').val()+"</p><p>"+childData.child('WestInfo').val()+"</p>";
+                    }else{
+                        preferredMethod = "Distortion Energy";
+                        preferredForce = childData.child('DeForce').val();
+                        preferredForce_info = "<p>"+childData.child('DeForceDef').val()+"</p><p>"+childData.child('DeForceInfo').val()+"</p>";
+                    }
                     
-                    //newPipeForce = "<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>preferredForce*</option><option>availForce2</option><option>availForce3</option></select>
+                    //TODO: On click of the up arrow hide/show calculation details
+                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'><option>"+preferredMethod+"*</option><option>availForce2</option><option>availForce3</option></select></td><td>"+preferredForce+"</td><td>lbs</td><td><i class='fa fa-angle-down' aria-hidden='true'></i></td></tr>";
+                    newPipeInfo = "<tr class='w3-small'><td colspan='5'>"+preferredForce_info+"</td></tr>";
                     //Use this format
                     //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
                     //            <tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
-                    
+                    tbl_forceApprox+=newPipeForce+newPipeInfo;
                 }
                 //create the wireline table
                 else {
                     newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblWire table').append(newWireRow);
                 }
+                $('#approx_forces').html(tbl_forceApprox);
             });
         });
         
@@ -196,7 +283,7 @@ $(document).ready(function() {
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
-            bopID, F_CAM,
+            bopID, F_CAM, F_CAM_info,
             pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
             tubeType = $('#tube_type').val(),
             tubeStrengthType = $('#tubeStrengthType').val(),
@@ -320,8 +407,11 @@ $(document).ready(function() {
                 testPipe: testPipe,
                 evalStrength: evalYS,
                 WestForce: forceValues.West_force,
+                WestInfo: forceValues.West_info,
+                WestDef: forceValues.West_def,
                 DeForce: forceValues.DE_force,
-                WestInfo: forceValues.West_info
+                DeForceInfo: forceValues.DE_info,
+                DeForceDef: forceValues.DE_def
         };
        console.log(pipe_data);
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
@@ -334,7 +424,12 @@ $(document).ready(function() {
                     bopID = $('#BOP_select').val();
                     $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
                         F_CAM = weight*c3*evalYS;  //force in lbs
-                        newPipedata.update({ppf: weight, CamForce: F_CAM, C3: c3});    
+                        F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
+                        newPipedata.update({
+                            ppf: weight, 
+                            CamForce: F_CAM.toFixed(0), 
+                            CamInfo: F_CAM_info,
+                            C3: c3});    
                     });
                 }else{
                     newPipedata.update({ppf: weight});
@@ -368,6 +463,12 @@ $(document).ready(function() {
        } 
     });
     
+    //TODO: When BOP "Select from list" is chosen or the OEM is changed, add or remove the cameron force from the pipe database
+    /*
+    $('name:bop_select').change(function(){
+        
+    })
+    */
     $('#masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
         display_results();
     });
@@ -406,7 +507,8 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
             
             //Use distortion energy regarless of elongation for comparison
             ForceValues.DE_force = (0.577 * area * strength).toFixed(0);
-            ForceValues.DE_info =     "0.577 x "+strength.toFixed(0)+" x "+area;
+            ForceValues.DE_info =     "0.577 x "+area+" x "+strength.toFixed(0);
+            ForceValues.DE_def = "0.577 x area x yield";
             //if elongation is present use west w/ elongation
             if(pipe_elong){
                 //The following values are given by a WEST engineering report generated for MMS
@@ -443,19 +545,22 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
                     Stdev = 75.15;
                 }
                 WestForce = C + A * 0.577 * strength * area + B * pipe_elong + (2 * Stdev);
-                WestEquationStr = C+" + "+A+" x 0.577 x "+strength.toFixed(0)+" x "+area+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
+                WestEquationStr = C+" + "+A+" x 0.577 x "+area+" x "+strength.toFixed(0)+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
                 ForceValues.West_force=WestForce.toFixed(0);
-                ForceValues.West_info="West Force = "+WestEquationStr;
+                ForceValues.West_info= ForceValues.West_force+" = "+WestEquationStr;
+                ForceValues.West_def = "Force (West) = "+C+" + "+A+" x 0.577 x area x yield + "+B+" x elongation + (2 x "+Stdev+")";
             }else{ //west w/o distortion 
                 ForceValues.West_force = (ForceValues.DE_force * 1.045).toFixed(0);
                 WestEquationStr = " 0.577 x "+area +" x "+strength.toFixed(0)+" x 1.045";
-                ForceValues.West_info="West Force = "+WestEquationStr;
+                ForceValues.West_info= ForceValues.West_force+" = "+WestEquationStr;
+                ForceValues.West_def = "Force (West) = 0.577 x area x yield x 1.045";
             }
         }else{ //calc shear force based on breaking strength
             ForceValues.West_force=false;
             ForceValues.West_info=false;
             ForceValues.DE_force = (0.577 * strength).toFixed(0);  //in this case the strength is a breaking force, not a yield (pressure)
             ForceValues.DE_info = "0.577 x "+strength;
+            ForceValues.DE_def = "0.577 x breaking strength";
         }
     //console.log(`isTube: ${isTube}, area: ${area}, strength: ${strength}, pipe_elong: ${pipe_elong}`); 
     return ForceValues;
@@ -672,77 +777,7 @@ function calculateArea() {
 	else{ return false;}
 }
 
-function display_results(){
-    var pressures = jQuery.extend({},Calc_all()),
-        od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
-        //forceValues = jQuery.extend({},Calculate_force()),
-    //TODO: forceValues removed because these will be calculated when a new pipe is added.  display_results should get the Force value for each pipe in the firebase table
-    
-        
-	//$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
-	
-	//if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
-	if(document.contains(document.getElementById("pipe_ppf"))){
-        od = check_form_field('pipe_od',""); 
-        wall = check_form_field('pipe_wall',"");
-        ys = get_minYS();
-        url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
-		
-		if(od && wall && ys){
-            Call_ajax(url,process_ppf,"GET");  //shows the ppf and the Cameron Force value
-		 }
-	}
-	
-	//Get the closing area
-	bop_closingarea = check_form_field('bop_closingarea');
-	
-	//If a shear method can be determined write it to the Force Approximations
-    TableForceApprox = "<tr id=\"Fcam\"></tr>"; //THE row for the Cameron value will always be in here.
-    //West = check_value_isNumber(forceValues.West_force,0,false);
-    //DistEnergy = check_value_isNumber(forceValues.DE_force,0,false);
-	
-	//Get the list of pipes in the firebase.
-	//for each
-	   //build force approximations table (show recommended method)
-	   //build shear pressure with recommended evaluation method
 
-
-	/*
-	if(West){ 
-		West_info = forceValues.West_info+"&#x0D Given by West Engineering document titled Mini Shear Study for MMS (BSEE TAP 455)";
-		TableForceApprox += "<tr><td>F-West <span title=\""+West_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+West+"</td><td>kips</td></tr>";
-	}
-	if(DistEnergy){
-		TableForceApprox += "<tr><td>F-DE <span title=\""+forceValues.DE_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+DistEnergy+"</td><td>kips</td></tr>";
-	}
-    //Cameron > Recommended force
-    
-   // Press_final = (forceValues.Recommended_force * 1000) / bop_closingarea + pressures.Press_adj;
-	*/
-	//Fill SUMMARY BOX
-	
-	//Well Pressure
-	$('#P_mud').html(check_value_isNumber(pressures.Press_well));
-	//Dominate Well Pressure
-	$('#WellP_type').html(pressures.Press_type);
-	//Seawater head pressure
-	$('#P_head_sw').html(check_value_isNumber(pressures.Press_head_sw));
-	//Control fluid head pressure
-	$('#P_head_cf').html(check_value_isNumber(pressures.Press_head_cf));
-	//Force approximations
-	$('#approx_forces').html(TableForceApprox);
-	//Closing Pressure adjustment
-	$('#P_adj').text(check_value_isNumber(pressures.Press_adj,2));
-	//SHEAR PRESSURE
-	//$('#final_pressure').text(check_value_isNumber(Press_final));
-	//document.getElementById('final_pressure_row').className = ""; //clear any error notification
-	
-	//if(bop_closingarea && forceValues.Recommended_force){	
-	//Shear Pressure info
-	//document.getElementById("final_P_info").title= "= ("+check_value_isNumber(forceValues.Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(pressures.Press_adj,2);
-	$("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
-	//}
-}
 
 function pipe_fields(){
 	// change pipe selction method based on radio buttons
