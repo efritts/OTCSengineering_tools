@@ -7,9 +7,30 @@
  * Inital release Feb 5, 2016
  *
  */
-  var database = firebase.database();
-  var dbRefWorksheet = database.ref().child('shearWorksheet');
-  var newWorksheet = dbRefWorksheet.push();
+var database = firebase.database(),
+	dbRefWorksheet = database.ref().child('shearWorksheet'),
+	newWorksheet = dbRefWorksheet.push(),
+    //TODO: finish the grade table
+    gradeObj = { 
+        E75: { min: 75000, max: 105000 },
+        L80: { min: 80000, max: 95000 },
+        X95: { min: 95000, max: 125000 },
+        G105: { min: 105000, max: 135000 },
+        P110: { min: 110000, max: 140000 },
+        Q125: { min: 125000, max: 150000 },
+        S135: { min: 135000, max: 165000 },
+        Z140: { min: 140000, max: 0 }, //Finish
+        V150: { min: 150000, max: 0 }, //Finish
+        H40: { min: 40000, max: 80000 },
+        J55: { min: 55000, max: 80000 },
+        K55: { min: 55000, max: 80000 },
+        M65: { min: 65000, max: 85000 },
+        N80: { min: 80000, max: 110000 },
+        C90: { min: 90000, max: 105000 },
+        R95: { min: 95000, max: 110000},
+        T95: { min: 95000, max: 110000 },
+        C110: { min: 110000, max: 120000 }
+    };
   console.log('Created key: '+newWorksheet.key);
 function display_results(){
     var pressures = jQuery.extend({},Calc_all()),
@@ -81,6 +102,60 @@ function display_results(){
     //document.getElementById("final_P_info").title= "= ("+check_value_isNumber(forceValues.Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(pressures.Press_adj,2);
     $("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
     //}
+}
+
+function updateCamForces(tubeObj){
+	var pipeODval = tubeObj.child('diameter').val(),
+		tubeType = tubeObj.child('type').val(),
+		//pipeWallVal = $('#pipe_wall').val(),
+		weight = tubeObj.child('ppf').val(),
+		evalYS, bopID, F_CAM, F_CAM_info, pipeGrade = null,
+		isTube = (tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  )? true: false;
+	//if the BOP is a cameron, include the Cameron Force		
+	if($('#OEM_select option:selected').text() === 'Cameron'){ //TODO: Update to work for casing/tubing grade or for a specified yield
+		console.log('Update the tubes with Cameron Forces');  //testing
+		
+		//Determine Evaluation strength TODO: this code is a duplicated below, create function.
+		//if strength is selected, then use $('#pipe_minYS').val()
+		//if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
+		if($('#tubeStrengthType').val()==='strength'){
+		    evalYS=$('#pipe_minYS').val();
+		}else if($('#tubeStrengthType').val()==='grade'){
+		    if($('#testPipe').data('value')===true){
+		        //min yield for grade
+		        evalYS=gradeObj[$('#tube_grade option:selected').text()].min;
+		    }else{
+		        //max yield for grade
+		        evalYS=gradeObj[$('#tube_grade option:selected').text()].max;
+		    }
+		}else{  //for wires
+		    evalYS=$('#brStrength').val();
+		}
+            
+		if(isTube){
+			pipeGrade = tubeType === "pipe" ?   $('#tube_grade option:selected').text() : $('#casing_grade option:selected').text();
+            bopID = $('#BOP_select').val();
+            console.log("requesting: include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval);
+            $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
+                F_CAM = weight*c3*evalYS;  //force in lbs
+                F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
+                tubeObj.ref.update({
+                    ppf: weight, 
+                    CamForce: F_CAM, 
+                    CamInfo: F_CAM_info,
+                    C3: c3
+                }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
+            }).fail(function(err){console.log("Failed to get C3 value: "+err);});
+		}	
+	}else{ //Not a Cameron BOP, remove any Cameron Forces that exist
+		tubeObj.ref.update({  
+			CamForce: null, 
+			CamInfo: null,
+			C3: null
+		})
+		.then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to remove cameron forces');}, function(error){console.log('Error nulling cameron data: '+error);});
+	}	
+	//console.log(tubeObj.key);
 }
 $(document).ready(function() {
     "use strict";
@@ -292,27 +367,6 @@ $(document).ready(function() {
             pipeWallVal = $('#pipe_wall').val(),
             forceValues,
             pipe_data = {},
-            //TODO: finish the grade table
-            gradeObj = { 
-                E75: { min: 75000, max: 105000 },
-                L80: { min: 80000, max: 95000 },
-                X95: { min: 95000, max: 125000 },
-                G105: { min: 105000, max: 135000 },
-                P110: { min: 110000, max: 140000 },
-                Q125: { min: 125000, max: 150000 },
-                S135: { min: 135000, max: 165000 },
-                Z140: { min: 140000, max: 0 }, //Finish
-                V150: { min: 150000, max: 0 }, //Finish
-                H40: { min: 40000, max: 80000 },
-                J55: { min: 55000, max: 80000 },
-                K55: { min: 55000, max: 80000 },
-                M65: { min: 65000, max: 85000 },
-                N80: { min: 80000, max: 110000 },
-                C90: { min: 90000, max: 105000 },
-                R95: { min: 95000, max: 110000},
-                T95: { min: 95000, max: 110000 },
-                C110: { min: 110000, max: 120000 }
-            },
             pipeAddError = false;
 	    //reset the errors
 	    $('#pipe_wall').removeClass("w3-border-red");
@@ -416,6 +470,7 @@ $(document).ready(function() {
        console.log(pipe_data);
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
        
+       //TODO: use function updateCamForces(tubeObj)
        //add the pipe weight for tubes
        if(isTube){
             $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
@@ -424,7 +479,7 @@ $(document).ready(function() {
                     bopID = $('#BOP_select').val();
                     $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
                         F_CAM = weight*c3*evalYS;  //force in lbs
-                        F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
+                        F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
                         newPipedata.update({
                             ppf: weight, 
                             CamForce: F_CAM.toFixed(0), 
@@ -462,13 +517,6 @@ $(document).ready(function() {
            $('.rigSurface').addClass('w3-hide');
        } 
     });
-    
-    //TODO: When BOP "Select from list" is chosen or the OEM is changed, add or remove the cameron force from the pipe database
-    /*
-    $('name:bop_select').change(function(){
-        
-    })
-    */
     $('#masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
         display_results();
     });
@@ -483,7 +531,18 @@ $(document).ready(function() {
     newWorksheet.child('tubulars/'+key).remove().then(function(){
         console.log("removed key:" + key);    
     });
-});
+})
+//TODO: When OEM is changed or (the BOP model is changed and it's Cameron OEM), add or remove the cameron force from the pipe database
+.on('change', '#OEM_select, #BOP_select', function(){
+   		console.log('OEM/model changed');
+   		var fb_tubulars = newWorksheet.child('tubulars');
+		fb_tubulars.once('value', function(snapshot) {
+			snapshot.forEach(function(childSnapshot){
+				updateCamForces(childSnapshot);
+			});
+		});
+
+ });
 
 function Calculate_force(isTube, strength, area, pipe_elong) {
     /*Function Calculates the shear force in lbs for a given pipe size.  
