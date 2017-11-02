@@ -137,8 +137,8 @@ function updateCamForces(tubeObj){
             bopID = $('#BOP_select').val();
             console.log("requesting: include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval);
             $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
-                F_CAM = weight*c3*evalYS;  //force in lbs
-                F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
+                F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
+                F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
                 tubeObj.ref.update({
                     ppf: weight, 
                     CamForce: F_CAM, 
@@ -160,17 +160,24 @@ function updateCamForces(tubeObj){
 $(document).ready(function() {
     "use strict";
 	
+	
+	
 	//disable the button to get a sharable link until a shear pressure is calculated.
 	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
 
 	//Expandable tool tips
-	//Hide the div below the #expander arrow
-	$(".expander").click(function(){
-	   $(this).parent().parent().children(":nth-child(2)").toggleClass("w3-show w3-hide");
-	   if($(this).html()===' <i class="fa fa-chevron-down" aria-hidden="true"></i> '){
-                $(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');
-            }
-            else{$(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');}
+	//Hide the section below the #expander arrow.  The hidden section is a sibbling of the arrow's parent.
+	$(document).on('click', '.expander', function(){
+	    var currentRow = $(this).parent(), allChildren = currentRow.parent().children(), 
+	    currentRowIndex=allChildren.index(currentRow),
+	    showRowIndex = currentRowIndex + 2;  //this will show the next child in a non-0 indexed list
+        //allChildren.addClass('w3-red');
+        //currentRow.addClass('w3-green');
+        
+	   $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
+	   if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
+                $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
+       }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
 	});
 	/*
 	 * Form Error Checking
@@ -326,13 +333,14 @@ $(document).ready(function() {
                     }
                     
                     //TODO: On click of the up arrow hide/show calculation details
-                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'><option>"+preferredMethod+"*</option><option>availForce2</option><option>availForce3</option></select></td><td>"+preferredForce+"</td><td>lbs</td><td><i class='fa fa-angle-down' aria-hidden='true'></i></td></tr>";
-                    newPipeInfo = "<tr class='w3-small'><td colspan='5'>"+preferredForce_info+"</td></tr>";
+                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'><option>"+preferredMethod+"*</option><option>availForce2</option><option>availForce3</option></select></td><td>"+preferredForce+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
+                    newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+preferredForce_info+"</td></tr>";
                     //Use this format
                     //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
-                    //            <tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
+                    //<tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
                     tbl_forceApprox+=newPipeForce+newPipeInfo;
                 }
+                //TODO: Add wirelines to force approximations
                 //create the wireline table
                 else {
                     newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
@@ -617,6 +625,7 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
         }else{ //calc shear force based on breaking strength
             ForceValues.West_force=false;
             ForceValues.West_info=false;
+            ForceValues.West_def = false;
             ForceValues.DE_force = (0.577 * strength).toFixed(0);  //in this case the strength is a breaking force, not a yield (pressure)
             ForceValues.DE_info = "0.577 x "+strength;
             ForceValues.DE_def = "0.577 x breaking strength";
