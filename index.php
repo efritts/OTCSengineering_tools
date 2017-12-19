@@ -129,7 +129,7 @@ switch ($_GET["page"]) {
 					</footer>
 				</div>
 			</div>
-<footer class="w3-container w3-black w3-right-align w3-tiny footer"><a href="?page=updates">last modified</a> June 19, 2017 by David Hanks</footer>	<!-- inline style corrects shear pressure overlap, but hides footer below initial area.  style="margin-top:10px;" -->
+<footer class="w3-container w3-black w3-right-align w3-tiny footer"><a href="?page=updates">last modified</a> December 19, 2017 by David Hanks</footer>	<!-- inline style corrects shear pressure overlap, but hides footer below initial area.  style="margin-top:10px;" -->
 <?php
 /*TODO: 
  *  add the latest git commit with shell_exec()
