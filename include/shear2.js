@@ -8,8 +8,8 @@
  *
  */
 var database = firebase.database(),
-	dbRefWorksheet = database.ref().child('shearWorksheet'),
-	newWorksheet = dbRefWorksheet.push(),
+    dbRefWorksheet = database.ref().child('shearWorksheet'),
+    newWorksheet = dbRefWorksheet.push(),
     //TODO: finish the grade table
     gradeObj = { 
         E75: { min: 75000, max: 105000 },
@@ -31,12 +31,11 @@ var database = firebase.database(),
         T95: { min: 95000, max: 110000 },
         C110: { min: 110000, max: 120000 }
     };
-  console.log('Created key: '+newWorksheet.key);
+    console.log('Created key: '+newWorksheet.key);
 function display_results(){
     var pressures = jQuery.extend({},Calc_all()),
         od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
-            
-        
+
     //$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
     
     //if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
@@ -159,9 +158,7 @@ function updateCamForces(tubeObj){
 }
 $(document).ready(function() {
     "use strict";
-	
-	
-	
+
 	//disable the button to get a sharable link until a shear pressure is calculated.
 	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
 
@@ -171,13 +168,13 @@ $(document).ready(function() {
 	    var currentRow = $(this).parent(), allChildren = currentRow.parent().children(), 
 	    currentRowIndex=allChildren.index(currentRow),
 	    showRowIndex = currentRowIndex + 2;  //this will show the next child in a non-0 indexed list
-        //allChildren.addClass('w3-red');
-        //currentRow.addClass('w3-green');
+            //allChildren.addClass('w3-red');
+            //currentRow.addClass('w3-green');
         
-	   $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
-	   if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
+            $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
+            if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
                 $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
-       }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
+            }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
 	});
 	/*
 	 * Form Error Checking
@@ -203,17 +200,16 @@ $(document).ready(function() {
 	        if($('#tube_type').val()==="pipe"){
 	           $('#tubeGrade').removeClass("w3-hide");
 	           $('#casingTubeGrade').addClass("w3-hide");
-	         }
-	         else if(($('#tube_type').val()=== "tubing") || ($('#tube_type').val()=== "casing")){
+	        }
+	        else if(($('#tube_type').val()=== "tubing") || ($('#tube_type').val()=== "casing")){
 	           $('#casingTubeGrade').removeClass("w3-hide");
 	           $('#tubeGrade').addClass("w3-hide");
-	         }
-	    }
-	    else{
+	        }
+	    }else{
             $('#tubeGrade').addClass("w3-hide");
             $('#casingTubeGrade').addClass("w3-hide");
             $('#tubeStrength').removeClass("w3-hide");
-        }
+            }
 	});
 	//Test Pipe Box
 	$('#testPipe').click(function (){
@@ -278,23 +274,23 @@ $(document).ready(function() {
 	 */	
 	 
 	//When a tubular is added to the database, order them by breaking strength and renumber
-    var fb_tubulars = newWorksheet.child('tubulars');
-    fb_tubulars.orderByChild('brkStrength_sortDesc').on("value", function(data){
-        var newPipeNo = 1, 
-            newWireNo = 1;
+        var fb_tubulars = newWorksheet.child('tubulars');
+        fb_tubulars.orderByChild('brkStrength_sortDesc').on("value", function(data){
+            var newPipeNo = 1, 
+                newWireNo = 1;
         
-        //update the pipe number based on breaking strength
-        data.forEach(function(childData){
-            var type = childData.child('type').val();
+            //update the pipe number based on breaking strength
+            data.forEach(function(childData){
+                var type = childData.child('type').val();
 
-            if(type === 'pipe' || type === 'tubing' || type === 'casing'){
-                childData.ref.update( {pipeNo: newPipeNo});
-                newPipeNo +=1;
-            }else{
-                childData.ref.update( {pipeNo: newWireNo});
-                newWireNo +=1;
-            }
-        });
+                if(type === 'pipe' || type === 'tubing' || type === 'casing'){
+                    childData.ref.update( {pipeNo: newPipeNo});
+                    newPipeNo +=1;
+                }else{
+                    childData.ref.update( {pipeNo: newWireNo});
+                    newWireNo +=1;
+                }
+            });
         
         //Generate a new table
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
@@ -307,7 +303,15 @@ $(document).ready(function() {
                 var type = childData.child('type').val(),
                     newPipeRow, newWireRow, newPipeForce, newPipeInfo,
                     preferredMethod, preferredForce, preferredForce_info,
-                    pipeElong_txt;
+                    pipeElong_txt, calcMethodOptionHTML = "",
+                    cameronMethodAvailable = childData.child('CamForce') && childData.child('CamForce').val() > 0,
+                    westMethodAvailable = childData.child('WestForce') && childData.child('WestForce').val() > 0,
+                    calculationMethods = {
+                        preferred: "",
+                        preferredForceValue: 0,
+                        preferredForceInfo: "",
+                        available: []
+                    };
                 
                 if(type === 'pipe' || type === 'tubing' || type === 'casing'){
                     //Create the list of pipe evaluated
@@ -315,26 +319,41 @@ $(document).ready(function() {
                     newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td title='remove' data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblPipe table').append(newPipeRow);
                     
-                    //Construct the Pipe Force Approximation Table
-                    //Figure out the preferred force.  if Cameron is available use that, else West, else DE
-                    //TODO: provide user the ability to select unpreferred forces and update table on change.
-                    if(childData.child('CamForce') && childData.child('CamForce').val() > 0){
-                        preferredMethod = "Cameron";
-                        preferredForce = childData.child('CamForce').val();
-                        preferredForce_info = "<p>Force (Cameron) = ppf x c3 x yield</p><p>"+childData.child('CamInfo').val()+"</p>";
-                    }else if(childData.child('WestForce') && childData.child('WestForce').val() > 0){
-                        preferredMethod = "West";
-                        preferredForce = childData.child('WestForce').val();
-                        preferredForce_info = "<p>"+childData.child('WestDef').val()+"</p><p>"+childData.child('WestInfo').val()+"</p>";
-                    }else{
-                        preferredMethod = "Distortion Energy";
-                        preferredForce = childData.child('DeForce').val();
-                        preferredForce_info = "<p>"+childData.child('DeForceDef').val()+"</p><p>"+childData.child('DeForceInfo').val()+"</p>";
-                    }
                     
-                    //TODO: On click of the up arrow hide/show calculation details
-                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'><option>"+preferredMethod+"*</option><option>availForce2</option><option>availForce3</option></select></td><td>"+preferredForce+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
-                    newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+preferredForce_info+"</td></tr>";
+                    //Create an object with available and preferred methods. var calculationMethods { preferred: "Cameron", available {"Cameron", "West", "DE" }}
+                    //Order of preference is Cameron then West then DE (Distortion Energy)
+                    if(cameronMethodAvailable){
+                        calculationMethods.preferred = "Cameron";
+                        calculationMethods.preferredForceValue = childData.child('CamForce').val();
+                        calculationMethods.preferredForceInfo = "<p>Force (Cameron) = ppf x c3 x yield</p><p>"+childData.child('CamInfo').val()+"</p>";
+                        calculationMethods.available.push("Cameron");
+                    }
+                    if(westMethodAvailable){
+                        calculationMethods.available.push("West");                       
+                        if(!cameronMethodAvailable){
+                            calculationMethods.preferred = "West";
+                            calculationMethods.preferredForceValue = childData.child('WestForce').val();
+                            calculationMethods.preferredForceInfo = "<p>"+childData.child('WestDef').val()+"</p><p>"+childData.child('WestInfo').val()+"</p>";
+                        }
+                    }
+                    if(!cameronMethodAvailable && !westMethodAvailable){
+                        calculationMethods.preferred = "DE";
+                        calculationMethods.preferredForceValue = childData.child('DeForce').val();
+                        calculationMethods.preferredForceInfo = "<p>"+childData.child('DeForceDef').val()+"</p><p>"+childData.child('DeForceInfo').val()+"</p>";
+                    }
+                    calculationMethods.available.push("DE");              
+
+                    //TODO: move to a function that will construct a table based on "selected" and available methods.  That way, when a different method is selected the same function can be called.
+                    //Construct the Pipe Force Approximation Table
+                    calculationMethods.available.forEach(function(value){
+                        if(value === calculationMethods.preferred){
+                            calcMethodOptionHTML += "<option selected='selected'>"+value+"*</option>";
+                        }else{
+                            calcMethodOptionHTML += "<option>"+value+"</option>";
+                        }
+                    });
+                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.preferredForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
+                    newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+calculationMethods.preferredForceInfo+"</td></tr>";
                     //Use this format
                     //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
                     //<tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>

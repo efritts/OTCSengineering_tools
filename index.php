@@ -2,8 +2,7 @@
 /* index.php
  * 
  *
- * ADD CONTENT
- * Check user credentials
+ * TODO: Check user credentials
  */
 ?>
 <!DOCTYPE html>
@@ -16,58 +15,58 @@
 //change the page content based on page selection.  Page clicked on is given by $_GET["page"] 
 switch ($_GET["page"]) {
 	case "calcs":
-		//REMOVE: if (empty($_GET["sub"])){ include ("calculators_home.html");}
-		switch ($_GET["sub"]) {
-			case "ssc":
-		        include 'include/functions.php';
-		        include 'include/shear.js.php';
-				include 'shear_calculator.php';
-				//if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
-				if(isset($_GET["save"]) && is_numeric($_GET["save"])){
-					include 'ShearCalculator/load_ssc_save.php'; 				
- 				}
-				break;
-			case "mtsc":
-		        include 'include/functions.php';
-		        include 'include/shear.js.php';
-				include 'shear_calculator2.html';
-				
-				//if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
-				if(isset($_GET["save"]) && is_numeric($_GET["save"])){
-					include 'ShearCalculator/load_ssc_save.php'; 				
- 				}
-				break;
-			case "atest":
-				//include 'include/functions.php';
-				include 'form_accum_test.php';
-				break;
-            default:
-                include 'calculators_home.html';
-		}
-		break;
+            //REMOVE: if (empty($_GET["sub"])){ include ("calculators_home.html");}
+            switch ($_GET["sub"]) {
+                case "ssc":
+                include 'include/functions.php';
+                include 'include/shear.js.php';
+                        include 'shear_calculator.php';
+                        //if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
+                        if(isset($_GET["save"]) && is_numeric($_GET["save"])){
+                                include 'ShearCalculator/load_ssc_save.php'; 				
+                        }
+                        break;
+                case "mtsc":
+                    include 'include/functions.php';
+                    include 'include/shear.js.php';
+                    include 'shear_calculator2.html';
+
+                    //if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
+                    if(isset($_GET["save"]) && is_numeric($_GET["save"])){
+                        include 'ShearCalculator/load_ssc_save.php'; 				
+                    }
+                    break;
+                case "atest":
+                        //include 'include/functions.php';
+                        include 'form_accum_test.php';
+                        break;
+                default:
+                    include 'calculators_home.html';
+            }
+            break;
 	case "bop":
 		switch ($_GET["sub"]) {
-			case "Add":
-				echo "<div class=\"w3-container content\"><h1>Add BOP</h1>";
-				include 'form_bop.php';
-				echo "</div>";
-				break;
-            case "Detail":
-				echo "<div class='w3-container'>";
-				include 'bopBrowse.php';
-				echo "</div>";
-                echo "<div class=\"w3-container\"><h1>BOP detail</h1>";
-				include 'BOPdetail.php';
-				echo "</div>";
-				break;
-			default:
-            case "Browse":
-                echo "<div class=\"w3-container content\"><h1>BOP's available</h1>";
-                include 'bopBrowse.php';
-                echo "</div>";
+                    case "Add":
+                        echo "<div class=\"w3-container content\"><h1>Add BOP</h1>";
+                        include 'form_bop.php';
+                        echo "</div>";
+                        break;
+                    case "Detail":
+                        echo "<div class='w3-container'>";
+                        include 'bopBrowse.php';
+                        echo "</div>";
+                        echo "<div class=\"w3-container\"><h1>BOP detail</h1>";
+                        include 'BOPdetail.php';
+                        echo "</div>";
+                        break;
+                    default:
+                    case "Browse":
+                        echo "<div class=\"w3-container content\"><h1>BOP's available</h1>";
+                        include 'bopBrowse.php';
+                        echo "</div>";
+                        break;
+                }
                 break;
-		}
-		break;
 	case "pipe":?>
 		<div class="w3-row content">
 			<div class="w3-col l8 w3-red">Column 75% red</div>
