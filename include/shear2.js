@@ -65,19 +65,6 @@ function display_results(){
        //build force approximations table (show recommended method)
        //build shear pressure with recommended evaluation method
 
-
-    /*
-    if(West){ 
-        West_info = forceValues.West_info+"&#x0D Given by West Engineering document titled Mini Shear Study for MMS (BSEE TAP 455)";
-        TableForceApprox += "<tr><td>F-West <span title=\""+West_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+West+"</td><td>kips</td></tr>";
-    }
-    if(DistEnergy){
-        TableForceApprox += "<tr><td>F-DE <span title=\""+forceValues.DE_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+DistEnergy+"</td><td>kips</td></tr>";
-    }
-    //Cameron > Recommended force
-    
-   // Press_final = (forceValues.Recommended_force * 1000) / bop_closingarea + pressures.Press_adj;
-    */
     //Fill SUMMARY BOX
     
     //Well Pressure
@@ -103,6 +90,22 @@ function display_results(){
     //}
 }
 
+function selectedMethodRow(key,method){
+    ////TODO
+    //returns and html formatted row for the selected method
+    //key is the key from firebase of the pipe being evaluated
+    //var method as String = "Cameron" || "West" || "DE"
+    //method is the selected evaluation method to use when calculating the force
+    //var options as Array 
+    //options is an array of the existing available methods that can be utilized to evaluate the pipe.
+    
+    var options = []; //options is an array of the existing available methods that can be utilized to evaluate the pipe. e.g. options = = ["Cameron", "West", "DE"]
+    
+    //get the pipe data based on the key
+    
+    //determine the options based on what's available in firebase.
+    
+}
 function updateCamForces(tubeObj){
 	var pipeODval = tubeObj.child('diameter').val(),
 		tubeType = tubeObj.child('type').val(),
