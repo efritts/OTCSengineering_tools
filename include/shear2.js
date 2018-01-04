@@ -89,23 +89,6 @@ function display_results(){
     $("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
     //}
 }
-
-function selectedMethodRow(key,method){
-    ////TODO
-    //returns and html formatted row for the selected method
-    //key is the key from firebase of the pipe being evaluated
-    //var method as String = "Cameron" || "West" || "DE"
-    //method is the selected evaluation method to use when calculating the force
-    //var options as Array 
-    //options is an array of the existing available methods that can be utilized to evaluate the pipe.
-    
-    var options = []; //options is an array of the existing available methods that can be utilized to evaluate the pipe. e.g. options = = ["Cameron", "West", "DE"]
-    
-    //get the pipe data based on the key
-    
-    //determine the options based on what's available in firebase.
-    
-}
 function updateCamForces(tubeObj){
 	var pipeODval = tubeObj.child('diameter').val(),
 		tubeType = tubeObj.child('type').val(),
@@ -164,7 +147,18 @@ $(document).ready(function() {
 
 	//disable the button to get a sharable link until a shear pressure is calculated.
 	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
-
+        
+        //When a new calculation method is selected, update the force.
+        $(document).on('change','#approx_forces select', function(){ 
+            //get the key of the pipe from firebase of the pipe being evaluated
+            var key = $(this).parent().parent().attr('data-key');
+            //get the method that was just selected
+            var selectedMethodName = $("#approx_forces select option:selected").val();
+            
+            //Update the selected method in the firebase db
+            newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
+        });
+        
 	//Expandable tool tips
 	//Hide the section below the #expander arrow.  The hidden section is a sibbling of the arrow's parent.
 	$(document).on('click', '.expander', function(){
@@ -179,9 +173,10 @@ $(document).ready(function() {
                 $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
             }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
 	});
-	/*
-	 * Form Error Checking
-	 */
+        
+/*
+ * Form Error Checking
+ */
 	//Wall thickness should be a number and it should not start with "."  
 	// "0.25" is ok ".25" is not
 	//TODO: wall should start with 0 not "."
@@ -192,9 +187,9 @@ $(document).ready(function() {
 	    }
 	});
 		
-	/*
-	 * TUBULAR FORM 
-	 */
+/*
+ * TUBULAR FORM 
+ */
 	//Show the correct pipe grade if pipe, tubing, or casing is selected.
 	$("#tubeStrengthType").change(function(){
 	    if($("#tubeStrengthType").val()==="grade"){
@@ -226,7 +221,7 @@ $(document).ready(function() {
 	       $('#testPipe').html('Test Pipe <i class="fa fa-check" aria-hidden="true"></i> ');
 	    }
 	});
-	//Show the appropriate inputs for the type fo tublular selected
+	//Show the appropriate inputs for the type for tublular selected
 	//For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
 	//For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
 	$('#tube_type').change(function(){
@@ -271,10 +266,10 @@ $(document).ready(function() {
 		}
 	});
 	
-	/*
-	 * PIPE TABLE DISPLAY & Force approximation display
-	 * Listen to the firebase database and update the html table
-	 */	
+/*
+ * PIPE TABLE DISPLAY & Force approximation display
+ * Listen to the firebase database and update the html table
+ */	
 	 
 	//When a tubular is added to the database, order them by breaking strength and renumber
         var fb_tubulars = newWorksheet.child('tubulars');
@@ -311,6 +306,7 @@ $(document).ready(function() {
                     westMethodAvailable = childData.child('WestForce') && childData.child('WestForce').val() > 0,
                     calculationMethods = {
                         preferred: "",
+                        selected: "",
                         preferredForceValue: 0,
                         preferredForceInfo: "",
                         available: []
@@ -345,14 +341,15 @@ $(document).ready(function() {
                         calculationMethods.preferredForceInfo = "<p>"+childData.child('DeForceDef').val()+"</p><p>"+childData.child('DeForceInfo').val()+"</p>";
                     }
                     calculationMethods.available.push("DE");              
-
+                    calculationMethods.selected = $("#approx_forces select option:selected").val();
+                    
                     //TODO: move to a function that will construct a table based on "selected" and available methods.  That way, when a different method is selected the same function can be called.
                     //Construct the Pipe Force Approximation Table
                     calculationMethods.available.forEach(function(value){
                         if(value === calculationMethods.preferred){
-                            calcMethodOptionHTML += "<option selected='selected'>"+value+"*</option>";
+                            calcMethodOptionHTML += "<option value='"+value+"'>"+value+"*</option>";
                         }else{
-                            calcMethodOptionHTML += "<option>"+value+"</option>";
+                            calcMethodOptionHTML += "<option value='"+value+"'>"+value+"</option>";
                         }
                     });
                     newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.preferredForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
@@ -372,16 +369,14 @@ $(document).ready(function() {
             });
         });
         
-		//if there's pipes unhide the table
+	//if there's pipes unhide the table
         if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
         else{$('#tblPipe').addClass('w3-hide');}
         //if there's wires unhide the table
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
         else{$('#tblWire').addClass('w3-hide');}
         
-        
-        
-		console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
+	console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
         console.log(data.val());
     });
 	
@@ -400,37 +395,37 @@ $(document).ready(function() {
             pipeAddError = false;
 	    //reset the errors
 	    $('#pipe_wall').removeClass("w3-border-red");
-        $('#pipe_od').removeClass("w3-border-red");
-        $('#brStrength').removeClass("w3-border-red");
+            $('#pipe_od').removeClass("w3-border-red");
+            $('#brStrength').removeClass("w3-border-red");
         
-        //Error checks on tubular form
-		if(pipeODval === ""){
-            //show error
-	        $('#pipe_od').addClass("w3-border-red");
+            //Error checks on tubular form
+            if(pipeODval === ""){
+                //show error
+                $('#pipe_od').addClass("w3-border-red");
                 pipeAddError = true;
-		}
-		if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
-	       isTube = true;
-	       if($('#pipe_wall').val() === ""){
-               //show error
-               $('#pipe_wall').addClass("w3-border-red");
-               pipeAddError = true;
-           }
-        //TODO: if strength type is selected, then value should exist for yield.
-		}else{
-			if($('#brStrength').val() === ""){
-			       //show error
-			       $('#brStrength').addClass("w3-border-red");
-			       pipeAddError = true;
-			}
-			pipeGrade = null; 
-			pipeWallVal = null;
-		}
-		//if any errors are seen when adding, then exit the click handler
-		if(pipeAddError){return;}
+            }
+            if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
+                isTube = true;
+                if($('#pipe_wall').val() === ""){
+                    //show error
+                    $('#pipe_wall').addClass("w3-border-red");
+                    pipeAddError = true;
+                }
+                //TODO: if strength type is selected, then value should exist for yield.
+            }else{
+                if($('#brStrength').val() === ""){
+                       //show error
+                       $('#brStrength').addClass("w3-border-red");
+                       pipeAddError = true;
+                }
+                pipeGrade = null; 
+                pipeWallVal = null;
+            }
+            //if any errors are seen when adding, then exit the click handler
+            if(pipeAddError){return;}
 
 	   //Get the user's new tubular data  
-        if(isTube){//if it's a pipe,casing,or tube assign those values to be stored	   
+            if(isTube){//if it's a pipe,casing,or tube assign those values to be stored	   
             
             //if it's pipe use a pipe grade
             if(tubeType === "pipe"){
@@ -446,10 +441,10 @@ $(document).ready(function() {
 	       pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toFixed(2);
 	       console.log("Area is: ",pipeArea);
 	       wire_brkStr = pipeStrVal * pipeArea;
-        }else{
-            pipeNo = $('#tblWire tr').length;
-            wire_brkStr = $('#brStrength').val();
-        }
+            }else{
+                pipeNo = $('#tblWire tr').length;
+                wire_brkStr = $('#brStrength').val();
+            }
 		rev_brkStr = 100000000 - wire_brkStr;
 				
 		//determine if it's a test pipe.
@@ -523,16 +518,16 @@ $(document).ready(function() {
            }).fail(function(err){console.log("we got an error: "+err);});
        }
        
-	   //Reset the tubular form
-	   $("#tube_type>option[value='pipe']").prop("selected",true);
-	   $("#tubeStrengthType>option[value='grade']").prop("selected",true);
-	   $("#tube_grade>option[value='75000']").prop("selected",true);
-	   $("#tube_type").change();
-	   $('#pipe_od').val("");
-	   $('#pipe_wall').val("");
-	   $('#pipe_elong').val("");
-	   $('#brStrength').val("");
-	   $('#testPipe').removeClass('w3-blue').addClass('w3-opacity').data('value',false).html('Test Pipe');
+        //Reset the tubular form
+        $("#tube_type>option[value='pipe']").prop("selected",true);
+        $("#tubeStrengthType>option[value='grade']").prop("selected",true);
+        $("#tube_grade>option[value='75000']").prop("selected",true);
+        $("#tube_type").change();
+        $('#pipe_od').val("");
+        $('#pipe_wall').val("");
+        $('#pipe_elong').val("");
+        $('#brStrength').val("");
+        $('#testPipe').removeClass('w3-blue').addClass('w3-opacity').data('value',false).html('Test Pipe');
     });
     
     /*
