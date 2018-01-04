@@ -383,7 +383,7 @@ $(document).ready(function() {
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
 	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
-            bopID, F_CAM, F_CAM_info,
+            bopID, F_CAM, F_CAM_info, preferredEvalMethod, selectedEvalMethod,
             pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
             tubeType = $('#tube_type').val(),
             tubeStrengthType = $('#tubeStrengthType').val(),
@@ -468,7 +468,13 @@ $(document).ready(function() {
 		}
 		
         forceValues = jQuery.extend({},Calculate_force(isTube, evalYS, pipeArea, pipeElongVal));
-			   
+	if(forceValues.West_force){
+            preferredEvalMethod = "West";
+            selectedEvalMethod= "West";
+        }else{
+            preferredEvalMethod = "DE";
+            selectedEvalMethod= "DE";
+        }		   
         //add pipe to the database
         pipeElongVal = pipeElongVal.length === 0 ? null : pipeElongVal; 
         pipe_data = {
@@ -490,7 +496,9 @@ $(document).ready(function() {
                 WestDef: forceValues.West_def,
                 DeForce: forceValues.DE_force,
                 DeForceInfo: forceValues.DE_info,
-                DeForceDef: forceValues.DE_def
+                DeForceDef: forceValues.DE_def,
+                preferredMethod: preferredEvalMethod,
+                selectedMethod: selectedEvalMethod
         };
        console.log(pipe_data);
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
@@ -506,6 +514,8 @@ $(document).ready(function() {
                         F_CAM = weight*c3*evalYS;  //force in lbs
                         F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
                         newPipedata.update({
+                            preferredMethod: "Cameron",
+                            selectedMethod: "Cameron",
                             ppf: weight, 
                             CamForce: F_CAM.toFixed(0), 
                             CamInfo: F_CAM_info,
