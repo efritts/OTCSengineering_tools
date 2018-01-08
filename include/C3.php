@@ -9,6 +9,7 @@
  *  Ex C3.php?bop_id=2&pipe_grade=E75&pipe_od=6.625
  * bop_id -> the id number of a bop table in the database
  * pipe_grade -> E75, L80, X95, G105, P110, Q125, S135, Z140, V150
+ * pipe_yield -> in ksi. this can be used instead of pipe grade.
  * pipe_od -> outside diameter of the pipe.
  * 
  * The following terms are evaluated based on the inputs given.
@@ -22,7 +23,7 @@
  * 	TYPE B - DS, ISR, DSI, DVS, CDVS, CDVS II
  * 
  * $pipe_od:
- * 	if bop_group="B" then tubular size is required to determien C3
+ * 	if bop_group="B" then tubular size is required to determine C3
  * 	-9.625 TUBULAR UP TO 9.625 OD
  * 	+9.625 TUBULAR GREATER THAN 9.625 OD
  * 
@@ -44,7 +45,41 @@
  $bop_id = (!IsNullOrEmptyString($_GET["bop_id"])?$_GET["bop_id"]:"");
  $pipe_grade = (!IsNullOrEmptyString($_GET["pipe_grade"])?$_GET["pipe_grade"]:"");
  $pipe_od = (!IsNullOrEmptyString($_GET["pipe_od"])?$_GET["pipe_od"]:"");
+ $pipe_yield = (!IsNullOrEmptyString($_GET["pipe_yield"])?$_GET["pipe_yield"]:"");
 //UPDATE NEEDED.  Check that pipe_grade is an existing pipe grade and in the correct format.
+
+ //If the pipe grade is empty, but a yield is given, select an appropriate pipe grade.  The next lowest grade will be selected.  130 => pipe grade of "Q125" 
+ if(IsNullOrEmptyString($pipe_grade) && !IsNullOrEmptyString($pipe_yield)){
+     switch (true){
+         case $pipe_yield < 80:
+            $pipe_grade = "E75";
+            break;
+         case $pipe_yield < 95:
+             $pipe_grade = "L80";
+             break;
+         case $pipe_yield < 105:
+             $pipe_grade = "X95";
+             break;
+         case $pipe_yield < 110:
+             $pipe_grade = "G105";
+             break;
+         case $pipe_yield < 125:
+             $pipe_grade = "P110";
+             break;
+         case $pipe_yield < 135:
+             $pipe_grade = "Q125";
+             break;
+         case $pipe_yield < 140:
+             $pipe_grade = "S135";
+             break;
+         case $pipe_yield < 150:
+             $pipe_grade = "Z140";
+             break;
+         default:
+             $pipe_grade = "V150";
+             break;
+     }
+ }
 
 
 if(!IsNullOrEmptyString($bop_id) && !IsNullOrEmptyString($pipe_grade) && !IsNullOrEmptyString($pipe_od)){

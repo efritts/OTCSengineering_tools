@@ -90,38 +90,31 @@ function display_results(){
     //}
 }
 function updateCamForces(tubeObj){
+        //A new BOP was selected, check the tubeObj supplied and update the firebase database.
+        //tubeObj is a snapshot of a particular tube in the database
 	var pipeODval = tubeObj.child('diameter').val(),
-		tubeType = tubeObj.child('type').val(),
-		//pipeWallVal = $('#pipe_wall').val(),
-		weight = tubeObj.child('ppf').val(),
-		evalYS, bopID, F_CAM, F_CAM_info, pipeGrade = null,
-		isTube = (tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  )? true: false;
+            pipeNo = tubeObj.child('pipeNo').val(),
+            tubeType = tubeObj.child('type').val(),
+            weight = tubeObj.child('ppf').val(),
+            strengthType = tubeObj.child('strengthType').val(),  //either "strength" or "grade"
+            evalYS, bopID, F_CAM, F_CAM_info, pipeGrade = null, c3QueryString,
+            isTube = (tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  )? true: false;
 	//if the BOP is a cameron, include the Cameron Force		
 	if($('#OEM_select option:selected').text() === 'Cameron'){ //TODO: Update to work for casing/tubing grade or for a specified yield
-		console.log('Update the tubes with Cameron Forces');  //testing
-		
-		//Determine Evaluation strength TODO: this code is a duplicated below, create function.
-		//if strength is selected, then use $('#pipe_minYS').val()
-		//if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
-		if($('#tubeStrengthType').val()==='strength'){
-		    evalYS=$('#pipe_minYS').val();
-		}else if($('#tubeStrengthType').val()==='grade'){
-		    if($('#testPipe').data('value')===true){
-		        //min yield for grade
-		        evalYS=gradeObj[$('#tube_grade option:selected').text()].min;
-		    }else{
-		        //max yield for grade
-		        evalYS=gradeObj[$('#tube_grade option:selected').text()].max;
-		    }
-		}else{  //for wires
-		    evalYS=$('#brStrength').val();
-		}
+            console.log('Update tubular #'+pipeNo+' with Cameron Forces');  //testing
+            evalYS=tubeObj.child('evalStrength').val();
             
-		if(isTube){
-			pipeGrade = tubeType === "pipe" ?   $('#tube_grade option:selected').text() : $('#casing_grade option:selected').text();
-            bopID = $('#BOP_select').val();
-            console.log("requesting: include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval);
-            $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
+            if(isTube){
+                bopID = $('#BOP_select').val();
+                if(strengthType === "grade"){
+                    //pipeGrade = tubeType === "pipe" ?   $('#tube_grade option:selected').text() : $('#casing_grade option:selected').text();
+                    pipeGrade = tubeObj.child('grade').val();
+                    c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
+                }else{
+                    c3QueryString = "bop_id="+bopID+"&pipe_yield="+(evalYS/1000)+"&pipe_od="+pipeODval;
+                }
+                console.log("requesting: include/C3.php?"+c3QueryString);
+                $.get("include/C3.php?"+c3QueryString, function(c3){
                 F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
                 F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
                 tubeObj.ref.update({
@@ -130,165 +123,165 @@ function updateCamForces(tubeObj){
                     CamInfo: F_CAM_info,
                     C3: c3
                 }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
-            }).fail(function(err){console.log("Failed to get C3 value: "+err);});
-		}	
+                }).fail(function(err){console.log("Failed to get C3 value: "+err);});
+            }	
 	}else{ //Not a Cameron BOP, remove any Cameron Forces that exist
-		tubeObj.ref.update({  
-			CamForce: null, 
-			CamInfo: null,
-			C3: null
-		})
-		.then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to remove cameron forces');}, function(error){console.log('Error nulling cameron data: '+error);});
-	}	
-	//console.log(tubeObj.key);
+            tubeObj.ref.update({  
+                CamForce: null, 
+                CamInfo: null,
+                C3: null
+            })
+            .then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to remove cameron forces');}, function(error){console.log('Error nulling cameron data: '+error);});
+	}
+        //TODO: call a function that determines the preferred method.
 }
 $(document).ready(function() {
     "use strict";
+    var fb_tubulars = newWorksheet.child('tubulars');
+    
+    //disable the button to get a sharable link until a shear pressure is calculated.
+    $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
 
-	//disable the button to get a sharable link until a shear pressure is calculated.
-	$("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
+    //When a new calculation method is selected, update the force.
+    $(document).on('change','#approx_forces select', function(){ 
+        //get the key of the pipe from firebase of the pipe being evaluated
+        var key = $(this).parent().parent().attr('data-key');
+        //get the method that was just selected
+        var selectedMethodName = $("#approx_forces select option:selected").val();
+
+        //Update the selected method in the firebase db
+        newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
+    });
         
-        //When a new calculation method is selected, update the force.
-        $(document).on('change','#approx_forces select', function(){ 
-            //get the key of the pipe from firebase of the pipe being evaluated
-            var key = $(this).parent().parent().attr('data-key');
-            //get the method that was just selected
-            var selectedMethodName = $("#approx_forces select option:selected").val();
-            
-            //Update the selected method in the firebase db
-            newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
-        });
-        
-	//Expandable tool tips
-	//Hide the section below the #expander arrow.  The hidden section is a sibbling of the arrow's parent.
-	$(document).on('click', '.expander', function(){
-	    var currentRow = $(this).parent(), allChildren = currentRow.parent().children(), 
-	    currentRowIndex=allChildren.index(currentRow),
-	    showRowIndex = currentRowIndex + 2;  //this will show the next child in a non-0 indexed list
-            //allChildren.addClass('w3-red');
-            //currentRow.addClass('w3-green');
-        
-            $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
-            if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
-                $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
-            }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
-	});
+    //Expandable tool tips
+    //Hide the section below the #expander arrow.  The hidden section is a sibbling of the arrow's parent.
+    $(document).on('click', '.expander', function(){
+        var currentRow = $(this).parent(), allChildren = currentRow.parent().children(), 
+        currentRowIndex=allChildren.index(currentRow),
+        showRowIndex = currentRowIndex + 2;  //this will show the next child in a non-0 indexed list
+        //allChildren.addClass('w3-red');
+        //currentRow.addClass('w3-green');
+
+        $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
+        if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
+            $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
+        }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
+    });
         
 /*
  * Form Error Checking
  */
-	//Wall thickness should be a number and it should not start with "."  
-	// "0.25" is ok ".25" is not
-	//TODO: wall should start with 0 not "."
-	$('#pipe_wall').keyup(function(){
-	    if($('#pipe_wall').val().match("^.")){
-	        //var wall_float = parseFloat('0'+$('pipe_wall').val(),3);
-	        //$('#pipe_wall').val(wall_float);
-	    }
-	});
+    //Wall thickness should be a number and it should not start with "."  
+    // "0.25" is ok ".25" is not
+    //TODO: wall should start with 0 not "."
+    $('#pipe_wall').keyup(function(){
+        if($('#pipe_wall').val().match("^.")){
+            //var wall_float = parseFloat('0'+$('pipe_wall').val(),3);
+            //$('#pipe_wall').val(wall_float);
+        }
+    });
 		
 /*
  * TUBULAR FORM 
  */
-	//Show the correct pipe grade if pipe, tubing, or casing is selected.
-	$("#tubeStrengthType").change(function(){
-	    if($("#tubeStrengthType").val()==="grade"){
-	        $('#tubeStrength').addClass("w3-hide");
-	        
-	        if($('#tube_type').val()==="pipe"){
-	           $('#tubeGrade').removeClass("w3-hide");
-	           $('#casingTubeGrade').addClass("w3-hide");
-	        }
-	        else if(($('#tube_type').val()=== "tubing") || ($('#tube_type').val()=== "casing")){
-	           $('#casingTubeGrade').removeClass("w3-hide");
-	           $('#tubeGrade').addClass("w3-hide");
-	        }
-	    }else{
-            $('#tubeGrade').addClass("w3-hide");
-            $('#casingTubeGrade').addClass("w3-hide");
-            $('#tubeStrength').removeClass("w3-hide");
+    //Show the correct pipe grade if pipe, tubing, or casing is selected.
+    $("#tubeStrengthType").change(function(){
+        if($("#tubeStrengthType").val()==="grade"){
+            $('#tubeStrength').addClass("w3-hide");
+
+            if($('#tube_type').val()==="pipe"){
+               $('#tubeGrade').removeClass("w3-hide");
+               $('#casingTubeGrade').addClass("w3-hide");
             }
-	});
-	//Test Pipe Box
-	$('#testPipe').click(function (){
-	    if($('#testPipe').data('value')){
-	        $('#testPipe').removeClass('w3-blue').addClass('w3-opacity');
-	        $('#testPipe').data('value',false);
-	        $('#testPipe').html('Test Pipe');
-	    }else{
-	       $('#testPipe').addClass('w3-blue').removeClass('w3-opacity');
-	       $('#testPipe').data('value',true);
-	       $('#testPipe').html('Test Pipe <i class="fa fa-check" aria-hidden="true"></i> ');
-	    }
-	});
-	//Show the appropriate inputs for the type for tublular selected
-	//For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
-	//For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
-	$('#tube_type').change(function(){
-		var tubeType = $('#tube_type').val();
-		if (tubeType === 'casing' || tubeType === 'pipe' || tubeType === 'tubing'){
-		    $("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
-            $("#tubeStrengthType>option[value='strength']").prop("disabled",false);
-            $("#tubeStrengthType>option[value='grade']").prop("disabled",false);
-            
-            //show od, wall, % elongation
-            $('.tubeOnly').removeClass('w3-hide');
-            $('.wireOnly').addClass('w3-hide');
-            
-            //maintain the strength type, but change the grades available if pipe was changed to (casing || tubing) OR vise versa
-		    if($('#tubeStrengthType').val()==="grade"){
-                if ($('#tube_type').val() === "pipe"){
-                   $('#tubeGrade').removeClass('w3-hide');
-                   $('#casingTubeGrade').addClass('w3-hide');
-                   $('#tubeStrength').addClass('w3-hide');
-                }
-                else if ($('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"){
-                    $('#casingTubeGrade').removeClass('w3-hide');
-                    $('#tubeGrade').addClass('w3-hide');
-                    $('#tubeStrength').addClass('w3-hide');
-                }
-            }else if ($("#tubeStrengthType").val()==="strength"){
-                //keep #tubeStrength visible
-                //keep #tubeGrade & #casingTubeGrade hidden
-            }else{ //by default select grade
-                $("#tubeStrengthType>option[value='grade']").prop("selected",true);
-                $('#tubeStrengthType').change();
+            else if(($('#tube_type').val()=== "tubing") || ($('#tube_type').val()=== "casing")){
+               $('#casingTubeGrade').removeClass("w3-hide");
+               $('#tubeGrade').addClass("w3-hide");
             }
-		}else{
-			$("#tubeStrengthType>option[value='brStrength']").prop("disabled",false);
-			$("#tubeStrengthType>option[value='strength']").prop("disabled",true);
-			$("#tubeStrengthType>option[value='grade']").prop("disabled",true);
-			$("#tubeStrengthType>option[value='brStrength']").prop("selected",true);
-			
-			//show od, wall, % elongation
-			$('.tubeOnly').addClass('w3-hide');		
-			$('.wireOnly').removeClass('w3-hide');	
-		}
-	});
+        }else{
+        $('#tubeGrade').addClass("w3-hide");
+        $('#casingTubeGrade').addClass("w3-hide");
+        $('#tubeStrength').removeClass("w3-hide");
+        }
+    });
+    //Test Pipe Box
+    $('#testPipe').click(function (){
+        if($('#testPipe').data('value')){
+            $('#testPipe').removeClass('w3-blue').addClass('w3-opacity');
+            $('#testPipe').data('value',false);
+            $('#testPipe').html('Test Pipe');
+        }else{
+           $('#testPipe').addClass('w3-blue').removeClass('w3-opacity');
+           $('#testPipe').data('value',true);
+           $('#testPipe').html('Test Pipe <i class="fa fa-check" aria-hidden="true"></i> ');
+        }
+    });
+    //Show the appropriate inputs for the type for tublular selected
+    //For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
+    //For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
+    $('#tube_type').change(function(){
+            var tubeType = $('#tube_type').val();
+            if (tubeType === 'casing' || tubeType === 'pipe' || tubeType === 'tubing'){
+                $("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
+        $("#tubeStrengthType>option[value='strength']").prop("disabled",false);
+        $("#tubeStrengthType>option[value='grade']").prop("disabled",false);
+
+        //show od, wall, % elongation
+        $('.tubeOnly').removeClass('w3-hide');
+        $('.wireOnly').addClass('w3-hide');
+
+        //maintain the strength type, but change the grades available if pipe was changed to (casing || tubing) OR vise versa
+                if($('#tubeStrengthType').val()==="grade"){
+            if ($('#tube_type').val() === "pipe"){
+               $('#tubeGrade').removeClass('w3-hide');
+               $('#casingTubeGrade').addClass('w3-hide');
+               $('#tubeStrength').addClass('w3-hide');
+            }
+            else if ($('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"){
+                $('#casingTubeGrade').removeClass('w3-hide');
+                $('#tubeGrade').addClass('w3-hide');
+                $('#tubeStrength').addClass('w3-hide');
+            }
+        }else if ($("#tubeStrengthType").val()==="strength"){
+            //keep #tubeStrength visible
+            //keep #tubeGrade & #casingTubeGrade hidden
+        }else{ //by default select grade
+            $("#tubeStrengthType>option[value='grade']").prop("selected",true);
+            $('#tubeStrengthType').change();
+        }
+            }else{
+                    $("#tubeStrengthType>option[value='brStrength']").prop("disabled",false);
+                    $("#tubeStrengthType>option[value='strength']").prop("disabled",true);
+                    $("#tubeStrengthType>option[value='grade']").prop("disabled",true);
+                    $("#tubeStrengthType>option[value='brStrength']").prop("selected",true);
+
+                    //show od, wall, % elongation
+                    $('.tubeOnly').addClass('w3-hide');		
+                    $('.wireOnly').removeClass('w3-hide');	
+            }
+    });
 	
 /*
  * PIPE TABLE DISPLAY & Force approximation display
  * Listen to the firebase database and update the html table
  */	
 	 
-	//When a tubular is added to the database, order them by breaking strength and renumber
-        var fb_tubulars = newWorksheet.child('tubulars');
-        fb_tubulars.orderByChild('brkStrength_sortDesc').on("value", function(data){
-            var newPipeNo = 1, 
-                newWireNo = 1;
-        
-            //update the pipe number based on breaking strength
-            data.forEach(function(childData){
-                var type = childData.child('type').val();
+    //When a tubular is added to the database, order them by breaking strength and renumber    
+    fb_tubulars.orderByChild('brkStrength_sortDesc').on("value", function(data){
+        var newPipeNo = 1, 
+            newWireNo = 1;
 
-                if(type === 'pipe' || type === 'tubing' || type === 'casing'){
-                    childData.ref.update( {pipeNo: newPipeNo});
-                    newPipeNo +=1;
-                }else{
-                    childData.ref.update( {pipeNo: newWireNo});
-                    newWireNo +=1;
-                }
-            });
+        //update the pipe number based on breaking strength
+        data.forEach(function(childData){
+            var type = childData.child('type').val();
+
+            if(type === 'pipe' || type === 'tubing' || type === 'casing'){
+                childData.ref.update( {pipeNo: newPipeNo});
+                newPipeNo +=1;
+            }else{
+                childData.ref.update( {pipeNo: newWireNo});
+                newWireNo +=1;
+            }
+        });
         
         //Generate a new table
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
@@ -369,16 +362,16 @@ $(document).ready(function() {
             });
         });
         
-	//if there's pipes unhide the table
-        if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
-        else{$('#tblPipe').addClass('w3-hide');}
-        //if there's wires unhide the table
-        if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
-        else{$('#tblWire').addClass('w3-hide');}
-        
-	console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
-        console.log(data.val());
-    });
+            //if there's pipes unhide the table
+            if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
+            else{$('#tblPipe').addClass('w3-hide');}
+            //if there's wires unhide the table
+            if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
+            else{$('#tblWire').addClass('w3-hide');}
+
+            console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
+            console.log(data.val());
+        });
 	
 	//Add a pipe to the list to be evaluated.
 	$("#addPipe").click(function(){
@@ -427,14 +420,14 @@ $(document).ready(function() {
 	   //Get the user's new tubular data  
             if(isTube){//if it's a pipe,casing,or tube assign those values to be stored	   
             
-            //if it's pipe use a pipe grade
-            if(tubeType === "pipe"){
-                pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
-                pipeGrade = $('#tube_grade option:selected').text();    
-            }else{ //if it's casing or tubing use casing/tubing grade
-                pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').val() : $('#pipe_minYS').val();
-                pipeGrade = $('#casing_grade option:selected').text();
-            }    
+                //if it's pipe use a pipe grade
+                if(tubeType === "pipe"){
+                    pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
+                    pipeGrade = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : null;    
+                }else{ //if it's casing or tubing use casing/tubing grade
+                    pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').val() : $('#pipe_minYS').val();
+                    pipeGrade = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').text() : null;
+                }    
 
 	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
 	       pipeNo = $('#tblPipe tr').length;
@@ -503,11 +496,10 @@ $(document).ready(function() {
        console.log(pipe_data);
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
        
-       //TODO: use function updateCamForces(tubeObj)
+       //TODO: use function updateCamForces(tubeObj) after the ppf is updated.
        //add the pipe weight for tubes
        if(isTube){
             $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
-                //if the BOP is a cameron, include the Cameron Force
                 if($('#OEM_select option:selected').text()==='Cameron' && pipeGrade){//TODO: Update to work for casing/tubing grade or for a specified yield
                     bopID = $('#BOP_select').val();
                     $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
@@ -526,6 +518,7 @@ $(document).ready(function() {
                     //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
                 }
            }).fail(function(err){console.log("we got an error: "+err);});
+           
        }
        
         //Reset the tubular form
@@ -537,6 +530,7 @@ $(document).ready(function() {
         $('#pipe_wall').val("");
         $('#pipe_elong').val("");
         $('#brStrength').val("");
+        $('#pipe_minYS').val("");
         $('#testPipe').removeClass('w3-blue').addClass('w3-opacity').data('value',false).html('Test Pipe');
     });
     
@@ -593,15 +587,21 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
     "use strict";
     area = (typeof area !== 'undefined') ?  area : false;
     pipe_elong = (typeof pipe_elong !== 'undefined') ?  pipe_elong : false;
-    var method = "", A, B, C, Stdev, R2, WestForce, WestEquationStr,
+    var method = "", A, B, C, Stdev, R2, WestForce, WestEquationStr, strengthConcat,
         ForceValues = {},
         min_YS = strength;
+    
+    if(typeof strength === "string"){
+        strengthConcat = parseFloat(strength).toFixed(0);
+    } else{
+        strengthConcat = strength.toFixed(0);
+    }
 
     if(isTube && area){
             
             //Use distortion energy regarless of elongation for comparison
             ForceValues.DE_force = (0.577 * area * strength).toFixed(0);
-            ForceValues.DE_info =     "0.577 x "+area+" x "+strength.toFixed(0);
+            ForceValues.DE_info =     "0.577 x "+area+" x "+strengthConcat;
             ForceValues.DE_def = "0.577 x area x yield";
             //if elongation is present use west w/ elongation
             if(pipe_elong){
@@ -639,13 +639,13 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
                     Stdev = 75.15;
                 }
                 WestForce = C + A * 0.577 * strength * area + B * pipe_elong + (2 * Stdev);
-                WestEquationStr = C+" + "+A+" x 0.577 x "+area+" x "+strength.toFixed(0)+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
+                WestEquationStr = C+" + "+A+" x 0.577 x "+area+" x "+strengthConcat+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
                 ForceValues.West_force=WestForce.toFixed(0);
                 ForceValues.West_info= ForceValues.West_force+" = "+WestEquationStr;
                 ForceValues.West_def = "Force (West) = "+C+" + "+A+" x 0.577 x area x yield + "+B+" x elongation + (2 x "+Stdev+")";
             }else{ //west w/o distortion 
                 ForceValues.West_force = (ForceValues.DE_force * 1.045).toFixed(0);
-                WestEquationStr = " 0.577 x "+area +" x "+strength.toFixed(0)+" x 1.045";
+                WestEquationStr = " 0.577 x "+area +" x "+strengthConcat+" x 1.045";
                 ForceValues.West_info= ForceValues.West_force+" = "+WestEquationStr;
                 ForceValues.West_def = "Force (West) = 0.577 x area x yield x 1.045";
             }
@@ -654,7 +654,7 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
             ForceValues.West_info=false;
             ForceValues.West_def = false;
             ForceValues.DE_force = (0.577 * strength).toFixed(0);  //in this case the strength is a breaking force, not a yield (pressure)
-            ForceValues.DE_info = "0.577 x "+strength;
+            ForceValues.DE_info = "0.577 x "+strengthConcat;
             ForceValues.DE_def = "0.577 x breaking strength";
         }
     //console.log(`isTube: ${isTube}, area: ${area}, strength: ${strength}, pipe_elong: ${pipe_elong}`); 
