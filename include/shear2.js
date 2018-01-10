@@ -6,6 +6,8 @@
  * author David Hanks 
  * Inital release Feb 5, 2016
  *
+ *KNOWN ISSUES:
+ *1) When pipe with strength is added after a Cameron BOP is selected, the Cameron is not shown as an available force.
  */
 var database = firebase.database(),
     dbRefWorksheet = database.ref().child('shearWorksheet'),
@@ -19,8 +21,8 @@ var database = firebase.database(),
         P110: { min: 110000, max: 140000 },
         Q125: { min: 125000, max: 150000 },
         S135: { min: 135000, max: 165000 },
-        Z140: { min: 140000, max: 0 }, //Finish
-        V150: { min: 150000, max: 0 }, //Finish
+        Z140: { min: 140000, max: 150000 },
+        V150: { min: 150000, max: 165000 },
         H40: { min: 40000, max: 80000 },
         J55: { min: 55000, max: 80000 },
         K55: { min: 55000, max: 80000 },
@@ -35,22 +37,6 @@ var database = firebase.database(),
 function display_results(){
     var pressures = jQuery.extend({},Calc_all()),
         od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
-
-    //$('#pipe_area').html(check_value_isNumber(calculateArea(),2,""));
-    
-    //if the pipe weight field is available, show the result. (A Cameron BOP is selected if the ppf field is shown)
-    /*
-    if(document.contains(document.getElementById("pipe_ppf"))){
-        od = check_form_field('pipe_od',""); 
-        wall = check_form_field('pipe_wall',"");
-        ys = get_minYS();
-        url = "include/pipe_weight.php?od="+od+"&wall="+wall+"&minYS="+ys;
-        
-        if(od && wall && ys){
-            Call_ajax(url,process_ppf,"GET");  //shows the ppf and the Cameron Force value
-         }
-    }
-    */
     
     //Get the closing area
     bop_closingarea = check_form_field('bop_closingarea');
@@ -89,6 +75,35 @@ function display_results(){
     $("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
     //}
 }
+function getPreferredMethod(tubeReference){
+    //returns the preferred methods of those available.
+    //tubeReference -> firebase database reference
+    var cameronMethodAvailable = false,
+        westMethodAvailable = false,
+        deMethodAvailable = false,
+        preferred;
+    
+    tubeReference.once("value", function(snapshot){
+        console.log("Here's the info we're looking at in getPreferredMethod() snapshot");
+        console.log("WestForce: "+snapshot.child('WestForce').val());
+        console.log("CamForce: "+snapshot.child('CamForce').val());
+        console.log("snapshot: ");
+        console.log(snapshot.val());
+
+       cameronMethodAvailable = snapshot.child('CamForce') && snapshot.child('CamForce').val() > 0;
+       westMethodAvailable = snapshot.child('WestForce').val() > 0;  
+       deMethodAvailable = snapshot.child('DeForce').val() > 0;
+       if(cameronMethodAvailable){preferred = "Cameron";
+        }else if(westMethodAvailable){preferred = "West";
+        }else if(deMethodAvailable){preferred = "DE";
+        }else{ preferred = false;
+        }
+    });
+    
+    console.log(preferred);
+    return preferred;
+    
+}
 function updateCamForces(tubeObj){
         //A new BOP was selected, check the tubeObj supplied and update the firebase database.
         //tubeObj is a snapshot of a particular tube in the database
@@ -98,9 +113,10 @@ function updateCamForces(tubeObj){
             weight = tubeObj.child('ppf').val(),
             strengthType = tubeObj.child('strengthType').val(),  //either "strength" or "grade"
             evalYS, bopID, F_CAM, F_CAM_info, pipeGrade = null, c3QueryString,
+            preferredMethod = "",
             isTube = (tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  )? true: false;
 	//if the BOP is a cameron, include the Cameron Force		
-	if($('#OEM_select option:selected').text() === 'Cameron'){ //TODO: Update to work for casing/tubing grade or for a specified yield
+	if($('#OEM_select option:selected').text() === 'Cameron'){ //TODO: Update to work for casing/tubing grade
             console.log('Update tubular #'+pipeNo+' with Cameron Forces');  //testing
             evalYS=tubeObj.child('evalStrength').val();
             
@@ -115,23 +131,38 @@ function updateCamForces(tubeObj){
                 }
                 console.log("requesting: include/C3.php?"+c3QueryString);
                 $.get("include/C3.php?"+c3QueryString, function(c3){
-                F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
-                F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
-                tubeObj.ref.update({
-                    ppf: weight, 
-                    CamForce: F_CAM, 
-                    CamInfo: F_CAM_info,
-                    C3: c3
+                    F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
+                    F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
+                    tubeObj.ref.update({
+                        preferredMethod: "Cameron",
+                        selectedMethod: "Cameron",
+                        ppf: weight, 
+                        CamForce: F_CAM, 
+                        CamInfo: F_CAM_info,
+                        C3: c3
                 }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
                 }).fail(function(err){console.log("Failed to get C3 value: "+err);});
+            }else{
+                //this is a wireline
             }	
 	}else{ //Not a Cameron BOP, remove any Cameron Forces that exist
-            tubeObj.ref.update({  
+            //TODO: Determine the preferred/selected evaluation method
+            tubeObj.ref.update({
                 CamForce: null, 
                 CamInfo: null,
                 C3: null
-            })
-            .then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to remove cameron forces');}, function(error){console.log('Error nulling cameron data: '+error);});
+            }).then(function(){
+                console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to remove cameron forces');
+                preferredMethod = getPreferredMethod(tubeObj.ref);
+                tubeObj.ref.update({ 
+                    preferredMethod: preferredMethod,
+                    selectedMethod: preferredMethod
+                });
+            }, function(error){console.log('Error nulling cameron data: '+error);
+                
+            });
+            
+            
 	}
         //TODO: call a function that determines the preferred method.
 }
@@ -147,8 +178,8 @@ $(document).ready(function() {
         //get the key of the pipe from firebase of the pipe being evaluated
         var key = $(this).parent().parent().attr('data-key');
         //get the method that was just selected
-        var selectedMethodName = $("#approx_forces select option:selected").val();
-
+        var selectedMethodName = $(this).val();
+        console.log(selectedMethodName);
         //Update the selected method in the firebase db
         newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
     });
@@ -292,61 +323,53 @@ $(document).ready(function() {
             $('.wireSummaryRow').remove();
             newdata.forEach(function(childData){
                 var type = childData.child('type').val(),
-                    newPipeRow, newWireRow, newPipeForce, newPipeInfo,
-                    preferredMethod, preferredForce, preferredForce_info,
+                    newPipeRow, newWireRow, newPipeForce, newPipeInfo, visibleOption,
+                    preferredMethod = childData.child('preferredMethod').val(),
+                    selectedMethod = childData.child('selectedMethod').val(),
                     pipeElong_txt, calcMethodOptionHTML = "",
                     cameronMethodAvailable = childData.child('CamForce') && childData.child('CamForce').val() > 0,
                     westMethodAvailable = childData.child('WestForce') && childData.child('WestForce').val() > 0,
                     calculationMethods = {
-                        preferred: "",
-                        selected: "",
-                        preferredForceValue: 0,
-                        preferredForceInfo: "",
+                        selectedForceValue: 0,
+                        selectedForceInfo: "",
                         available: []
                     };
-                
                 if(type === 'pipe' || type === 'tubing' || type === 'casing'){
                     //Create the list of pipe evaluated
                     pipeElong_txt = childData.child('elongation').val() === null ? "" : childData.child('elongation').val()+" %";
                     newPipeRow = "<tr class='pipeSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('yieldstr').val()+"</td><td>"+pipeElong_txt+"</td><td>"+childData.child('diameter').val()+"</td><td>"+childData.child('wall').val()+"</td><td title='remove' data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
-                    $('#tblPipe table').append(newPipeRow);
+                    $('#tblPipe table').append(newPipeRow); 
                     
-                    
-                    //Create an object with available and preferred methods. var calculationMethods { preferred: "Cameron", available {"Cameron", "West", "DE" }}
-                    //Order of preference is Cameron then West then DE (Distortion Energy)
+                    //Create an object with available methods. var calculationMethods { selectedForceValue: 10008080, available {"Cameron", "West", "DE" }}
                     if(cameronMethodAvailable){
-                        calculationMethods.preferred = "Cameron";
-                        calculationMethods.preferredForceValue = childData.child('CamForce').val();
-                        calculationMethods.preferredForceInfo = "<p>Force (Cameron) = ppf x c3 x yield</p><p>"+childData.child('CamInfo').val()+"</p>";
                         calculationMethods.available.push("Cameron");
                     }
                     if(westMethodAvailable){
                         calculationMethods.available.push("West");                       
-                        if(!cameronMethodAvailable){
-                            calculationMethods.preferred = "West";
-                            calculationMethods.preferredForceValue = childData.child('WestForce').val();
-                            calculationMethods.preferredForceInfo = "<p>"+childData.child('WestDef').val()+"</p><p>"+childData.child('WestInfo').val()+"</p>";
-                        }
-                    }
-                    if(!cameronMethodAvailable && !westMethodAvailable){
-                        calculationMethods.preferred = "DE";
-                        calculationMethods.preferredForceValue = childData.child('DeForce').val();
-                        calculationMethods.preferredForceInfo = "<p>"+childData.child('DeForceDef').val()+"</p><p>"+childData.child('DeForceInfo').val()+"</p>";
                     }
                     calculationMethods.available.push("DE");              
-                    calculationMethods.selected = $("#approx_forces select option:selected").val();
+                    if(selectedMethod === "Cameron"){
+                        calculationMethods.selectedForceValue = childData.child('CamForce').val();
+                        calculationMethods.selectedForceInfo = "<p>Force (Cameron) = ppf x c3 x yield</p><p>"+childData.child('CamInfo').val()+"</p>";
+                    }else if(selectedMethod === "West"){
+                        calculationMethods.selectedForceValue = childData.child('WestForce').val();
+                        calculationMethods.selectedForceInfo = "<p>"+childData.child('WestDef').val()+"</p><p>"+childData.child('WestInfo').val()+"</p>";
+                    }else if(selectedMethod === "DE"){
+                        calculationMethods.selectedForceValue = childData.child('DeForce').val();
+                        calculationMethods.selectedForceInfo = "<p>"+childData.child('DeForceDef').val()+"</p><p>"+childData.child('DeForceInfo').val()+"</p>";
+                    }
                     
-                    //TODO: move to a function that will construct a table based on "selected" and available methods.  That way, when a different method is selected the same function can be called.
                     //Construct the Pipe Force Approximation Table
                     calculationMethods.available.forEach(function(value){
-                        if(value === calculationMethods.preferred){
-                            calcMethodOptionHTML += "<option value='"+value+"'>"+value+"*</option>";
+                        visibleOption = value === preferredMethod ? value+"*" : value;
+                        if(value === selectedMethod){
+                            calcMethodOptionHTML += "<option value='"+value+"' selected>"+visibleOption+"</option>";
                         }else{
-                            calcMethodOptionHTML += "<option value='"+value+"'>"+value+"</option>";
+                            calcMethodOptionHTML += "<option value='"+value+"'>"+visibleOption+"</option>";
                         }
                     });
-                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.preferredForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
-                    newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+calculationMethods.preferredForceInfo+"</td></tr>";
+                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.selectedForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
+                    newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+calculationMethods.selectedForceInfo+"</td></tr>";
                     //Use this format
                     //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
                     //<tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
@@ -362,106 +385,106 @@ $(document).ready(function() {
             });
         });
         
-            //if there's pipes unhide the table
-            if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
-            else{$('#tblPipe').addClass('w3-hide');}
-            //if there's wires unhide the table
-            if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
-            else{$('#tblWire').addClass('w3-hide');}
+        //if there's pipes unhide the table
+        if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
+        else{$('#tblPipe').addClass('w3-hide');}
+        //if there's wires unhide the table
+        if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
+        else{$('#tblWire').addClass('w3-hide');}
 
-            console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
-            console.log(data.val());
-        });
+        console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
+        console.log(data.val());
+    });
 	
-	//Add a pipe to the list to be evaluated.
-	$("#addPipe").click(function(){
-	    var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
-            bopID, F_CAM, F_CAM_info, preferredEvalMethod, selectedEvalMethod,
-            pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
-            tubeType = $('#tube_type').val(),
-            tubeStrengthType = $('#tubeStrengthType').val(),
-            pipeODval = $('#pipe_od').val(),
-            pipeElongVal = $('#pipe_elong').val(),
-            pipeWallVal = $('#pipe_wall').val(),
-            forceValues,
-            pipe_data = {},
-            pipeAddError = false;
-	    //reset the errors
-	    $('#pipe_wall').removeClass("w3-border-red");
-            $('#pipe_od').removeClass("w3-border-red");
-            $('#brStrength').removeClass("w3-border-red");
-        
-            //Error checks on tubular form
-            if(pipeODval === ""){
+    //Add a pipe to the list to be evaluated.
+    $("#addPipe").click(function(){
+        var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
+        bopID, F_CAM, F_CAM_info, preferredEvalMethod, selectedEvalMethod,
+        pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
+        tubeType = $('#tube_type').val(),
+        tubeStrengthType = $('#tubeStrengthType').val(),
+        pipeODval = $('#pipe_od').val(),
+        pipeElongVal = $('#pipe_elong').val(),
+        pipeWallVal = $('#pipe_wall').val(),
+        forceValues,
+        pipe_data = {},
+        pipeAddError = false;
+        //reset the errors
+        $('#pipe_wall').removeClass("w3-border-red");
+        $('#pipe_od').removeClass("w3-border-red");
+        $('#brStrength').removeClass("w3-border-red");
+
+        //Error checks on tubular form
+        if(pipeODval === ""){
+            //show error
+            $('#pipe_od').addClass("w3-border-red");
+            pipeAddError = true;
+        }
+        if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
+            isTube = true;
+            if($('#pipe_wall').val() === ""){
                 //show error
-                $('#pipe_od').addClass("w3-border-red");
+                $('#pipe_wall').addClass("w3-border-red");
                 pipeAddError = true;
             }
-            if(tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  ){
-                isTube = true;
-                if($('#pipe_wall').val() === ""){
-                    //show error
-                    $('#pipe_wall').addClass("w3-border-red");
-                    pipeAddError = true;
-                }
-                //TODO: if strength type is selected, then value should exist for yield.
-            }else{
-                if($('#brStrength').val() === ""){
-                       //show error
-                       $('#brStrength').addClass("w3-border-red");
-                       pipeAddError = true;
-                }
-                pipeGrade = null; 
-                pipeWallVal = null;
+        //TODO: if strength type is selected, then value should exist for yield.
+        }else{
+            if($('#brStrength').val() === ""){
+                   //show error
+                   $('#brStrength').addClass("w3-border-red");
+                   pipeAddError = true;
             }
-            //if any errors are seen when adding, then exit the click handler
-            if(pipeAddError){return;}
+            pipeGrade = null; 
+            pipeWallVal = null;
+        }
+        //if any errors are seen when adding, then exit the click handler
+        if(pipeAddError){return;}
 
-	   //Get the user's new tubular data  
-            if(isTube){//if it's a pipe,casing,or tube assign those values to be stored	   
-            
-                //if it's pipe use a pipe grade
-                if(tubeType === "pipe"){
-                    pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
-                    pipeGrade = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : null;    
-                }else{ //if it's casing or tubing use casing/tubing grade
-                    pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').val() : $('#pipe_minYS').val();
-                    pipeGrade = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').text() : null;
-                }    
+       //Get the user's new tubular data  
+        if(isTube){//if it's a pipe,casing,or tube assign those values to be stored	   
 
-	       pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
-	       pipeNo = $('#tblPipe tr').length;
-	       pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toFixed(2);
-	       console.log("Area is: ",pipeArea);
-	       wire_brkStr = pipeStrVal * pipeArea;
+            //if it's pipe use a pipe grade
+            if(tubeType === "pipe"){
+                pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').val() : $('#pipe_minYS').val();
+                pipeGrade = $('#tubeStrengthType').val() === "grade" ? $('#tube_grade option:selected').text() : null;    
+            }else{ //if it's casing or tubing use casing/tubing grade
+                pipeStrVal = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').val() : $('#pipe_minYS').val();
+                pipeGrade = $('#tubeStrengthType').val() === "grade" ? $('#casing_grade option:selected').text() : null;
+            }    
+
+           pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
+           pipeNo = $('#tblPipe tr').length;
+           pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toFixed(2);
+           console.log("Area is: ",pipeArea);
+           wire_brkStr = pipeStrVal * pipeArea;
+        }else{
+            pipeNo = $('#tblWire tr').length;
+            wire_brkStr = $('#brStrength').val();
+        }
+        rev_brkStr = 100000000 - wire_brkStr;
+
+        //determine if it's a test pipe.
+        testPipe = $('#testPipe').data('value');
+
+        //Determine Evaluation strength
+        //if strength is selected, then use $('#pipe_minYS').val()
+        //if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
+        if($('#tubeStrengthType').val()==='strength'){
+            evalYS=$('#pipe_minYS').val();
+        }else if($('#tubeStrengthType').val()==='grade'){
+            if($('#testPipe').data('value')===true){
+                //min yield for grade
+                evalYS=gradeObj[$('#tube_grade option:selected').text()].min;
             }else{
-                pipeNo = $('#tblWire tr').length;
-                wire_brkStr = $('#brStrength').val();
+                //max yield for grade
+                evalYS=gradeObj[$('#tube_grade option:selected').text()].max;
             }
-		rev_brkStr = 100000000 - wire_brkStr;
-				
-		//determine if it's a test pipe.
-		testPipe = $('#testPipe').data('value');
-				
-		//Determine Evaluation strength
-		//if strength is selected, then use $('#pipe_minYS').val()
-		//if grade is selected, then use the max yield, unless it's the test pipe,then use the min yield for the grade.
-		if($('#tubeStrengthType').val()==='strength'){
-		    evalYS=$('#pipe_minYS').val();
-		}else if($('#tubeStrengthType').val()==='grade'){
-		    if($('#testPipe').data('value')===true){
-		        //min yield for grade
-		        evalYS=gradeObj[$('#tube_grade option:selected').text()].min;
-		    }else{
-		        //max yield for grade
-		        evalYS=gradeObj[$('#tube_grade option:selected').text()].max;
-		    }
-		}else{  //for wires
-		    evalYS=$('#brStrength').val();
-		}
-		
+        }else{  //for wires
+            evalYS=$('#brStrength').val();
+        }
+
         forceValues = jQuery.extend({},Calculate_force(isTube, evalYS, pipeArea, pipeElongVal));
-	if(forceValues.West_force){
+        if(forceValues.West_force){
             preferredEvalMethod = "West";
             selectedEvalMethod= "West";
         }else{
@@ -471,56 +494,56 @@ $(document).ready(function() {
         //add pipe to the database
         pipeElongVal = pipeElongVal.length === 0 ? null : pipeElongVal; 
         pipe_data = {
-                pipeNo: pipeNo,
-                type: tubeType,
-                diameter: pipeODval,
-                elongation: pipeElongVal,
-                wall: pipeWallVal,
-                area: pipeArea,
-                strengthType: tubeStrengthType,
-                grade: pipeGrade,
-                yieldstr: pipeStrVal,
-                brkStrength: wire_brkStr,
-                brkStrength_sortDesc: rev_brkStr,
-                testPipe: testPipe,
-                evalStrength: evalYS,
-                WestForce: forceValues.West_force,
-                WestInfo: forceValues.West_info,
-                WestDef: forceValues.West_def,
-                DeForce: forceValues.DE_force,
-                DeForceInfo: forceValues.DE_info,
-                DeForceDef: forceValues.DE_def,
-                preferredMethod: preferredEvalMethod,
-                selectedMethod: selectedEvalMethod
+            pipeNo: pipeNo,
+            type: tubeType,
+            diameter: pipeODval,
+            elongation: pipeElongVal,
+            wall: pipeWallVal,
+            area: pipeArea,
+            strengthType: tubeStrengthType,
+            grade: pipeGrade,
+            yieldstr: pipeStrVal,
+            brkStrength: wire_brkStr,
+            brkStrength_sortDesc: rev_brkStr,
+            testPipe: testPipe,
+            evalStrength: evalYS,
+            WestForce: forceValues.West_force,
+            WestInfo: forceValues.West_info,
+            WestDef: forceValues.West_def,
+            DeForce: forceValues.DE_force,
+            DeForceInfo: forceValues.DE_info,
+            DeForceDef: forceValues.DE_def,
+            preferredMethod: preferredEvalMethod,
+            selectedMethod: selectedEvalMethod
         };
        console.log(pipe_data);
        newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
-       
-       //TODO: use function updateCamForces(tubeObj) after the ppf is updated.
-       //add the pipe weight for tubes
-       if(isTube){
-            $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
-                if($('#OEM_select option:selected').text()==='Cameron' && pipeGrade){//TODO: Update to work for casing/tubing grade or for a specified yield
-                    bopID = $('#BOP_select').val();
-                    $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
-                        F_CAM = weight*c3*evalYS;  //force in lbs
-                        F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
-                        newPipedata.update({
-                            preferredMethod: "Cameron",
-                            selectedMethod: "Cameron",
-                            ppf: weight, 
-                            CamForce: F_CAM.toFixed(0), 
-                            CamInfo: F_CAM_info,
-                            C3: c3});    
-                    });
-                }else{
-                    newPipedata.update({ppf: weight});
-                    //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
-                }
-           }).fail(function(err){console.log("we got an error: "+err);});
-           
-       }
-       
+
+        //TODO: use function updateCamForces(tubeObj) after the ppf is updated.
+        //add the pipe weight for tubes
+        if(isTube){
+             $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
+                 if($('#OEM_select option:selected').text()==='Cameron' && pipeGrade){//TODO: Update to work for casing/tubing grade or for a specified yield
+                     bopID = $('#BOP_select').val();
+                     $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
+                         F_CAM = weight*c3*evalYS;  //force in lbs
+                         F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
+                         newPipedata.update({
+                             preferredMethod: "Cameron",
+                             selectedMethod: "Cameron",
+                             ppf: weight, 
+                             CamForce: F_CAM.toFixed(0), 
+                             CamInfo: F_CAM_info,
+                             C3: c3});    
+                     });
+                 }else{
+                     newPipedata.update({ppf: weight});
+                     //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
+                 }
+            }).fail(function(err){console.log("we got an error: "+err);});
+
+        }
+
         //Reset the tubular form
         $("#tube_type>option[value='pipe']").prop("selected",true);
         $("#tubeStrengthType>option[value='grade']").prop("selected",true);
@@ -875,8 +898,8 @@ function calculateArea() {
 
 
 function pipe_fields(){
-	// change pipe selction method based on radio buttons
-	var divobj = document.getElementById("pipe_values");
+    // change pipe selction method based on radio buttons
+    var divobj = document.getElementById("pipe_values");
     var theForm = document.forms["sheardata"];
     var Pipe_choice = theForm.elements["Pipe_select"];
     var BOP_OEM = "";
@@ -886,9 +909,9 @@ function pipe_fields(){
     if(document.getElementById("pipe_grade")){var init_pipegrade = document.getElementById("pipe_grade").selectedIndex;}
     
     //UPDATE NEEDED.  Selecting pipe grade changes min YS.  New function needed
-	var od = check_form_field('pipe_od',"");
-	var wall = check_form_field('pipe_wall',"");
-	var ys = check_form_field('pipe_ys',"");
+    var od = check_form_field('pipe_od',"");
+    var wall = check_form_field('pipe_wall',"");
+    var ys = check_form_field('pipe_ys',"");
     var elong = check_form_field('pipe_elong',"");
     var minYS = check_form_field('pipe_minYS',"");
     var uts = check_form_field('pipe_uts',"");
@@ -936,18 +959,9 @@ function calc_grad(x) {
 	return y;
 }
 
-/* this has been moved to shear.js.php because it needs to access database info with php
+/*
 function BOP_fields() {
-	var theForm = document.forms["sheardata"];
-	var BOPchoice = theForm.elements["BOP_select"];
-	var divobj = document.getElementById("BOP_values");
-	
-	//Determing if BOP values will be selected or specified.  Show the correct form.
-	if (BOPchoice[1].checked) {
-	divobj.innerHTML = "<table><tr><td>Closing Area</td><td><input type=\"text\" name=\"closingArea\" id=\"bop_closingarea\" onkeyup=\"display_results()\" value=\"293.7\"/></td><td>in<sup>2</sup></td></tr><tr><td>Closing Ratio</td><td><input type=\"text\" name=\"bop_closingratio\" id=\"bop_closingratio\" onkeyup=\"display_results()\" value=\"19.6\"/></td><td></td></tr><tr><td>Tailrod Area</td><td><input type=\"text\" name=\"TailrodArea\" id=\"bop_trarea\" onkeyup=\"display_results()\"/></td><td>in<sup>2</sup></td></tr></table>";
-	} else {
-		divobj.innerHTML = "Manufacture <br /> Model <br /> Operator size";
-	}
+    /* this has been moved to shear.js.php because it needs to access database info with php
 }
 
 */
@@ -992,34 +1006,34 @@ function Calc_all() {
         bop_closingratio = check_form_field('bop_closingratio'), // Closing ratio = Cr
         bop_trarea = check_form_field('bop_trarea'),
 	
-	//get Pressure of seawater at depth
-	//calc opening area = Ac + At - Ac/Cr
-        bop_openingarea = bop_closingarea + bop_trarea - (bop_closingarea/bop_closingratio),
-	
-	//calculate opening force dues to seawater against operator = Psw x Ao
-        ForceO_sw = head_sw * bop_openingarea,
-	
-	//get Pressure of control fluid at depth = Pcf
-	//calculate force of control fluid on closing side = Pcf x Ac
-        ForceC_cf = head_cf * bop_closingarea,
-	
-	//calculate closing force on the tailrod due to seawater = Psw x At
-        ForceC_tr = head_sw * bop_trarea,
-	
-	//determine adjustment in closing force due to hydrostatics
-        P_adjust_hyd = isSubsea ? ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio ): P_well / bop_closingratio,
-        //output_str = 'Force0_sw = '+ForceO_sw+', ForceC_cf = '+ForceC_cf+', ForceC_tr = '+ForceC_tr+', bop_closing_area = '+bop_closingarea+', P_well = '+P_well+', bop_closingratio = '+bop_closingratio+', P_adjust_hyd = '+P_adjust_hyd;
-        output_str = 'ForceC_cf = '+ForceC_cf+', head_sw ='+head_sw+', bop_trarea='+bop_trarea+', ForceC_tr = '+ForceC_tr+', P_adjust_hyd = '+P_adjust_hyd;
-        console.log(output_str);
-	
-	//return values to be displayed
-	var Pressures = {};
-		Pressures["Press_well"] = P_well;
-		Pressures["Press_type"] = Ptype_well;
-		Pressures["Press_head_sw"] = head_sw;  
-		Pressures["Press_head_cf"] = head_cf;
-		Pressures["Press_adj"] = P_adjust_hyd;
-	return Pressures;
+    //get Pressure of seawater at depth
+    //calc opening area = Ac + At - Ac/Cr
+    bop_openingarea = bop_closingarea + bop_trarea - (bop_closingarea/bop_closingratio),
+
+    //calculate opening force dues to seawater against operator = Psw x Ao
+    ForceO_sw = head_sw * bop_openingarea,
+
+    //get Pressure of control fluid at depth = Pcf
+    //calculate force of control fluid on closing side = Pcf x Ac
+    ForceC_cf = head_cf * bop_closingarea,
+
+    //calculate closing force on the tailrod due to seawater = Psw x At
+    ForceC_tr = head_sw * bop_trarea,
+
+    //determine adjustment in closing force due to hydrostatics
+    P_adjust_hyd = isSubsea ? ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio ): P_well / bop_closingratio,
+    //output_str = 'Force0_sw = '+ForceO_sw+', ForceC_cf = '+ForceC_cf+', ForceC_tr = '+ForceC_tr+', bop_closing_area = '+bop_closingarea+', P_well = '+P_well+', bop_closingratio = '+bop_closingratio+', P_adjust_hyd = '+P_adjust_hyd;
+    output_str = 'ForceC_cf = '+ForceC_cf+', head_sw ='+head_sw+', bop_trarea='+bop_trarea+', ForceC_tr = '+ForceC_tr+', P_adjust_hyd = '+P_adjust_hyd;
+    console.log(output_str);
+
+    //return values to be displayed
+    var Pressures = {};
+            Pressures["Press_well"] = P_well;
+            Pressures["Press_type"] = Ptype_well;
+            Pressures["Press_head_sw"] = head_sw;  
+            Pressures["Press_head_cf"] = head_cf;
+            Pressures["Press_adj"] = P_adjust_hyd;
+    return Pressures;
 }
 
 function Call_ajax(url,cfunc,type,data){
@@ -1033,11 +1047,11 @@ function Call_ajax(url,cfunc,type,data){
         var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
     }
     xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
             cfunc(xmlhttp);
         }
     };
-    if (type == "POST"){
+    if (type === "POST"){
     	xmlhttp.open("POST", url, true);
 		xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xmlhttp.send(data);
@@ -1068,7 +1082,7 @@ function Cameron_shear(od,grade,bop_id,ppf) {
         var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
     }
     xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
             var C3 = xmlhttp.responseText;
             var ys = get_minYS();
             CameronForce = parseFloat(ppf * C3 * ys / 1000).toFixed(1);
