@@ -29,7 +29,7 @@
 			<td>in</td>
 		</tr>
 		<tr>
-			<td><label>Closing Area/label></td>
+			<td><label>Closing Area</label></td>
 			<td><input class="w3-input w3-border w3-padding-0" type="text" id="bop_closingarea"></td>
 			<td>in<sup>2</sup></td>
 		</tr>

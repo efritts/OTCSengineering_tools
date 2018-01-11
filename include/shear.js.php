@@ -87,14 +87,14 @@ function BOP_fields() {
     //change the arrangment of the table if the selection is for the CIDS or the Shear Calculator
     var l3col_class = document.contains(document.forms["cids"]) ? "m4" : "l3 s4";  //l3col_class ->  left of 3 column class
     var m3col_class = document.contains(document.forms["cids"]) ? "m6 s10" : "l3 s4"; // middle of 3 column
-    var r3col_class = document.contains(document.forms["cids"]) ? "m2 s2" : "s1 w3-margin-left"  //right of 3 column
+    var r3col_class = document.contains(document.forms["cids"]) ? "m2 s2" : "s1 w3-margin-left";  //right of 3 column
     var l2col_class = document.contains(document.forms["cids"]) ? "m4" : "l3 s4";
     var r2col_class = document.contains(document.forms["cids"]) ? "m8" : "l3 s4";
     if(document.contains(document.getElementById('OEM_select'))){  //If an OEM has been selected    
             var e = document.getElementById("OEM_select");
             OEM_choice = e.options[e.selectedIndex].value;
             
-            if(document.contains(document.getElementById('BOP_select')) && OEM_choice!="SELECT"){  //If a BOP has been selected.  Nested inside the OEM selection b/c a BOP can only be selected if an OEM is selected first.
+            if(document.contains(document.getElementById('BOP_select')) && OEM_choice!=="SELECT"){  //If a BOP has been selected.  Nested inside the OEM selection b/c a BOP can only be selected if an OEM is selected first.
                 var f = document.getElementById("BOP_select");									
                 BOP_choice = f.options[f.selectedIndex].value;
             }
@@ -110,7 +110,7 @@ function BOP_fields() {
         var BOPproperties = ""; //placeholder for closing ratio, closing area, tail rod area;
 
         for (var count = 0; count < OEM.length; count++){
-            if (OEM[count]['id']==OEM_choice){  // adds the selected value to the option if it was previously selected
+            if (OEM[count]['id']===OEM_choice){  // adds the selected value to the option if it was previously selected
                 var OEM_selected = "selected";
             }
             else{
@@ -129,8 +129,8 @@ function BOP_fields() {
             BOPselect += "<div class=\"w3-col "+l2col_class+"\">Model:</div><div class=\"w3-col "+r2col_class+"\"><select name=\"BOP_select\" id=\"BOP_select\" class=\"w3-select\" onchange=\""+BOPselect_scripts+"\">";
             //document.getElementById("test").innerHTML = l3col_class;
             for (var BOP_row = 0; BOP_row < BOP.length; BOP_row++){
-                if (BOP[BOP_row]['OEM_id']==OEM_choice){
-                    if((BOP[BOP_row]['BOP_id']==BOP_choice) || (BOP[BOP_row]['BOP_id']!=BOP_choice && first_BOP)){  // adds selected value to the option if it was previously selected.
+                if (BOP[BOP_row]['OEM_id']===OEM_choice){
+                    if((BOP[BOP_row]['BOP_id']===BOP_choice) || (BOP[BOP_row]['BOP_id']!==BOP_choice && first_BOP)){  // adds selected value to the option if it was previously selected.
                         var BOP_selected = "selected";
                         
                         //create data for (the selected one) or (if none selected and it's the first row)
@@ -143,7 +143,7 @@ function BOP_fields() {
                     BOPselect += "<option value=\""+BOP[BOP_row]['BOP_id']+"\" "+BOP_selected+">"+BOP[BOP_row]['BOP_model']+"</option>";  //UpdATE NEEDED maintain selection.
                 }
             }
-            BOPselect +="</select></div>"
+            BOPselect +="</select></div>";
         }   
     }
     

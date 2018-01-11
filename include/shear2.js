@@ -21,7 +21,7 @@ var database = firebase.database(),
         P110: { min: 110000, max: 140000 },
         Q125: { min: 125000, max: 150000 },
         S135: { min: 135000, max: 165000 },
-        Z140: { min: 140000, max: 150000 },
+        Z140: { min: 140000, max: 160000 },
         V150: { min: 150000, max: 165000 },
         H40: { min: 40000, max: 80000 },
         J55: { min: 55000, max: 80000 },
@@ -35,22 +35,7 @@ var database = firebase.database(),
     };
     console.log('Created key: '+newWorksheet.key);
 function display_results(){
-    var pressures = jQuery.extend({},Calc_all()),
-        od, wall, ys, url, bop_closingarea, TableForceApprox, West, DistEnergy;
-    
-    //Get the closing area
-    bop_closingarea = check_form_field('bop_closingarea');
-    
-    //If a shear method can be determined write it to the Force Approximations
-    //TableForceApprox = "<tr id=\"Fcam\"></tr>"; //THE row for the Cameron value will always be in here.
-    //West = check_value_isNumber(forceValues.West_force,0,false);
-    //DistEnergy = check_value_isNumber(forceValues.DE_force,0,false);
-    
-    //Get the list of pipes in the firebase.
-    //for each
-       //build force approximations table (show recommended method)
-       //build shear pressure with recommended evaluation method
-
+    var pressures = jQuery.extend({},Calc_all());
     //Fill SUMMARY BOX
     
     //Well Pressure
@@ -61,36 +46,22 @@ function display_results(){
     $('#P_head_sw').html(check_value_isNumber(pressures.Press_head_sw));
     //Control fluid head pressure
     $('#P_head_cf').html(check_value_isNumber(pressures.Press_head_cf));
-    //Force approximations
-    //$('#approx_forces').html(TableForceApprox);
     //Closing Pressure adjustment
     $('#P_adj').text(check_value_isNumber(pressures.Press_adj,2));
-    //SHEAR PRESSURE
-    //$('#final_pressure').text(check_value_isNumber(Press_final));
-    //document.getElementById('final_pressure_row').className = ""; //clear any error notification
-    
-    //if(bop_closingarea && forceValues.Recommended_force){ 
     //Shear Pressure info
-    //document.getElementById("final_P_info").title= "= ("+check_value_isNumber(forceValues.Recommended_force,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(pressures.Press_adj,2);
     $("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
-    //}
 }
 function getPreferredMethod(tubeReference){
-    //returns the preferred methods of those available.
+    //returns the preferred method of those available for the given pipe snapshot.
     //tubeReference -> firebase database reference
     var cameronMethodAvailable = false,
         westMethodAvailable = false,
         deMethodAvailable = false,
-        preferred;
+        preferred, pipeNo;
     
     tubeReference.once("value", function(snapshot){
-        console.log("Here's the info we're looking at in getPreferredMethod() snapshot");
-        console.log("WestForce: "+snapshot.child('WestForce').val());
-        console.log("CamForce: "+snapshot.child('CamForce').val());
-        console.log("snapshot: ");
-        console.log(snapshot.val());
-
-       cameronMethodAvailable = snapshot.child('CamForce') && snapshot.child('CamForce').val() > 0;
+        //Look at the data in tubeReference and determine which forces exist.
+       cameronMethodAvailable = snapshot.child('CamForce').val() > 0;
        westMethodAvailable = snapshot.child('WestForce').val() > 0;  
        deMethodAvailable = snapshot.child('DeForce').val() > 0;
        if(cameronMethodAvailable){preferred = "Cameron";
@@ -98,11 +69,10 @@ function getPreferredMethod(tubeReference){
         }else if(deMethodAvailable){preferred = "DE";
         }else{ preferred = false;
         }
+        pipeNo = snapshot.child('pipeNo');
     });
-    
-    console.log(preferred);
+    console.log(preferred+"is the preferred method to evaluate pipe #"+pipeNo);
     return preferred;
-    
 }
 function updateCamForces(tubeObj){
         //A new BOP was selected, check the tubeObj supplied and update the firebase database.
@@ -165,6 +135,9 @@ function updateCamForces(tubeObj){
             
 	}
         //TODO: call a function that determines the preferred method.
+}
+function BOPdataToFireBase(){
+    //TODO: add the Closing Area, Closing Ratio, Tailrod Area, & MOPFLPS to firebase
 }
 $(document).ready(function() {
     "use strict";
@@ -368,7 +341,7 @@ $(document).ready(function() {
                             calcMethodOptionHTML += "<option value='"+value+"'>"+visibleOption+"</option>";
                         }
                     });
-                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.selectedForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-up' aria-hidden='true'></i></td></tr>";
+                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.selectedForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
                     newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+calculationMethods.selectedForceInfo+"</td></tr>";
                     //Use this format
                     //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
@@ -593,7 +566,13 @@ $(document).ready(function() {
 				updateCamForces(childSnapshot);
 			});
 		});
+                
+                //TODO: add the Closing Area, Closing Ratio, Tailrod Area, & MOPFLPS to firebase
+                BOPdataToFireBase();
 
+ })
+.on('change','#bop_closingarea, #bop_closingratio, bop_trarea', function(){
+    BOPdataToFireBase();
  });
 
 function Calculate_force(isTube, strength, area, pipe_elong) {
