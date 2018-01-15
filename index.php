@@ -28,7 +28,7 @@ switch ($_GET["page"]) {
                         break;
                 case "mtsc":
                     include 'include/functions.php';
-                    include 'include/shear.js.php';
+                    include 'include/shear2.js.php';
                     include 'shear_calculator2.html';
 
                     //if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
