@@ -1,5 +1,5 @@
 /**shear.js
- * 
+ *
  * This file contains no php statements and is left as a js file to reduce load time of the cached file for the user.  
  * Functions within are only utilized during shear calculations, so this file does not need to be loaded on other pages. 
  * 
@@ -138,10 +138,34 @@ function updateCamForces(tubeObj){
 }
 function BOPdataToFireBase(){
     //TODO: add the Closing Area, Closing Ratio, Tailrod Area, & MOPFLPS to firebase
+    var OEM = $('#OEM_select option:selected').text();
+    var model = $('#BOP_select option:selected').text();
+    var closingArea = $('#bop_closingarea').val();
+    var closingRatio = $('#bop_closingratio').val();
+    var trArea = $('#bop_trarea').val() ? $('#bop_trarea').val() : "";
+    var MOPFLPS = $('#bop_MOPFLPS').val();
+   
+    newWorksheet.child('BOP').update({
+       OEM: OEM,
+       model: model,
+       closingArea: closingArea,
+       closingRatio: closingRatio,
+       trArea: trArea,
+       MOPFLPS: MOPFLPS
+    });
 }
 $(document).ready(function() {
     "use strict";
     var fb_tubulars = newWorksheet.child('tubulars');
+    
+    newWorksheet.child('BOP').set({
+       OEM: "",
+       model: "",
+       closingArea: "",
+       closingRatio: "",
+       trArea: "",
+       MOPFLPS: ""
+    });
     
     //disable the button to get a sharable link until a shear pressure is calculated.
     $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
@@ -542,11 +566,11 @@ $(document).ready(function() {
            $('.rigSurface').addClass('w3-hide');
        } 
     });
+    $('#masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
+        display_results();
+    });
 })
 //Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
-.on('change','#masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc, #bop_MOPFLPS, #bop_closingarea, #bop_closingratio, #bop_trarea', function(){
-    display_results();
-})
 .on('click', 'table .fa-trash-o ',function(){
    "use strict";
     //Get the key value from the row attribute.
@@ -558,20 +582,21 @@ $(document).ready(function() {
     });
 })
 //TODO: When OEM is changed or (the BOP model is changed and it's Cameron OEM), add or remove the cameron force from the pipe database
-.on('change', '#OEM_select, #BOP_select, #bop_closingarea, #bop_closingratio, #bop_trarea, #bop_MOPFLPS', function(){
-   		console.log('BOP info changed');              
-                //TODO: add the Closing Area, Closing Ratio, Tailrod Area, & MOPFLPS to firebase
-                BOPdataToFireBase();
-
- })
 .on('change', '#OEM_select, #BOP_select', function(){
-   		
+   		console.log('OEM/model changed');
    		var fb_tubulars = newWorksheet.child('tubulars');
 		fb_tubulars.once('value', function(snapshot) {
 			snapshot.forEach(function(childSnapshot){
 				updateCamForces(childSnapshot);
 			});
 		});
+                
+                //TODO: add the Closing Area, Closing Ratio, Tailrod Area, & MOPFLPS to firebase
+                BOPdataToFireBase();
+
+ })
+.on('change','#bop_closingarea, #bop_closingratio, #bop_trarea, #bop_MOPFLPS', function(){
+    BOPdataToFireBase();
  });
 
 function Calculate_force(isTube, strength, area, pipe_elong) {
@@ -1120,4 +1145,3 @@ function validateForm() {
     }
     return true;
 }
-/*EOF*/
