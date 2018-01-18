@@ -6,13 +6,18 @@
  * author David Hanks 
  * Inital release Feb 5, 2016
  *
- *KNOWN ISSUES:
+ * TODO: ensure updateShearPressure is called when:
+ *  pipe is changed
+ * closing area changes
+ * closing pressure adjustment changes
+ * MOPFLPS changes
+ *
+ **KNOWN ISSUES:
  *1) When pipe with strength is added after a Cameron BOP is selected, the Cameron is not shown as an available force.
  */
 var database = firebase.database(),
     dbRefWorksheet = database.ref().child('shearWorksheet'),
     newWorksheet = dbRefWorksheet.push(),
-    //TODO: finish the grade table
     gradeObj = { 
         E75: { min: 75000, max: 105000 },
         L80: { min: 80000, max: 95000 },
@@ -50,6 +55,15 @@ function display_results(){
     $('#P_adj').text(check_value_isNumber(pressures.Press_adj,2));
     //Shear Pressure info
     $("#get_link").prop('disabled',false).attr('title',"Click to get a sharable link");
+    
+    //write values to firebase database
+    newWorksheet.child('Well').update({
+        Pressure: pressures.Press_well,
+        DominatePressureType: pressures.Press_type,
+        SeaHeadPressure: pressures.Press_head_sw,
+        controlHeadPressure: pressures.Press_head_cf,
+        closingPressureAdjustment: check_value_isNumber(pressures.Press_adj,2)
+    });
 }
 function getPreferredMethod(tubeReference){
     //returns the preferred method of those available for the given pipe snapshot.
@@ -57,21 +71,30 @@ function getPreferredMethod(tubeReference){
     var cameronMethodAvailable = false,
         westMethodAvailable = false,
         deMethodAvailable = false,
-        preferred, pipeNo;
+        preferred = {}, 
+        pipeNo;
     
     tubeReference.once("value", function(snapshot){
         //Look at the data in tubeReference and determine which forces exist.
        cameronMethodAvailable = snapshot.child('CamForce').val() > 0;
        westMethodAvailable = snapshot.child('WestForce').val() > 0;  
        deMethodAvailable = snapshot.child('DeForce').val() > 0;
-       if(cameronMethodAvailable){preferred = "Cameron";
-        }else if(westMethodAvailable){preferred = "West";
-        }else if(deMethodAvailable){preferred = "DE";
-        }else{ preferred = false;
+       if(cameronMethodAvailable){
+            preferred["method"] = "Cameron";
+            preferred["forceValue"] = snapshot.child('CamForce').val();
+        }else if(westMethodAvailable){
+            preferred["method"] = "West";
+            preferred["forceValue"] = snapshot.child('WestForce').val();
+        }else if(deMethodAvailable){
+            preferred["method"] = "DE";
+            preferred["forceValue"] = snapshot.child('DeForce').val();
+        }else{ 
+            preferred["method"] = false;
+            preferred["forceValue"] = false;
         }
-        pipeNo = snapshot.child('pipeNo');
+        pipeNo = snapshot.child('pipeNo').val();
     });
-    console.log(preferred+"is the preferred method to evaluate pipe #"+pipeNo);
+    //console.log(preferred.method+" is the preferred method to evaluate pipe #"+pipeNo);
     return preferred;
 }
 function updateCamForces(tubeObj){
@@ -123,7 +146,7 @@ function updateCamForces(tubeObj){
                 C3: null
             }).then(function(){
                 console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to remove cameron forces');
-                preferredMethod = getPreferredMethod(tubeObj.ref);
+                preferredMethod = getPreferredMethod(tubeObj.ref).method;
                 tubeObj.ref.update({ 
                     preferredMethod: preferredMethod,
                     selectedMethod: preferredMethod
@@ -154,48 +177,92 @@ function BOPdataToFireBase(){
        MOPFLPS: MOPFLPS
     });
 }
+
+function updateShearPressures(){
+    /*Update shear pressures should be called whenever any of the following changes:
+     * pipe is changed
+     * closing area changes
+     * closing pressure adjustment changes
+     * MOPFLPS changes
+     * 
+     */
+    console.log("updateShearPressures() working...");
+    //COMPUTE THE CLOSING PRESSURE
+    //Is there a BOP closing area?
+    var closingAreaExists = false, Padj, MOPFLPS, Pseal, Pshear, Poperate, PoperateDef, PoperateEq, forceSelected, closingArea = null;
+    newWorksheet.child('BOP').once('value', function(snapshot){
+        closingAreaExists = (snapshot.child('closingArea').val()!== null);
+        //console.log("Closing Area Exists = "+closingAreaExists);
+        if(closingAreaExists){
+            //console.log("CA="+snapshot.child('closingArea').val());
+            closingArea = snapshot.child('closingArea').val();
+            Padj = check_value_isNumber(snapshot.child('closingPressureAdjustment'),2,0);
+            MOPFLPS = check_value_isNumber(snapshot.child('MOPFLPS'),0,0);
+            Pseal = Padj + MOPFLPS;
+            newWorksheet.child('tubulars').once("value", function(tubes){
+                if(tubes.hasChildren()){
+                    tubes.forEach(function(tube){
+                        //Calculate shear pressure
+                        
+                        forceSelected = jQuery.extend({},getPreferredMethod(tube.ref));
+                        
+                        Pshear = (forceSelected.forceValue)/closingArea + Padj;
+                        console.log(Pshear);
+                        if(Pshear > Pseal){
+                            Poperate = Pshear;
+                            PoperateDef = "Shear pressure = {Shear Force}/{Closing Area} + {Closing Pressure adjustment}";
+                            PoperateEq = Poperate+" = "+forceSelected.forceValue+" / "+closingArea+" + "+Padj;
+                        }else{
+                            Poperate = Pseal;
+                            PoperateDef = "Shear pressure = {MOPFLPS} + {Closing Pressure adjustment}";
+                            PoperateEq = Poperate+" = "+MOPFLPS+" + "+Padj;
+                        }
+                        //record shear pressure and shear pressure equation
+                        tube.ref.update({
+                            OperatingPressure: Poperate,
+                            OperatingPressureDefinition: PoperateDef,
+                            OperatingPressureEquation: PoperateEq
+                        });
+                    });
+                }else{
+                    console.log('tube or closingarea DNE');
+                    console.log('tubes: '+tubesExist+'  | closing Area: '+closingAreaExists);
+                }
+            });
+        }
+    });
+    
+    
+    
+}
 $(document).ready(function() {
     "use strict";
     var fb_tubulars = newWorksheet.child('tubulars');
-    
-    newWorksheet.child('BOP').set({
-       OEM: "",
-       model: "",
-       closingArea: "",
-       closingRatio: "",
-       trArea: "",
-       MOPFLPS: ""
+    /*DELETE - commented out on 1/18/2018
+    newWorksheet.set({
+        Well: {
+            Pressure: "",
+            DominatePressureType: "",
+            SeaHeadPressure: "",
+            controlHeadPressure: "",
+            closingPressureAdjustment: ""
+        },
+        
+        BOP: { 
+            OEM: "",
+            model: "",
+            closingArea: "",
+            closingRatio: "",
+            trArea: "",
+            MOPFLPS: ""
+        }
+        
     });
-    
+        */
+
     //disable the button to get a sharable link until a shear pressure is calculated.
     $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
-
-    //When a new calculation method is selected, update the force.
-    $(document).on('change','#approx_forces select', function(){ 
-        //get the key of the pipe from firebase of the pipe being evaluated
-        var key = $(this).parent().parent().attr('data-key');
-        //get the method that was just selected
-        var selectedMethodName = $(this).val();
-        console.log(selectedMethodName);
-        //Update the selected method in the firebase db
-        newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
-    });
-        
-    //Expandable tool tips
-    //Hide the section below the #expander arrow.  The hidden section is a sibbling of the arrow's parent.
-    $(document).on('click', '.expander', function(){
-        var currentRow = $(this).parent(), allChildren = currentRow.parent().children(), 
-        currentRowIndex=allChildren.index(currentRow),
-        showRowIndex = currentRowIndex + 2;  //this will show the next child in a non-0 indexed list
-        //allChildren.addClass('w3-red');
-        //currentRow.addClass('w3-green');
-
-        $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
-        if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
-            $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
-        }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
-    });
-        
+       
 /*
  * Form Error Checking
  */
@@ -382,6 +449,8 @@ $(document).ready(function() {
             });
         });
         
+        updateShearPressures();
+                
         //if there's pipes unhide the table
         if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
         else{$('#tblPipe').addClass('w3-hide');}
@@ -452,7 +521,7 @@ $(document).ready(function() {
            pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
            pipeNo = $('#tblPipe tr').length;
            pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toFixed(2);
-           console.log("Area is: ",pipeArea);
+           //console.log("Area is: ",pipeArea);
            wire_brkStr = pipeStrVal * pipeArea;
         }else{
             pipeNo = $('#tblWire tr').length;
@@ -566,11 +635,11 @@ $(document).ready(function() {
            $('.rigSurface').addClass('w3-hide');
        } 
     });
-    $('#masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc').change(function(){
-        display_results();
-    });
 })
 //Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
+.on('change', '#masp, #mawhp, #g_cf, #g_sw, #mud_weight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc',function(){
+        display_results();
+ })
 .on('click', 'table .fa-trash-o ',function(){
    "use strict";
     //Get the key value from the row attribute.
@@ -581,7 +650,7 @@ $(document).ready(function() {
         console.log("removed key:" + key);    
     });
 })
-//TODO: When OEM is changed or (the BOP model is changed and it's Cameron OEM), add or remove the cameron force from the pipe database
+//When OEM is changed or (the BOP model is changed and it's Cameron OEM), add or remove the cameron force from the pipe database
 .on('change', '#OEM_select, #BOP_select', function(){
    		console.log('OEM/model changed');
    		var fb_tubulars = newWorksheet.child('tubulars');
@@ -597,7 +666,32 @@ $(document).ready(function() {
  })
 .on('change','#bop_closingarea, #bop_closingratio, #bop_trarea, #bop_MOPFLPS', function(){
     BOPdataToFireBase();
- });
+    display_results();
+ })
+ //When a new calculation method is selected, update the force.
+.on('change','#approx_forces select', function(){ 
+    //get the key of the pipe from firebase of the pipe being evaluated
+    var key = $(this).parent().parent().attr('data-key');
+    //get the method that was just selected
+    var selectedMethodName = $(this).val();
+    console.log(selectedMethodName);
+    //Update the selected method in the firebase db
+    newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
+})
+//Expandable tool tips
+//Hide the section below the #expander arrow.  The hidden section is a sibbling of the arrow's parent.
+.on('click', '.expander', function(){
+        var currentRow = $(this).parent(), allChildren = currentRow.parent().children(), 
+        currentRowIndex=allChildren.index(currentRow),
+        showRowIndex = currentRowIndex + 2;  //this will show the next child in a non-0 indexed list
+        //allChildren.addClass('w3-red');
+        //currentRow.addClass('w3-green');
+
+        $(this).parent().parent().children(":nth-child("+showRowIndex+")").toggleClass("w3-hide");
+        if($(this).html()===' <i class="fa fa-chevron-up" aria-hidden="true"></i> '){
+            $(this).html(' <i class="fa fa-chevron-down" aria-hidden="true"></i> ');
+        }else{$(this).html(' <i class="fa fa-chevron-up" aria-hidden="true"></i> ');}
+    });;
 
 function Calculate_force(isTube, strength, area, pipe_elong) {
     /*Function Calculates the shear force in lbs for a given pipe size.  
@@ -897,8 +991,6 @@ function calculateArea() {
 	}
 	else{ return false;}
 }
-
-
 
 function pipe_fields(){
     // change pipe selction method based on radio buttons

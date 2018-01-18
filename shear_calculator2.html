@@ -237,25 +237,38 @@ WELL SECTION
 				</div>
 				<div class="w3-card-4">
 				<h3>Summary</h3>
-					<table class="w3-table w3-bordered w3-striped">
-						<tr><td>Well Pressure <span title="The greater of the pressure due to the mud weight at the depth of the BOP, the MAWHP, or the MASP on a surface stack"><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_mud" class="values"></td><td>psi</td></tr>
-						<tr><td>Dominate Well Pressure  <span title="Displays which pressure is displayed in the &quot;Well Pressure&quot; row"><span class="fa fa-info-circle w3-small"></span></span></td><td id="WellP_type"></td><td>psi</td></tr>
-						<tr class="w3-hide rigSubsea"><td>Seawater head pressure <span title="Acts on the opening side and the tailrod if present."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_sw"></td><td>psi</td></tr>
-						<tr class="w3-hide rigSubsea"><td>Control fluid head pressure <span title="Acts on the closing side."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_cf"></td><td>psi</td></tr>
-                        <tr><td>Closing Pressure adjustment <span title="Added to the shear pressure to account for the Well, Seawater head, and Control fluid head pressures."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_adj"></td><td>psi</td></tr>						
-                        <tr><td></td><td></td><td></td></tr>
-                        <tr><td colspan="3"><u>Force Approximations</u>  <span title="If enough information is provided the program will provide one to three different methods of shear force approximations. A '*' indicates the preferred method."><span class="fa fa-info-circle w3-small"></span></span></td></tr>
-                        <tr><td colspan="3">
-                            <table class="w3-table w3-white w3-bordered w3-striped" id="approx_forces">
-                                <!--format example
-                                <tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
-                                <tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
-                                <tr><td>2</td><td>West</td><td>125,321</td><td>lbs</td></tr>
-                                <tr><td>3</td><td>West</td><td>90,510</td><td>lbs</td></tr>
-                                -->
-                            </table></td></tr>
-						<tr class="answer"><td id="final_pressure_row" class="" title="Shear pressure considers F-West, F-Cam, and F-DE and uses the most appropriate.  A pipe OD and BOP must be selected to get a value."><b>SHEAR PRESSURE</b> <span id="final_P_info" ><span class="fa fa-info-circle w3-small"></span></span></td> <td id="final_pressure">-</td><td>psi</td></tr>
-					</table>
+                                    <table class="w3-table w3-bordered w3-striped">
+                                        <tr><td>Well Pressure <span title="The greater of the pressure due to the mud weight at the depth of the BOP, the MAWHP, or the MASP on a surface stack"><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_mud" class="values"></td><td>psi</td></tr>
+                                        <tr><td>Dominate Well Pressure  <span title="Displays which pressure is displayed in the &quot;Well Pressure&quot; row"><span class="fa fa-info-circle w3-small"></span></span></td><td id="WellP_type"></td><td>psi</td></tr>
+                                        <tr class="w3-hide rigSubsea"><td>Seawater head pressure <span title="Acts on the opening side and the tailrod if present."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_sw"></td><td>psi</td></tr>
+                                        <tr class="w3-hide rigSubsea"><td>Control fluid head pressure <span title="Acts on the closing side."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_head_cf"></td><td>psi</td></tr>
+                                        <tr><td>Closing Pressure adjustment <span title="Added to the shear pressure to account for the Well, Seawater head, and Control fluid head pressures."><span class="fa fa-info-circle w3-small"></span></span></td><td id="P_adj"></td><td>psi</td></tr>						
+                                        <tr><td></td><td></td><td></td></tr>
+                                        <tr><td colspan="3"><u>Shear Forces</u>  <span title="If enough information is provided the program will provide one to three different methods of shear force approximations. A '*' indicates the preferred method."><span class="fa fa-info-circle w3-small"></span></span></td></tr>
+                                        <tr><td colspan="3">
+                                            <table class="w3-table w3-white w3-bordered w3-striped" id="approx_forces">
+                                                <!--format example
+                                                <tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
+                                                <tr><td colspan="5"><p>WEST force = A x B X C + D</p><p>135,510 = 1 x 1 x 135,000 + 510</p></td></tr>
+                                                <tr><td>2</td><td>West</td><td>125,321</td><td>lbs</td></tr>
+                                                <tr><td>3</td><td>West</td><td>90,510</td><td>lbs</td></tr>
+                                                -->
+                                            </table>
+                                        </td></tr>
+                                        <tr><td colspan="3"><u>Shear Pressure</u></td></tr>
+                                        <tr><td colspan="3">
+                                            <table class="w3-table w3-white w3-bordered w3-striped" id="shear_pressures">
+                                                <!--format example
+                                                <tr><td>1</td><td>1,510</td><td>psi</td><td class='expander'><i class="fa fa-chevron-down" aria-hidden="true"></i></td></tr>
+                                                <tr class="w3-hide"><td colspan="5"><p>Pressure = A/B + C</p><p>1,510 = 15,000/10 + 100</p></td></tr>
+                                                <tr><td>2</td><td>780</td><td>psi</td><td class='expander'><i class="fa fa-chevron-down" aria-hidden="true"></i></td></tr>
+                                                <tr class="w3-hide"><td colspan="5"><p>Pressure = A/B + C</p><p>1,510 = 15,000/10 + 100</p></td></tr>
+                                                <tr><td>3</td><td>510</td><td>psi</td><td><i class="fa fa-chevron-down" aria-hidden="true"></i></td></tr>
+                                                -->
+                                            </table>
+                                        </td></tr>
+                                        <!--<tr class="answer"><td id="final_pressure_row" class="" title="Shear pressure considers F-West, F-Cam, and F-DE and uses the most appropriate.  A pipe OD and BOP must be selected to get a value."><b>SHEAR PRESSURE</b> <span id="final_P_info" ><span class="fa fa-info-circle w3-small"></span></span></td> <td id="final_pressure">-</td><td>psi</td></tr>-->
+                                    </table>
 				</div>
 				<div class="w3-center"><button class="w3-button w3-blue w3-margin" id="get_link" onclick="getShareLink()">Get Sharable Link</button></div>
 				<div class="w3-container" style="word-wrap:break-word;" id="save_link"></div>
