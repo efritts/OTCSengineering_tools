@@ -472,7 +472,7 @@ $(document).ready(function() {
                     //create shear pressures table
                     if(childData.child('OperatingPressure').val() !== null){
                         newPipePressure = "<tr><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('OperatingPressure').val().toFixed(0)+"</td><td>psi</td><td class='expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
-                        newPipePressureInfo = "<tr class='w3-hide'><td colspan='5'><p>"+childData.child('OperatingPressureDefinition').val()+"</p><p>"+childData.child('OperatingPressureEquation').val()+"</p></td></tr>";
+                        newPipePressureInfo = "<tr class='w3-small w3-hide'><td colspan='5'><p>"+childData.child('OperatingPressureDefinition').val()+"</p><p>"+childData.child('OperatingPressureEquation').val()+"</p></td></tr>";
                         tbl_pressureApprox+=newPipePressure+newPipePressureInfo;
                     }
                 //TODO: Add wirelines to force approximations
