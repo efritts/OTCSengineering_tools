@@ -292,9 +292,8 @@ function check_value_isNumber(input, decimals, defaultvalue) {
 	decimals = (typeof decimals !== 'undefined') ? decimals : 0;
 	var value = (typeof defaultvalue !== 'undefined') ? defaultvalue : "-";
 	
-	if (input == null || input == "" || input == "undefined" || isNaN(input))  {
-		input = value;
-		return input;
+	if (input === null || input === "" || input === "undefined" || isNaN(input))  {
+		return value;
 	}
 	else {
 		return parseFloat(input).toFixed(decimals);
