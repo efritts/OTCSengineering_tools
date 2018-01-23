@@ -216,7 +216,7 @@ function updateShearPressures(){
                                 forceValue = check_value_isNumber(tube.child('CamForce').val(),0,0);
                                 break;
                         }                   
-                        console.log("forcevalue: "+forceValue);
+                        console.log("forcevalue for pipe "+tube.child('pipeNo').val()+": "+forceValue+ " lbs");
                         
                         //Calculate the Shear Pressure
                         Pshear = (forceValue)/closingArea+parseFloat(Padj);
@@ -490,7 +490,7 @@ $(document).ready(function() {
     //Add a pipe to the list to be evaluated.
     $("#addPipe").click(function(){
         var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
-        bopID, F_CAM, F_CAM_info, preferredEvalMethod, selectedEvalMethod,
+        bopID, F_CAM, F_CAM_info, preferredEvalMethod, selectedEvalMethod, c3Request,
         pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
         tubeType = $('#tube_type').val(),
         tubeStrengthType = $('#tubeStrengthType').val(),
@@ -614,25 +614,28 @@ $(document).ready(function() {
         //add the pipe weight for tubes
         if(isTube){
              $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
-                 if($('#OEM_select option:selected').text()==='Cameron' && pipeGrade){//TODO: Update to work for casing/tubing grade or for a specified yield
+                 if($('#OEM_select option:selected').text()==='Cameron' && (pipeGrade || evalYS)){//TODO: Update to work for casing/tubing grade or for a specified yield
                      bopID = $('#BOP_select').val();
-                     $.get("include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval, function(c3){
-                         F_CAM = weight*c3*evalYS;  //force in lbs
-                         F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
-                         newPipedata.update({
-                             preferredMethod: "Cameron",
-                             selectedMethod: "Cameron",
-                             ppf: weight, 
-                             CamForce: F_CAM.toFixed(0), 
-                             CamInfo: F_CAM_info,
-                             C3: c3});    
-                     });
-                 }else{
-                     newPipedata.update({ppf: weight});
-                     //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
-                 }
-            }).fail(function(err){console.log("we got an error: "+err);});
-
+                     if(pipeGrade){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
+                     }else if(evalYS){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_yield="+evalYS+"&pipe_od="+pipeODval;}
+                    $.get(c3Request, function(c3){
+                        F_CAM = weight*c3*evalYS;  //force in lbs
+                        F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
+                        newPipedata.update({
+                            preferredMethod: "Cameron",
+                            selectedMethod: "Cameron",
+                            ppf: weight, 
+                            CamForce: F_CAM.toFixed(0), 
+                            CamInfo: F_CAM_info,
+                            C3: c3});    
+                    }).fail(function(err){
+                        console.log("Error getting c3 value with request: "+c3Request+" Error msg: "+err);
+                    });
+                }else{
+                        newPipedata.update({ppf: weight});
+                        //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
+                }
+            }).fail(function(err){console.log("Error getting pipe weight from include/pipe_weight.php: "+err);});
         }
 
         //Reset the tubular form
