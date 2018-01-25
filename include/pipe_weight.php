@@ -23,7 +23,8 @@
  $OD = (!IsNullOrEmptyString($_GET["od"])?$_GET["od"]:"");
  $Wall = (!IsNullOrEmptyString($_GET["wall"])?$_GET["wall"]:"");
  $YS = (!IsNullOrEmptyString($_GET["minYS"])?$_GET["minYS"]:"");
- $type = (!IsNullOrEmptyString($_GET["type"])?$_GET["type"]:"pipe");
+ $type = (!IsNullOrEmptyString($_GET["type"])?$_GET["type"]:"pipe");  //pipe, casing, or tubing
+ $endType = (!IsNullOrEmptyString($_GET["endType"])?$_GET["endType"]:"NU");
  $ppf = "";
  
 if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall))
@@ -33,53 +34,33 @@ if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall))
 	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	
 	//Check pipe table for result in API 5DP
-	//UPDATE NEEDED query will not select WHERE wall=x.xx
-	if($type == "pipe"){
-		try {
-		    $stmt_pipe = $conn->prepare("SELECT * FROM Pipe WHERE OD=".$OD." && wall=".$Wall.";");   //Gets all . 
-		    $stmt_pipe->execute();
-			$count = $stmt_pipe->rowCount();
-			//if rows exists, assign $ppf
-			if($count>0){
-				while( $row = $stmt_pipe->fetch(PDO::FETCH_ASSOC)){
-					$ppf_statement="Found in API 5DP";    
-					$ppf=$row['nom_weight'];
-				}
-			}
-			else{//Else calculate the ppf
-			    $ppf_statement="Not found. Calculated.";
-				$ppf=round((pow($OD,2) - pow($OD-2*$Wall, 2))*2.92,2);
-			}
-		}
-		catch(PDOException $pw) {
-		    echo "Error: " . $pw->getMessage();
-			die();
-		}
+	if($type == "tubing"){
+            $query= "SELECT * FROM tubulars WHERE od=".$OD." && type='".$type."' && wall=".$Wall." && endType='".$endType."';";
+        }else{ //casing or pipe
+            $query= "SELECT * FROM tubulars WHERE od=".$OD." && type='".$type."' && wall=".$Wall.";";//for tubulars
 	}
-	else{//for tubulars
-		try {
-		    $stmt_pipe = $conn->prepare("SELECT * FROM tubulars WHERE od=".$OD." && type='".$type."' && wall=".$Wall.";");   
-		    $stmt_pipe->execute();
-			$count = $stmt_pipe->rowCount();
-			//if rows exists, assign $ppf
-			if($count>0){
-				while( $row = $stmt_pipe->fetch(PDO::FETCH_ASSOC)){
-					$ppf_statement="Found in API 5DP";    
-					$ppf=$row['weight'];
-				}
-			}
-			else{//Else calculate the ppf
-			    $ppf_statement="Not found. Calculated.";
-				$ppf=round((pow($OD,2) - pow($OD-2*$Wall, 2))*2.92,2);
-			}
-		}
-		catch(PDOException $pw) {
-		    echo "Error: " . $pw->getMessage();
-			die();
-		}
-		
-	}
-	$conn = null;
+	try {
+            $stmt_pipe = $conn->prepare($query);   
+            $stmt_pipe->execute();
+                $count = $stmt_pipe->rowCount();
+                //if rows exists, assign $ppf
+                if($count>0){
+                        while( $row = $stmt_pipe->fetch(PDO::FETCH_ASSOC)){
+                                $ppf_statement="Found in API 5";  
+                                $ppf=$row['weight'];
+                        }
+                }
+                else{//Else calculate the ppf
+                    $ppf_statement="Not found. Calculated.";
+                    $ppf=round((pow($OD,2) - pow($OD-2*$Wall, 2))*2.92,2);
+                }
+        }
+        catch(PDOException $pw) {
+            echo "Error: " . $pw->getMessage();
+                die();
+        }
+        $conn = null;
+        
 }
 else{// Nothing to return
  echo "";
@@ -87,6 +68,6 @@ else{// Nothing to return
 }
 
 //
-//echo $ppf_statement."<br />Pipe weight is ".$ppf; //comment out after testing
+//echo $ppf_statement."<br />tubing type is {$type}<br />Query is {$query}<br />Pipe weight is ".$ppf; //comment out after testing
 echo $ppf;
 ?>

@@ -329,45 +329,52 @@ $(document).ready(function() {
     //For wireline, slickline, e-line, or braided cable show OD and breaking strength. 
     //For casing, tubing, and pipe show OD, wall, Elongation and either yield or Grade for strength.
     $('#tube_type').change(function(){
-            var tubeType = $('#tube_type').val();
-            if (tubeType === 'casing' || tubeType === 'pipe' || tubeType === 'tubing'){
-                $("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
-        $("#tubeStrengthType>option[value='strength']").prop("disabled",false);
-        $("#tubeStrengthType>option[value='grade']").prop("disabled",false);
-
-        //show od, wall, % elongation
-        $('.tubeOnly').removeClass('w3-hide');
-        $('.wireOnly').addClass('w3-hide');
-
-        //maintain the strength type, but change the grades available if pipe was changed to (casing || tubing) OR vise versa
-                if($('#tubeStrengthType').val()==="grade"){
-            if ($('#tube_type').val() === "pipe"){
-               $('#tubeGrade').removeClass('w3-hide');
-               $('#casingTubeGrade').addClass('w3-hide');
-               $('#tubeStrength').addClass('w3-hide');
-            }
-            else if ($('#tube_type').val() === "casing" || $('#tube_type').val() === "tubing"){
-                $('#casingTubeGrade').removeClass('w3-hide');
-                $('#tubeGrade').addClass('w3-hide');
-                $('#tubeStrength').addClass('w3-hide');
-            }
-        }else if ($("#tubeStrengthType").val()==="strength"){
-            //keep #tubeStrength visible
-            //keep #tubeGrade & #casingTubeGrade hidden
-        }else{ //by default select grade
-            $("#tubeStrengthType>option[value='grade']").prop("selected",true);
-            $('#tubeStrengthType').change();
+        var tubeType = $('#tube_type').val();
+        //handle the End connection
+        if(tubeType ==='tubing'){
+            $('.tubingOnly').removeClass('w3-hide');
+        }else{
+            $('.tubingOnly').addClass('w3-hide');
         }
-            }else{
-                    $("#tubeStrengthType>option[value='brStrength']").prop("disabled",false);
-                    $("#tubeStrengthType>option[value='strength']").prop("disabled",true);
-                    $("#tubeStrengthType>option[value='grade']").prop("disabled",true);
-                    $("#tubeStrengthType>option[value='brStrength']").prop("selected",true);
+        
+        if (tubeType === 'casing' || tubeType === 'pipe' || tubeType === 'tubing'){
+            $("#tubeStrengthType>option[value='brStrength']").prop("disabled",true);
+            $("#tubeStrengthType>option[value='strength']").prop("disabled",false);
+            $("#tubeStrengthType>option[value='grade']").prop("disabled",false);
 
-                    //show od, wall, % elongation
-                    $('.tubeOnly').addClass('w3-hide');		
-                    $('.wireOnly').removeClass('w3-hide');	
+            //show od, wall, % elongation
+            $('.tubeOnly').removeClass('w3-hide');
+            $('.wireOnly').addClass('w3-hide');
+
+            //maintain the strength type, but change the grades available if pipe was changed to (casing || tubing) OR vise versa
+            if($('#tubeStrengthType').val()==="grade"){
+                if ($('#tube_type').val() === "pipe"){
+                   $('#tubeGrade').removeClass('w3-hide');
+                   $('#casingTubeGrade').addClass('w3-hide');
+                   $('#tubeStrength').addClass('w3-hide');
+                }
+                else if (tubeType === "casing" || tubeType === "tubing"){
+                    $('#casingTubeGrade').removeClass('w3-hide');
+                    $('#tubeGrade').addClass('w3-hide');
+                    $('#tubeStrength').addClass('w3-hide');
+                }
+            }else if ($("#tubeStrengthType").val()==="strength"){
+                //keep #tubeStrength visible
+                //keep #tubeGrade & #casingTubeGrade hidden
+            }else{ //by default select grade
+                $("#tubeStrengthType>option[value='grade']").prop("selected",true);
+                $('#tubeStrengthType').change();
             }
+        }else{
+                $("#tubeStrengthType>option[value='brStrength']").prop("disabled",false);
+                $("#tubeStrengthType>option[value='strength']").prop("disabled",true);
+                $("#tubeStrengthType>option[value='grade']").prop("disabled",true);
+                $("#tubeStrengthType>option[value='brStrength']").prop("selected",true);
+
+                //show od, wall, % elongation
+                $('.tubeOnly').addClass('w3-hide');		
+                $('.wireOnly').removeClass('w3-hide');	
+        }
     });
 	
 /*
@@ -497,6 +504,8 @@ $(document).ready(function() {
         pipeODval = $('#pipe_od').val(),
         pipeElongVal = $('#pipe_elong').val(),
         pipeWallVal = $('#pipe_wall').val(),
+        endConnection = $('#endConnection').val(),
+        queryPipeWeight = '',
         forceValues,
         pipe_data = {},
         pipeAddError = false;
@@ -613,7 +622,9 @@ $(document).ready(function() {
         //TODO: use function updateCamForces(tubeObj) after the ppf is updated.
         //add the pipe weight for tubes
         if(isTube){
-             $.get("include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType, function(weight){
+            if(tubeType = 'tubing'){queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType+"&endType="+endConnection;}
+            else{queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType;}
+             $.get(queryPipeWeight, function(weight){
                  if($('#OEM_select option:selected').text()==='Cameron' && (pipeGrade || evalYS)){//TODO: Update to work for casing/tubing grade or for a specified yield
                      bopID = $('#BOP_select').val();
                      if(pipeGrade){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
