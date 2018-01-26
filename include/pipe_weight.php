@@ -33,7 +33,7 @@ if(!IsNullOrEmptyString($OD) && !IsNullOrEmptyString($Wall))
 	$conn = connect_db();
 	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	
-	//Check pipe table for result in API 5DP
+	//Check pipe table for result in API 5DP & 5CT
 	if($type == "tubing"){
             $query= "SELECT * FROM tubulars WHERE od=".$OD." && type='".$type."' && wall=".$Wall." && endType='".$endType."';";
         }else{ //casing or pipe

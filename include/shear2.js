@@ -622,13 +622,13 @@ $(document).ready(function() {
         //TODO: use function updateCamForces(tubeObj) after the ppf is updated.
         //add the pipe weight for tubes
         if(isTube){
-            if(tubeType = 'tubing'){queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType+"&endType="+endConnection;}
+            if(tubeType === 'tubing'){queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType+"&endType="+endConnection;}
             else{queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType;}
              $.get(queryPipeWeight, function(weight){
                  if($('#OEM_select option:selected').text()==='Cameron' && (pipeGrade || evalYS)){//TODO: Update to work for casing/tubing grade or for a specified yield
                      bopID = $('#BOP_select').val();
                      if(pipeGrade){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
-                     }else if(evalYS){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_yield="+evalYS+"&pipe_od="+pipeODval;}
+                     }else if(evalYS){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_yield="+(evalYS/100)+"&pipe_od="+pipeODval;}
                     $.get(c3Request, function(c3){
                         F_CAM = weight*c3*evalYS;  //force in lbs
                         F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
@@ -1207,7 +1207,6 @@ function Call_ajax(url,cfunc,type,data){
     	xmlhttp.open("GET",url,true);
     	xmlhttp.send();	
     }
-    
 }
 
 function Cameron_shear(od,grade,bop_id,ppf) {
