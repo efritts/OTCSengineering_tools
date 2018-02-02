@@ -180,7 +180,9 @@ function BOPdataToFireBase(){
 }
 
 function updateShearPressures(){
-    /*Update shear pressures should be called whenever any of the following changes:
+    /*Calculates the shear pressures for all pipes using the selected evaluation method.
+     * 
+     * Update shear pressures should be called whenever any of the following changes:
      * pipe is changed
      * closing area changes
      * closing pressure adjustment changes
@@ -253,27 +255,6 @@ function updateShearPressures(){
 $(document).ready(function() {
     "use strict";
     var fb_tubulars = newWorksheet.child('tubulars');
-    /*DELETE - commented out on 1/18/2018
-    newWorksheet.set({
-        Well: {
-            Pressure: "",
-            DominatePressureType: "",
-            SeaHeadPressure: "",
-            controlHeadPressure: "",
-            closingPressureAdjustment: ""
-        },
-        
-        BOP: { 
-            OEM: "",
-            model: "",
-            closingArea: "",
-            closingRatio: "",
-            trArea: "",
-            MOPFLPS: ""
-        }
-        
-    });
-        */
 
     //disable the button to get a sharable link until a shear pressure is calculated.
     $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
@@ -399,10 +380,17 @@ $(document).ready(function() {
                 newWireNo +=1;
             }
         });
-        
+         
         //if there's pipes unhide the table
-        if(newPipeNo>1){ $('#tblPipe').removeClass('w3-hide');}
-        else{$('#tblPipe').addClass('w3-hide');}
+        if(newPipeNo>1){ 
+            $('#tblPipe').removeClass('w3-hide')
+            $('#approx_forces').removeClass('w3-hide');
+            $('#shear_pressures').removeClass('w3-hide');}
+        else{
+            $('#tblPipe').addClass('w3-hide');
+            $('#approx_forces').addClass('w3-hide');
+            $('#shear_pressures').addClass('w3-hide');
+        }
         //if there's wires unhide the table
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
         else{$('#tblWire').addClass('w3-hide');}
@@ -413,8 +401,8 @@ $(document).ready(function() {
         //Generate a new table
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
         fb_tubulars.orderByChild('pipeNo').once("value", function(newdata){
-            var tbl_forceApprox = "",
-                tbl_pressureApprox = "";
+            var tbl_forceApprox = "<tr><td style='font-weight: bold'>No.</td><td style='font-weight: bold'>Method</td><td colspan='2' style='font-weight: bold; text-align: center'>Force</td><td></td></tr>",
+                tbl_pressureApprox = "<tr><td style='font-weight: bold'>No.</td><td colspan='2' style='font-weight: bold; text-align: center'>Pressure</td><td></td></tr>";
             
             updateShearPressures();
             
@@ -469,7 +457,7 @@ $(document).ready(function() {
                             calcMethodOptionHTML += "<option value='"+value+"'>"+visibleOption+"</option>";
                         }
                     });
-                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td>"+calculationMethods.selectedForceValue+"</td><td>lbs</td><td class = 'expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
+                    newPipeForce = "<tr data-key='"+childData.key+"'><td>"+childData.child('pipeNo').val()+"</td><td><select class='w3-select w3-padding-0'>"+calcMethodOptionHTML+"</select></td><td style='text-align: right'>"+calculationMethods.selectedForceValue+"</td><td> lbs</td><td class = 'expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
                     newPipeInfo = "<tr class='w3-small w3-hide'><td colspan='5'>"+calculationMethods.selectedForceInfo+"</td></tr>";
                     //Use this format
                     //<tr><td>1</td><td><select class="w3-select w3-padding-0"><option>West*</option><option>DE</option><option>Cameron</option></select></td><td>135,510</td><td>lbs</td><td><i class="fa fa-angle-down" aria-hidden="true"></i></td></tr>
@@ -478,7 +466,7 @@ $(document).ready(function() {
                     
                     //create shear pressures table
                     if(childData.child('OperatingPressure').val() !== null){
-                        newPipePressure = "<tr><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('OperatingPressure').val().toFixed(0)+"</td><td>psi</td><td class='expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
+                        newPipePressure = "<tr><td>"+childData.child('pipeNo').val()+"</td><td style='text-align: right'>"+childData.child('OperatingPressure').val().toFixed(0)+"</td><td> psi</td><td class='expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
                         newPipePressureInfo = "<tr class='w3-small w3-hide'><td colspan='5'><p>"+childData.child('OperatingPressureDefinition').val()+"</p><p>"+childData.child('OperatingPressureEquation').val()+"</p></td></tr>";
                         tbl_pressureApprox+=newPipePressure+newPipePressureInfo;
                     }
@@ -487,10 +475,10 @@ $(document).ready(function() {
                 }else{
                     newWireRow = "<tr class='wireSummaryRow'><td>"+childData.child('pipeNo').val()+"</td><td>"+childData.child('brkStrength').val()+" lbs</td><td>"+childData.child('diameter').val()+"</td><td data-key='"+childData.key+"'><i class='fa fa-trash-o ' aria-hidden='true'></i></td></tr>";
                     $('#tblWire table').append(newWireRow);
-                }
-                $('#approx_forces').html(tbl_forceApprox);
-                $('#shear_pressures').html(tbl_pressureApprox);
+                }   
             });
+            $('#approx_forces').html(tbl_forceApprox);
+            $('#shear_pressures').html(tbl_pressureApprox);
         });
     });
 	

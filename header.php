@@ -160,8 +160,8 @@ $onloadscript = "onload=\"".$loadscript."\"";
   	<a href="?page=calcs" <?php echo $basiccalcs_page_active; ?> class="w3-button">Calculators</a>
   	<div class="w3-dropdown-content w3-bar-block w3-card-4">
       <a href="?page=calcs"<?php echo $basiccalcs_page_active; ?> class="w3-bar-item w3-button">About</a>
-      <a href="?page=calcs&sub=ssc" class="w3-bar-item w3-button">Shear Calculator</a>
-      <a href="?page=calcs&sub=mtsc" class="w3-bar-item w3-button">Mulit-Tube Shear Calculator *testing*</a>
+      <!-- Old <a href="?page=calcs&sub=ssc" class="w3-bar-item w3-button">Shear Calculator</a> -->
+      <a href="?page=calcs&sub=mtsc" class="w3-bar-item w3-button">Shear Calculator</a>
       <a href="?page=calcs&sub=atest" class="w3-bar-item w3-button">Accumulator Test</a>
     </div>
   </div>
