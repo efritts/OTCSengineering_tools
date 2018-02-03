@@ -98,6 +98,24 @@ function getPreferredMethod(tubeReference){
     //console.log(preferred.method+" is the preferred method to evaluate pipe #"+pipeNo);
     return preferred;
 }
+function getC3(bopID, pipeOD, evalYS, pipeGrade = false){
+    //returns the value of c3 for the given information
+    // 
+    //evalYS should be in ksi
+    var c3QueryString;
+    
+    if(pipeGrade){
+        c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeOD;
+    }else{
+        c3QueryString = "bop_id="+bopID+"&pipe_yield="+evalYS+"&pipe_od="+pipeOD;
+    }
+    $.get("include/C3.php?"+c3QueryString, function(){}
+    ).then(function(c3){ 
+        console.log("requesting: include/C3.php?"+c3QueryString);
+        console.log("answer: "+c3);
+        return c3;
+    });
+}
 function updateCamForces(tubeObj){
         //A new BOP was selected, check the tubeObj supplied and update the firebase database.
         //tubeObj is a snapshot of a particular tube in the database
@@ -106,7 +124,7 @@ function updateCamForces(tubeObj){
             tubeType = tubeObj.child('type').val(),
             weight = tubeObj.child('ppf').val(),
             strengthType = tubeObj.child('strengthType').val(),  //either "strength" or "grade"
-            evalYS, bopID, F_CAM, F_CAM_info, pipeGrade = null, c3QueryString,
+            evalYS, bopID, F_CAM, F_CAM_info, pipeGrade = null, c3QueryString, c3,
             preferredMethod = "",
             isTube = (tubeType === "pipe" || tubeType === "casing" || tubeType === "tubing"  )? true: false;
 	//if the BOP is a cameron, include the Cameron Force		
@@ -116,14 +134,17 @@ function updateCamForces(tubeObj){
             
             if(isTube){
                 bopID = $('#BOP_select').val();
-                if(strengthType === "grade"){
+                
+                if(strengthType === "grade" && tubeType === "pipe"){
                     //pipeGrade = tubeType === "pipe" ?   $('#tube_grade option:selected').text() : $('#casing_grade option:selected').text();
                     pipeGrade = tubeObj.child('grade').val();
-                    c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
+                    //c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
                 }else{
-                    c3QueryString = "bop_id="+bopID+"&pipe_yield="+(evalYS/1000)+"&pipe_od="+pipeODval;
+                    //c3QueryString = "bop_id="+bopID+"&pipe_yield="+(evalYS/1000)+"&pipe_od="+pipeODval;
                 }
-                console.log("requesting: include/C3.php?"+c3QueryString);
+                c3 = getC3(bopID,pipeODval,(evalYS/1000),pipeGrade);
+                //console.log("requesting: include/C3.php?"+c3QueryString);
+                /*
                 $.get("include/C3.php?"+c3QueryString, function(c3){
                     F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
                     F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
@@ -134,8 +155,19 @@ function updateCamForces(tubeObj){
                         CamForce: F_CAM, 
                         CamInfo: F_CAM_info,
                         C3: c3
-                }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
+                    }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
                 }).fail(function(err){console.log("Failed to get C3 value: "+err);});
+                */
+                F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
+                F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
+                tubeObj.ref.update({
+                    preferredMethod: "Cameron",
+                    selectedMethod: "Cameron",
+                    ppf: weight, 
+                    CamForce: F_CAM, 
+                    CamInfo: F_CAM_info,
+                    C3: c3
+                }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
             }else{
                 //this is a wireline
             }	
