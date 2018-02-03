@@ -123,8 +123,8 @@ $onloadscript = "onload=\"".$loadscript."\"";
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>NWTS tool set - <?php echo $title_name; ?></title>
-	<meta name="description" content="Calculates BOP shear pressure given BOP and pipe variables">
+	<title>OTC Solutions tool set - <?php echo $title_name; ?></title>
+	<meta name="description" content="Tools available for OTCS engineers">
 	<meta name="author" content="David Hanks">
 	
 	<!--HEADER SCRIPTS-->

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html lang="en">
+    <head>
+        <title>C3 tester</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <script src="https://www.gstatic.com/firebasejs/4.0.0/firebase.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="include/jfunctions.js"></script>
+        
+        <link rel="stylesheet" href="css/style.css" />
+        <script>
+            $(function(){
+                var cee = getC3(9, 6, 130 );
+                $("#answer").html('c3')
+                $("#answer").html(cee);
+            });
+            
+        </script>
+    </head>
+    <body>
+        <div style="margin: 20px">
+            <div><h2>Test the getC3 function</h2></div>
+            <br />
+            <div id="answer"></div>
+        </div>
+        <script>
+            // Initialize Firebase
+            var config = {
+              apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
+              authDomain: "otcsolutions-d2f8c.firebaseapp.com",
+              databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
+              projectId: "otcsolutions-d2f8c",
+              storageBucket: "otcsolutions-d2f8c.appspot.com",
+              messagingSenderId: "808288712006"
+            };
+            firebase.initializeApp(config);
+        </script>
+         <script src="include/shear2.js"></script>
+    </body>
+</html>
