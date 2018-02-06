@@ -144,6 +144,8 @@ if(!IsNullOrEmptyString($bop_id) && !IsNullOrEmptyString($pipe_grade) && !IsNull
 	 
 /*
  * Info when testing
+ * 
+
 	 echo "bop_type = $bop_type <br />";
 	 echo "bop_group = $bop_group <br />";
 	 echo "ram_type = $ram_type <br />";
@@ -152,7 +154,6 @@ if(!IsNullOrEmptyString($bop_id) && !IsNullOrEmptyString($pipe_grade) && !IsNull
 	 echo "pipe_grade = $pipe_grade <br />";
 	 echo "<b>C3 = $c3";
 	 echo $error;
- * 
  */
  echo $c3;
  $conn_C3 = null;

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html lang="en">
+    <head>
+        <title>C3 tester</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <script src="https://www.gstatic.com/firebasejs/4.0.0/firebase.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<!--<script src="include/jfunctions.js"></script>-->
+        
+        <!--STYLE SHEETS-->
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3.css">
+        
+        <script>
+            
+            $(document).ready(function(){
+                var database = firebase.database(),
+                    dbRefWorksheet = database.ref().child('shearWorksheet');
+                    console.log('Preparing to remove '+dbRefWorksheet.toString());
+        
+        
+            $('#clearfb').click(function (){
+                dbRefWorksheet.remove()
+                    .then(function() {
+                        console.log("Remove succeeded.")
+                    })
+                    .catch(function(error) {
+                        console.log("Remove failed: " + error.message)
+                    });
+            }
+            );
+                
+            });
+        </script>
+    </head>
+    <body>
+        <div style="margin: 20px">
+            <div><h2>Firebase erase</h2></div>
+            <br />
+            <button class="w3_button" id="clearfb">Clear all previous records!</button>
+        </div>
+        <script>
+            // Initialize Firebase
+            var config = {
+              apiKey: "AIzaSyC1kzPDgWGUcqDItqOIvmA_CPRQwM7YWYw",
+              authDomain: "otcsolutions-d2f8c.firebaseapp.com",
+              databaseURL: "https://otcsolutions-d2f8c.firebaseio.com",
+              projectId: "otcsolutions-d2f8c",
+              storageBucket: "otcsolutions-d2f8c.appspot.com",
+              messagingSenderId: "808288712006"
+            };
+            firebase.initializeApp(config);
+        </script>
+         <!--<script src="include/shear2.js"></script>-->
+    </body>
+</html>
