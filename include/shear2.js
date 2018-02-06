@@ -98,25 +98,34 @@ function getPreferredMethod(tubeReference){
     //console.log(preferred.method+" is the preferred method to evaluate pipe #"+pipeNo);
     return preferred;
 }
-function getC3(bopID, pipeOD, evalYS, pipeGrade = false){
+function getC3_v2(bopID, tubeObj){
     //returns the value of c3 for the given information
     // 
     //evalYS should be in ksi
-    var c3QueryString;
-    
-    if(pipeGrade){
-        c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeOD;
-    }else{
-        c3QueryString = "bop_id="+bopID+"&pipe_yield="+evalYS+"&pipe_od="+pipeOD;
-    }
-    $.get("include/C3.php?"+c3QueryString, function(){}
-    ).then(function(c3){ 
-        console.log("requesting: include/C3.php?"+c3QueryString);
-        console.log("answer: "+c3);
-        return c3;
+    return new Promise(function(resolve,reject){
+        var c3QueryString,
+            tubeType = tubeObj.child('type').val(),
+            pipeOD = tubeObj.child('diameter').val(),
+            strengthType = tubeObj.child('strengthType').val(),  //either "strength" or "grade"
+            evalYS = tubeObj.child('evalStrength').val(), pipeGrade = null, c3QueryString, c3;
+        if(tubeType === "pipe" && strengthType === "grade"){
+            pipeGrade = tubeObj.child('grade').val();
+            c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeOD;
+        }else{ //TODO: this does not address wireline
+            c3QueryString = "bop_id="+bopID+"&pipe_yield="+evalYS+"&pipe_od="+pipeOD; 
+        }
+        $.get("include/C3.php?"+c3QueryString
+        ).done(function(c3){ 
+            console.log("requesting: include/C3.php?"+c3QueryString);
+            console.log("answer: "+c3);
+            resolve(c3);
+        }).fail(function(error){
+            reject(()=>{console.log("Error in getC3_v2: "+error);});
+        });
     });
 }
-function updateCamForces(tubeObj){
+async function updateCamForces(tubeObj){
+        console.log("updateCamForces triggered...");
         //A new BOP was selected, check the tubeObj supplied and update the firebase database.
         //tubeObj is a snapshot of a particular tube in the database
 	var pipeODval = tubeObj.child('diameter').val(),
@@ -134,30 +143,7 @@ function updateCamForces(tubeObj){
             
             if(isTube){
                 bopID = $('#BOP_select').val();
-                
-                if(strengthType === "grade" && tubeType === "pipe"){
-                    //pipeGrade = tubeType === "pipe" ?   $('#tube_grade option:selected').text() : $('#casing_grade option:selected').text();
-                    pipeGrade = tubeObj.child('grade').val();
-                    //c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
-                }else{
-                    //c3QueryString = "bop_id="+bopID+"&pipe_yield="+(evalYS/1000)+"&pipe_od="+pipeODval;
-                }
-                c3 = getC3(bopID,pipeODval,(evalYS/1000),pipeGrade);
-                //console.log("requesting: include/C3.php?"+c3QueryString);
-                /*
-                $.get("include/C3.php?"+c3QueryString, function(c3){
-                    F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
-                    F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
-                    tubeObj.ref.update({
-                        preferredMethod: "Cameron",
-                        selectedMethod: "Cameron",
-                        ppf: weight, 
-                        CamForce: F_CAM, 
-                        CamInfo: F_CAM_info,
-                        C3: c3
-                    }).then(function(){console.log('Updated pipe '+tubeObj.child('pipeNo').val()+' to include cameron forces');}, function(error){console.log('Error on fb update: '+error);});
-                }).fail(function(err){console.log("Failed to get C3 value: "+err);});
-                */
+                c3 = await getC3_v2(bopID,tubeObj);
                 F_CAM = (weight*c3*evalYS).toFixed(0);  //force in lbs
                 F_CAM_info = F_CAM+" = "+weight+" x "+c3+" x "+evalYS;
                 tubeObj.ref.update({
@@ -636,37 +622,25 @@ $(document).ready(function() {
             preferredMethod: preferredEvalMethod,
             selectedMethod: selectedEvalMethod
         };
-       console.log(pipe_data);
-       newPipedata = newWorksheet.child('tubulars').push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+       //console.log(pipe_data);
+       newPipedata = fb_tubulars.push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
 
-        //TODO: use function updateCamForces(tubeObj) after the ppf is updated.
         //add the pipe weight for tubes
         if(isTube){
             if(tubeType === 'tubing'){queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType+"&endType="+endConnection;}
             else{queryPipeWeight = "include/pipe_weight.php?od="+pipeODval+"&wall="+pipeWallVal+"&type="+tubeType;}
-             $.get(queryPipeWeight, function(weight){
-                 if($('#OEM_select option:selected').text()==='Cameron' && (pipeGrade || evalYS)){//TODO: Update to work for casing/tubing grade or for a specified yield
-                     bopID = $('#BOP_select').val();
-                     if(pipeGrade){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeODval;
-                     }else if(evalYS){c3Request = "include/C3.php?bop_id="+bopID+"&pipe_yield="+(evalYS/100)+"&pipe_od="+pipeODval;}
-                    $.get(c3Request, function(c3){
-                        F_CAM = weight*c3*evalYS;  //force in lbs
-                        F_CAM_info = F_CAM.toFixed(0)+" = "+weight+" x "+c3+" x "+evalYS;
-                        newPipedata.update({
-                            preferredMethod: "Cameron",
-                            selectedMethod: "Cameron",
-                            ppf: weight, 
-                            CamForce: F_CAM.toFixed(0), 
-                            CamInfo: F_CAM_info,
-                            C3: c3});    
-                    }).fail(function(err){
-                        console.log("Error getting c3 value with request: "+c3Request+" Error msg: "+err);
-                    });
-                }else{
-                        newPipedata.update({ppf: weight});
-                        //console.log('OEM: '+$('#OEM_select option:selected').text()+'pipeGrade: '+pipeGrade); //testing
-                }
-            }).fail(function(err){console.log("Error getting pipe weight from include/pipe_weight.php: "+err);});
+            $.get(queryPipeWeight, function(weight){
+                newPipedata.update({ppf: weight});
+            }).done(() =>{ 
+                fb_tubulars.orderByKey().equalTo(newPipedata.key).once('value', function(snapshot){
+                            snapshot.forEach(function(childSnapshot){
+                                console.log("What I am sending...");
+                                console.log(childSnapshot.val());
+				updateCamForces(childSnapshot);
+			});
+                        });
+            }).fail(function(err){console.log("Error getting pipe weight from include/pipe_weight.php: "+err);
+            });
         }
 
         //Reset the tubular form
@@ -1228,71 +1202,6 @@ function Call_ajax(url,cfunc,type,data){
     	xmlhttp.send();	
     }
 }
-
-function Cameron_shear(od,grade,bop_id,ppf) {
-	
-	//Generate a force using Cameron's EB 702D.  The following must be available.
-	// C3, Cameron BOP, ppf
-	// this function is only called after ppf is pulled from the database
-	// this function uses od, grade, and bop_id to determine the C3 value
-	// once the C3 value is pulled from the database a value is returned in the results table.
-	
-	ppf = check_value_isNumber(ppf,3,false);
-	var bop_closingarea = check_form_field('bop_closingarea');
-	
-    if (window.XMLHttpRequest) {
-        // code for IE7+, Firefox, Chrome, Opera, Safari
-        var xmlhttp = new XMLHttpRequest();
-    } else {
-        // code for IE6, IE5
-        var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
-            var C3 = xmlhttp.responseText;
-            var ys = get_minYS();
-            CameronForce = parseFloat(ppf * C3 * ys / 1000).toFixed(1);
-            CameronPressure = (CameronForce * 1000) / bop_closingarea + Calc_all().Press_adj;
-            Cameron_info = "C3 = "+C3+"&#x0D Cameron Force = "+ppf+" * "+C3+" * "+ys+" / 1000";
-            document.getElementById("Fcam").innerHTML = "<td>F-Cameron <span title=\""+Cameron_info+"\"><span class=\"fa fa-info-circle w3-small\"></span></span></td><td>"+CameronForce+"</td><td>kips</td>";
- 			
- 			//Display the Shear Pressure as calculated using Cameron force.
-            document.getElementById("final_pressure").innerHTML = check_value_isNumber(CameronPressure,1);
-            document.getElementById('final_pressure_row').className = ""; //clear any error notification
-            document.getElementById("final_P_info").title= "Cameron Shear Pressure = ("+check_value_isNumber(CameronForce,0)+" * 1000) / "+bop_closingarea+" + "+check_value_isNumber(Calc_all().Press_adj,2);
-        }
-    };
-    xmlhttp.open("GET","include/c3.php?bop_id="+bop_id+"&pipe_grade="+grade+"&pipe_od="+od,true);
-    xmlhttp.send();
-}
-
-function process_ppf(xhttp) {
-	document.getElementById("pipe_ppf").innerHTML = xhttp.responseText;
-	
-	var ppf = check_value_isNumber(xhttp.responseText,3,false);
-	var od = check_form_field('pipe_od',false);
-	
-	//get grade
-	if(document.contains(document.getElementById('pipe_grade'))){  //If a pipe grade has been selected
-			var grade_option = document.getElementById("pipe_grade").options;
-			var grade_index = document.getElementById("pipe_grade").selectedIndex;
-			var pipe_grade = grade_option[grade_index].text;
-	}
-	else{ var pipe_grade = false;}
-	
-	//get bop_id
-	if(document.contains(document.getElementById('BOP_select'))){  //If a bop has been selected
-		var BOP_option = document.getElementById("BOP_select").options;
-		var BOP_index = document.getElementById("BOP_select").selectedIndex;
-		var BOP_id = BOP_option[BOP_index].value;
-		}
-	else{ var BOP_id = false;}
-		
-	if (od && BOP_id && pipe_grade){
-			Cameron_shear(od,pipe_grade,BOP_id,ppf);
-	}
-}
-
 function validateForm() {
 	//checks that a shear value has been calculated before generating a valid link.
     var x = check_html_text('final_pressure',false);
