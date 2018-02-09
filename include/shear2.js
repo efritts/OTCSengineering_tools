@@ -107,7 +107,7 @@ function getC3_v2(bopID, tubeObj){
             tubeType = tubeObj.child('type').val(),
             pipeOD = tubeObj.child('diameter').val(),
             strengthType = tubeObj.child('strengthType').val(),  //either "strength" or "grade"
-            evalYS = tubeObj.child('evalStrength').val(), pipeGrade = null, c3QueryString, c3;
+            evalYS = (tubeObj.child('evalStrength').val())/1000, pipeGrade = null, c3QueryString, c3;
         if(tubeType === "pipe" && strengthType === "grade"){
             pipeGrade = tubeObj.child('grade').val();
             c3QueryString = "bop_id="+bopID+"&pipe_grade="+pipeGrade+"&pipe_od="+pipeOD;
