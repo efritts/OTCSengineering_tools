@@ -1,7 +1,8 @@
 $(function() {
 	//Store original login-modal
 	var loginmodal_original = $('#login-modal').clone();
-	
+
+	updateFooter();
 	//Send verification email when button is pressed.
 	$(document).on('click',"#login-modal button:contains('Send verification email')", function(){
 		var user = firebase.auth().currentUser;
@@ -10,7 +11,7 @@ $(function() {
 		  $('#verifyemail-error').text('A message has been sent, please check your email.');
 		  $('#login-modal footer').html('<button class="w3-button w3-white w3-medium">OK</button>');
 		}, function(error) {
-		  console.log('Problem sending email to '+email+': '+error);
+		  console.log('Problem sending email to '+user.email+': '+error);
 		});	
 	});
 	
@@ -30,7 +31,7 @@ $(function() {
 	//When enter is hit for the login-modal, login.
 	$(document).on('keypress', "#login-modal input", function (e) {
 	 var key = e.which;
-	 if(key == 13){  // the enter key code
+	 if(key === 13){  // the enter key code
 	    $("#login-modal button:contains('Login')").trigger("click");
 	    return false;  
 	  }
@@ -145,7 +146,26 @@ $(function() {
 	});
 	
 });
+async function updateFooter(){ 
+	var commitVersion = await commitInfo();
+	$("#siteVersionInfo").html(commitVersion);
+}
+	
+function commitInfo(x){
+	// requests the git info
+	// idshort, idlong, committer, date, summary are acceptable argument for x
+	return new Promise(function(resolve, reject){
+		x = x || "";
 
+		$.get("include/git_info.php?"+x
+		).done(function(git_info){
+			console.log('received: '+git_info);
+			resolve(git_info);
+		}).fail(function(error){
+            reject(()=>{console.log("Error in commitInfo: "+error);});
+        });
+	});
+}
 function GetElementInsideContainer(containerID, childID) {
     var elm = document.getElementById(childID);
     var parent = elm ? elm.parentNode : {};

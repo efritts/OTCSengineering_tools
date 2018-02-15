@@ -155,7 +155,7 @@ $onloadscript = "onload=\"".$loadscript."\"";
  * 
  */?>	
 <div class="w3-bar w3-black">
-  <a href="/Compliance" <?php echo $home_page_active; ?> class="w3-bar-item w3-button w3-mobile"><i class="fa fa-home w3-small"></i></a>
+  <a href="./" <?php echo $home_page_active; ?> class="w3-bar-item w3-button w3-mobile"><i class="fa fa-home w3-small"></i></a>
   <div class="w3-dropdown-hover">
   	<a href="?page=calcs" <?php echo $basiccalcs_page_active; ?> class="w3-button">Calculators</a>
   	<div class="w3-dropdown-content w3-bar-block w3-card-4">
