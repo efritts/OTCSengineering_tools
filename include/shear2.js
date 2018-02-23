@@ -753,22 +753,18 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
     "use strict";
     area = (typeof area !== 'undefined') ?  area : false;
     pipe_elong = (typeof pipe_elong !== 'undefined') ?  pipe_elong : false;
-    var method = "", A, B, C, Stdev, R2, WestForce, WestEquationStr, strengthConcat,
+    var method = "", A, B, C, Stdev, R2, WestForce, strengthConcat,
         ForceValues = {},
-        min_YS = strength;
+        YS_ksi = strength/1000;
     
-    if(typeof strength === "string"){
-        strengthConcat = parseFloat(strength).toFixed(0);
-    } else{
-        strengthConcat = strength.toFixed(0);
-    }
-
+    //Strength should be a numerical value expressed in ksi
+    strengthConcat = typeof YS_ksi  === "string" ? parseFloat(YS_ksi).toFixed(0) : YS_ksi.toFixed(0);
+    
     if(isTube && area){
-            
-            //Use distortion energy regarless of elongation for comparison
-            ForceValues.DE_force = (0.577 * area * strength).toFixed(0);
-            ForceValues.DE_info =     "0.577 x "+area+" x "+strengthConcat;
-            ForceValues.DE_def = "0.577 x area x yield";
+            //Use distortion energy regardless of elongation for comparison
+            ForceValues.DE_force = 1000*((0.577 * area * YS_ksi).toFixed(0));
+            ForceValues.DE_info = "1000 x 0.577 x "+area+" x "+strengthConcat;
+            ForceValues.DE_def = "1000 x 0.577 x area x yield(ksi)";
             //if elongation is present use west w/ elongation
             if(pipe_elong){
                 //The following values are given by a WEST engineering report generated for MMS
@@ -782,37 +778,32 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
                     B = 25.357;
                     R2 = 0.359;
                     Stdev = 62.03;
-                }
-                else if (strength >= 105000 && strength < 135000){
+                }else if (strength >= 105000 && strength < 135000){
                     C = 181.33;
                     A = 0.396;
                     B = 2.035;
                     R2 = 0.121;
                     Stdev = 62.89;
-                }
-                else if (strength >= 135000 && strength < 200000){
+                }else if (strength >= 135000 && strength < 200000){
                     C = -35.11;
                     A = 0.630;
                     B = 4.489;
                     R2 = 0.3;
                     Stdev = 76.69;
-                }
-                else {
+                }else {
                     C = 35.28;
                     A = 0.427;
                     B = 6.629;
                     R2 = 0.231;
                     Stdev = 75.15;
                 }
-                WestForce = C + A * 0.577 * strength * area + B * pipe_elong + (2 * Stdev);
-                WestEquationStr = C+" + "+A+" x 0.577 x "+area+" x "+strengthConcat+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")";
+                WestForce = 1000*(C + A * 0.577 * YS_ksi * area + B * pipe_elong + (2 * Stdev));
                 ForceValues.West_force=WestForce.toFixed(0);
-                ForceValues.West_info= ForceValues.West_force+" = "+WestEquationStr;
-                ForceValues.West_def = "Force (West) = "+C+" + "+A+" x 0.577 x area x yield + "+B+" x elongation + (2 x "+Stdev+")";
-            }else{ //west w/o distortion 
+                ForceValues.West_info= ForceValues.West_force+" = 1000 x {"+C+" + "+A+" x 0.577 x "+area+" x "+strengthConcat+" + "+B+" x "+pipe_elong+" + (2 x "+Stdev+")}";
+                ForceValues.West_def = "Force (West) = 1000 x {"+C+" + "+A+" x 0.577 x area x yield + "+B+" x elongation + (2 x "+Stdev+")}";
+            }else{ //west w/o Elongation 
                 ForceValues.West_force = (ForceValues.DE_force * 1.045).toFixed(0);
-                WestEquationStr = " 0.577 x "+area +" x "+strengthConcat+" x 1.045";
-                ForceValues.West_info= ForceValues.West_force+" = "+WestEquationStr;
+                ForceValues.West_info= ForceValues.West_force+" = 1000 x 0.577 x "+area +" x "+strengthConcat+" x 1.045";
                 ForceValues.West_def = "Force (West) = 0.577 x area x yield x 1.045";
             }
         }else{ //calc shear force based on breaking strength
@@ -823,7 +814,6 @@ function Calculate_force(isTube, strength, area, pipe_elong) {
             ForceValues.DE_info = "0.577 x "+strengthConcat;
             ForceValues.DE_def = "0.577 x breaking strength";
         }
-    //console.log(`isTube: ${isTube}, area: ${area}, strength: ${strength}, pipe_elong: ${pipe_elong}`); 
     return ForceValues;
 }
 function display_ssc_save(xhttp) {
