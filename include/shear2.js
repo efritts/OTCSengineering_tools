@@ -622,8 +622,15 @@ $(document).ready(function() {
             preferredMethod: preferredEvalMethod,
             selectedMethod: selectedEvalMethod
         };
-       //console.log(pipe_data);
-       newPipedata = fb_tubulars.push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+             
+        newPipedata = fb_tubulars.push(pipe_data, function(error){
+            if(error){
+                console.log('could not push new tubular data.  Error Message: '+error);
+            }else{
+                console.log('added pipedata for Pipe number ' + pipeNo);
+            }
+        });
+       
 
         //add the pipe weight for tubes
         if(isTube){
