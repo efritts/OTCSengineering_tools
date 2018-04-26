@@ -38,7 +38,6 @@ var database = firebase.database(),
         T95: { min: 95000, max: 110000 },
         C110: { min: 110000, max: 120000 }
     };
-    console.log('Created key: '+newWorksheet.key);
 function display_results(){
     var pressures = jQuery.extend({},Calc_all());
     //Fill SUMMARY BOX
@@ -95,7 +94,6 @@ function getPreferredMethod(tubeReference){
         }
         pipeNo = snapshot.child('pipeNo').val();
     });
-    //console.log(preferred.method+" is the preferred method to evaluate pipe #"+pipeNo);
     return preferred;
 }
 function getC3_v2(bopID, tubeObj){
@@ -116,8 +114,8 @@ function getC3_v2(bopID, tubeObj){
         }
         $.get("include/C3.php?"+c3QueryString
         ).done(function(c3){ 
-            console.log("requesting: include/C3.php?"+c3QueryString);
-            console.log("answer: "+c3);
+            //console.log("requesting: include/C3.php?"+c3QueryString);
+            //console.log("answer: "+c3);
             resolve(c3);
         }).fail(function(error){
             reject(()=>{console.log("Error in getC3_v2: "+error);});
@@ -236,11 +234,10 @@ function updateShearPressures(){
                                 forceValue = check_value_isNumber(tube.child('CamForce').val(),0,0);
                                 break;
                         }                   
-                        console.log("forcevalue for pipe "+tube.child('pipeNo').val()+": "+forceValue+ " lbs");
+                        //console.log("forcevalue for pipe "+tube.child('pipeNo').val()+": "+forceValue+ " lbs");
                         
                         //Calculate the Shear Pressure
                         Pshear = (forceValue)/closingArea+parseFloat(Padj);
-                        console.log(Pshear);
                         
                         //Use the greater of the shear pressure or the sealing pressure as the operating pressure.
                         if(Pshear > Pseal){
@@ -260,8 +257,7 @@ function updateShearPressures(){
                         });
                     });
                 }else{
-                    console.log('tube or closingarea DNE');
-                    //console.log('tubes: '+tubesExist+'  | closing Area: '+closingAreaExists);
+                    console.log('tube or closingarea does  not exist');
                 }
             });
         }
@@ -413,8 +409,8 @@ $(document).ready(function() {
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
         else{$('#tblWire').addClass('w3-hide');}
 
-        console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
-        console.log(data.val());
+        //console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
+        //console.log(data.val());
         
         //Generate a new table
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
@@ -561,7 +557,6 @@ $(document).ready(function() {
            pipeElong_txt = pipeElongVal.length === 0 ? "" : pipeElongVal+" %";
            pipeNo = $('#tblPipe tr').length;
            pipeArea = (Math.PI*(Math.pow(pipeODval,2)-Math.pow((pipeODval-(2*pipeWallVal)),2))/4).toFixed(2);
-           //console.log("Area is: ",pipeArea);
            wire_brkStr = pipeStrVal * pipeArea;
         }else{
             pipeNo = $('#tblWire tr').length;
@@ -622,8 +617,15 @@ $(document).ready(function() {
             preferredMethod: preferredEvalMethod,
             selectedMethod: selectedEvalMethod
         };
-       //console.log(pipe_data);
-       newPipedata = fb_tubulars.push(pipe_data, function(){console.log('added pipedata for Pipe number ' + pipeNo);});
+             
+        newPipedata = fb_tubulars.push(pipe_data, function(error){
+            if(error){
+                console.log('could not push new tubular data.  Error Message: '+error);
+            }else{
+                console.log('Added pipe_data for Pipe number ' + pipeNo + 'to firebase.database');
+            }
+        });
+       
 
         //add the pipe weight for tubes
         if(isTube){
@@ -634,8 +636,8 @@ $(document).ready(function() {
             }).done(() =>{ 
                 fb_tubulars.orderByKey().equalTo(newPipedata.key).once('value', function(snapshot){
                             snapshot.forEach(function(childSnapshot){
-                                console.log("What I am sending...");
-                                console.log(childSnapshot.val());
+                                //console.log("What I am sending...");
+                                //console.log(childSnapshot.val());
 				updateCamForces(childSnapshot);
 			});
                         });
@@ -693,12 +695,11 @@ $(document).ready(function() {
     
     //Remove the key for this pipe row from firebase.
     newWorksheet.child('tubulars/'+key).remove().then(function(){
-        console.log("removed key:" + key);    
+        //console.log("removed key:" + key);    
     });
 })
 //When OEM is changed or (the BOP model is changed and it's Cameron OEM), add or remove the cameron force from the pipe database
 .on('change', '#OEM_select, #BOP_select', function(){
-   		console.log('OEM/model changed');
    		var fb_tubulars = newWorksheet.child('tubulars');
 		fb_tubulars.once('value', function(snapshot) {
 			snapshot.forEach(function(childSnapshot){
@@ -720,7 +721,6 @@ $(document).ready(function() {
     var key = $(this).parent().parent().attr('data-key');
     //get the method that was just selected
     var selectedMethodName = $(this).val();
-    console.log(selectedMethodName);
     //Update the selected method in the firebase db
     newWorksheet.child('tubulars').child(key).ref.update( {selectedMethod: selectedMethodName});
 })
@@ -1155,7 +1155,6 @@ function Calc_all() {
     P_adjust_hyd = isSubsea ? ((( ForceO_sw - ForceC_cf - ForceC_tr ) / bop_closingarea)) + ( P_well / bop_closingratio ): P_well / bop_closingratio,
     //output_str = 'Force0_sw = '+ForceO_sw+', ForceC_cf = '+ForceC_cf+', ForceC_tr = '+ForceC_tr+', bop_closing_area = '+bop_closingarea+', P_well = '+P_well+', bop_closingratio = '+bop_closingratio+', P_adjust_hyd = '+P_adjust_hyd;
     output_str = 'ForceC_cf = '+ForceC_cf+', head_sw ='+head_sw+', bop_trarea='+bop_trarea+', ForceC_tr = '+ForceC_tr+', P_adjust_hyd = '+P_adjust_hyd;
-    console.log(output_str);
 
     //return values to be displayed
     var Pressures = {};

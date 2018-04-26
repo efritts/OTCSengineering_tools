@@ -90,7 +90,7 @@ if(!IsNullOrEmptyString($bop_id) && !IsNullOrEmptyString($pipe_grade) && !IsNull
 	
 	//Using the $bop_id, determine $bop_group & $ram_type
 	try {
-	    $stmt_bopinfo = $conn_C3->prepare("SELECT id, BOP_model, BOP_Operatortype, BOP_ramtype FROM compliance.BOP WHERE id=".$bop_id); 
+	    $stmt_bopinfo = $conn_C3->prepare("SELECT id, BOP_model, BOP_Operatortype, BOP_ramtype FROM BOP WHERE id=".$bop_id); 
 	    $stmt_bopinfo->execute();
 		$count = $stmt_bopinfo->rowCount();
 		//if rows exists, assign $bop_type & ram_type
@@ -111,17 +111,17 @@ if(!IsNullOrEmptyString($bop_id) && !IsNullOrEmptyString($pipe_grade) && !IsNull
 			//Determine BOP Ram Group A or B
 			if($ram_type=="SBR"){$ram_group="A";}
 			else{$ram_group="B";}
-			$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM compliance.CameronC3 WHERE BOP_group='A' AND Ram_type='$ram_group' AND pipe_grade='$pipe_grade'");
+			$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM CameronC3 WHERE BOP_group='A' AND Ram_type='$ram_group' AND pipe_grade='$pipe_grade'");
 			//echo "bop_group=$bop_group ram_group=$ram_group<br />";//testing
 		}
 		else{
 		//if BOP group B
 			if($pipe_od>9.625)
 			{
-				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM compliance.CameronC3 WHERE BOP_group='B' AND Tubular_size='+9.625' AND pipe_grade='$pipe_grade'");
+				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM CameronC3 WHERE BOP_group='B' AND Tubular_size='+9.625' AND pipe_grade='$pipe_grade'");
 			}
 			else {
-				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM compliance.CameronC3 WHERE BOP_group='B' AND Tubular_size='-9.625' AND pipe_grade='$pipe_grade'");
+				$stmt_c3Query = $conn_C3->prepare("SELECT idCameronC3, C3 FROM CameronC3 WHERE BOP_group='B' AND Tubular_size='-9.625' AND pipe_grade='$pipe_grade'");
 			}
 			//echo "bop_group=$bop_group pipe_od=$pipe_od<br />";//testing
 		}

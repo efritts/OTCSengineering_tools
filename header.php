@@ -128,7 +128,7 @@ $onloadscript = "onload=\"".$loadscript."\"";
 	<meta name="author" content="David Hanks">
 	
 	<!--HEADER SCRIPTS-->
-	<script src="https://www.gstatic.com/firebasejs/4.0.0/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/4.13.0/firebase.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="include/jfunctions.js"></script>
 
