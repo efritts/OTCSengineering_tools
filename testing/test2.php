@@ -34,6 +34,8 @@ var OEM = <?php echo json_encode($oem, JSON_PRETTY_PRINT) ?>;
 </script>
 
 <?php
-echo "Connected to {$dbname} on {$servername} as {$username}.";
-echo json_encode($oem, JSON_PRETTY_PRINT)
+//echo "Connected to {$dbname} on {$servername} as {$username}.";
+//echo "<br />".json_encode(getenv(), JSON_PRETTY_PRINT);
+echo "{CLEARDB_DATABASE_URL}= ".getenv("CLEARDB_DATABASE_URL");
+//mysql://b2d3fec699a396:4fda2c9a@us-cdbr-iron-east-05.cleardb.net/heroku_fd05977f8785f28?reconnect=true
 ?>

@@ -10,5 +10,4 @@ function connect_db(){
     $connection = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
     return $connection;
 }
-//mysql://b2d3fec699a396:4fda2c9a@us-cdbr-iron-east-05.cleardb.net/heroku_fd05977f8785f28?reconnect=true
 ?>
