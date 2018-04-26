@@ -9,11 +9,7 @@
  */
  
 //Setup Connection with MySQL database
-$servername = "localhost";
-$username= "bop_user";
-$password="G0n3W357";
-$dbname="compliance";
-$conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+$conn = connect_db();
 $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $bop_id=$_GET["id"];  //UPDATED NEEDED.  assign a default value when no Get['id'] is unavailable.
 
