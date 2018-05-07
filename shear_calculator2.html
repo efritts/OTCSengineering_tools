@@ -281,10 +281,57 @@ WELL SECTION
                                         <!--<tr class="answer"><td id="final_pressure_row" class="" title="Shear pressure considers F-West, F-Cam, and F-DE and uses the most appropriate.  A pipe OD and BOP must be selected to get a value."><b>SHEAR PRESSURE</b> <span id="final_P_info" ><span class="fa fa-info-circle w3-small"></span></span></td> <td id="final_pressure">-</td><td>psi</td></tr>-->
                                     </table>
 				</div>
+                                <br />
+                                <div class="w3-center w3-btn w3-white w3-border w3-border-blue w3-round w3-padding-4 w3-hide" id="startReport">Start Report</div>
 				<!--<div class="w3-center"><button class="w3-button w3-blue w3-margin" id="get_link" onclick="getShareLink()">Get Sharable Link</button></div>-->
 				<div class="w3-container" style="word-wrap:break-word;" id="save_link"></div>
 			</div>
 			</div>
+                        <div id="reportForm" class="w3-row w3-light-grey w3-container">  <!--hide after testing-->
+                            <div class="w3-col m4 s12 w3-padding">
+                                <div class="w3-row ">
+                                    <div class="w3-col s12"><h3>Document Properties</h3></div>
+                                    <div class="w3-col l3 s4">Author</div>
+                                    <div class="w3-col l9 s8"><input id="docAuthor" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col l3 s4">Company</div>
+                                    <div class="w3-col l9 s8"><input id="docCompany" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col l3 s4">Description</div>
+                                    <div class="w3-col l9 s8"><input id="docDesc" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col l3 s4">Document Number</div>
+                                    <div class="w3-col l9 s8"><input id="docNo" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col s12"><h3>Client</h3></div>
+                                    <div class="w3-col l3 s4">Client</div>
+                                    <div class="w3-col l9 s8"><input id="clientFullLegal" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col s12"><h3>Well</h3></div>
+                                    <div class="w3-col l3 s4">Name</div>
+                                    <div class="w3-col l9 s8"><input id="wellName" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col l3 s4">Location</div>
+                                    <div class="w3-col l9 s8"><input id="wellLocation" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col s12"><h3>Rig</h3></div>
+                                    <div class="w3-col l3 s4">Rig Name</div>
+                                    <div class="w3-col l9 s8"><input id="rigNameprop" class="w3-input w3-padding-0"/></div>
+                                </div>
+                            </div>
+                            <div class="w3-col m4 s12 w3-padding">
+                                <div class="w3-row" id="revColumn">
+                                    <div class="w3-col s12"><h3>Revisions</h3></div>
+                                    <div class="w3-col l3 s4">Current Rev</div>
+                                    <div class="w3-col l9 s8"><input id="docRev" type="number" min=0 max=50 class="w3-input w3-padding-0" value="0"/></div>
+                                    <div class="w3-col l3 s4">Date</div>
+                                    <div class="w3-col l9 s8"><input id="revDate" class="w3-input w3-padding-0" /></div>
+                                    <div class="w3-col l3 s4">Prepared</div>
+                                    <div class="w3-col l9 s8"><input id="prepared" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col l3 s4">Checked</div>
+                                    <div class="w3-col l9 s8"><input id="checked" class="w3-input w3-padding-0"/></div>
+                                    <div class="w3-col l3 s4">Approved</div>
+                                    <div class="w3-col l9 s8"><input id="approved" class="w3-input w3-padding-0"/></div>
+                                    <div id="oldRevs"></div>
+                                </div>
+                            </div>
+                            <div class="w3-col m4 s12 w3-padding">
+                                <h3>References</h3>
+                            </div>
+                        </div>
 			<div id="warn_validate" class="w3-modal" onclick="this.style.display='none'">
 				<div class="w3-modal-content w3-animate-zoom">
 					<header class="w3-container w3-red">

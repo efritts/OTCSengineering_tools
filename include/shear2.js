@@ -261,10 +261,7 @@ function updateShearPressures(){
                 }
             });
         }
-    });
-    
-    
-    
+    });   
 }
 $(document).ready(function() {
     "use strict";
@@ -285,7 +282,7 @@ $(document).ready(function() {
             //$('#pipe_wall').val(wall_float);
         }
     });
-		
+    
 /*
  * TUBULAR FORM 
  */
@@ -397,13 +394,11 @@ $(document).ready(function() {
          
         //if there's pipes unhide the table
         if(newPipeNo>1){ 
-            $('#tblPipe').removeClass('w3-hide')
+            $('#tblPipe').removeClass('w3-hide');
             $('#approx_forces').removeClass('w3-hide');
-            $('#shear_pressures').removeClass('w3-hide');}
-        else{
+        }else{
             $('#tblPipe').addClass('w3-hide');
             $('#approx_forces').addClass('w3-hide');
-            $('#shear_pressures').addClass('w3-hide');
         }
         //if there's wires unhide the table
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
@@ -416,7 +411,8 @@ $(document).ready(function() {
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
         fb_tubulars.orderByChild('pipeNo').once("value", function(newdata){
             var tbl_forceApprox = "<tr><td style='font-weight: bold'>No.</td><td style='font-weight: bold'>Method</td><td colspan='2' style='font-weight: bold; text-align: center'>Force</td><td></td></tr>",
-                tbl_pressureApprox = "<tr><td style='font-weight: bold'>No.</td><td colspan='2' style='font-weight: bold; text-align: center'>Pressure</td><td></td></tr>";
+                tbl_pressureApprox = "<tr><td style='font-weight: bold'>No.</td><td colspan='2' style='font-weight: bold; text-align: center'>Pressure</td><td></td></tr>",
+                shearPressureExists = false;
             
             updateShearPressures();
             
@@ -426,7 +422,7 @@ $(document).ready(function() {
             newdata.forEach(function(childData){
                 var type = childData.child('type').val(),
                     newPipeRow, newWireRow, newPipeForce, newPipeInfo, visibleOption,
-                    newPipePressure, newPipePressureInfo,
+                    newPipePressure, newPipePressureInfo, 
                     preferredMethod = childData.child('preferredMethod').val(),
                     selectedMethod = childData.child('selectedMethod').val(),
                     pipeElong_txt, calcMethodOptionHTML = "",
@@ -480,6 +476,7 @@ $(document).ready(function() {
                     
                     //create shear pressures table
                     if(childData.child('OperatingPressure').val() !== null){
+                        shearPressureExists = true;
                         newPipePressure = "<tr><td>"+childData.child('pipeNo').val()+"</td><td style='text-align: right'>"+childData.child('OperatingPressure').val().toFixed(0)+"</td><td> psi</td><td class='expander'><i class='fa fa-chevron-down' aria-hidden='true'></i></td></tr>";
                         newPipePressureInfo = "<tr class='w3-small w3-hide'><td colspan='5'><p>"+childData.child('OperatingPressureDefinition').val()+"</p><p>"+childData.child('OperatingPressureEquation').val()+"</p></td></tr>";
                         tbl_pressureApprox+=newPipePressure+newPipePressureInfo;
@@ -491,8 +488,16 @@ $(document).ready(function() {
                     $('#tblWire table').append(newWireRow);
                 }   
             });
+            if(shearPressureExists){
+                $('#shear_pressures').removeClass('w3-hide');
+                $('#shear_pressures').html(tbl_pressureApprox);
+                $('#startReport').removeClass('w3-hide');
+            }else{
+                $('#shear_pressures').addClass('w3-hide');
+                $('#startReport').addClass('w3-hide');
+            }
             $('#approx_forces').html(tbl_forceApprox);
-            $('#shear_pressures').html(tbl_pressureApprox);
+            
         });
     });
 	
@@ -683,10 +688,19 @@ $(document).ready(function() {
         });
     });
 })
+
+.on('click', '#startReport', function(){
+    $("#reportForm").toggleClass('w3-hide');
+})
+
+.on('change', '#docRev', function(){
+ var revNo = $('#docRev').val();
+ $('#revColumn').append('Rev No.: '+revNo);            
+})
+
 //Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
 .on('change', '#masp, #mawhp, #g_cf, #g_sw, #mudweight, #h_bop, #h_sw, #h_riser, #rigHPUelevation, #rigBOPLoc',function(){
-        
-        display_results();
+    display_results();
  })
 .on('click', 'table .fa-trash-o ',function(){
    "use strict";
