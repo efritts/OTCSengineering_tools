@@ -695,7 +695,13 @@ $(document).ready(function() {
 
 .on('change', '#docRev', function(){
  var revNo = $('#docRev').val();
- $('#revColumn').append('Rev No.: '+revNo);            
+ //clear the old revs
+ $('#oldRevs').html('');
+ //add a form for each old rev
+ for(var i = revNo-1;i >= 0 ; i--){
+     $('#oldRevs').append('Rev No.: '+i+'<br />');            
+ }
+ 
 })
 
 //Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
