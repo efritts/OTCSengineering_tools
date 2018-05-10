@@ -694,14 +694,63 @@ $(document).ready(function() {
 })
 
 .on('change', '#docRev', function(){
- var revNo = $('#docRev').val();
- //clear the old revs
- $('#oldRevs').html('');
- //add a form for each old rev
- for(var i = revNo-1;i >= 0 ; i--){
-     $('#oldRevs').append('Rev No.: '+i+'<br />');            
- }
- 
+    var scratchRevBlock, revGroup = [], revNo = $('#docRev').val();
+    //Save the template
+    var templateRevBlock = $('#revTemplate');
+    //clear the old revs
+    $('#oldRevs').html('');
+    //add a form for each old rev
+    for(var i = revNo-1;i >= 0 ; i--){
+       //configure the revblock
+       scratchRevBlock = templateRevBlock.clone().attr('id','revBlock'+i).removeClass('w3-hide');
+       scratchRevBlock.find("#docRevTemp").attr('id','docRev'+i).attr('value',i);
+       scratchRevBlock.find("#revDateTemp").attr('id','revDate'+i);
+       scratchRevBlock.find("#preparedTemp").attr('id','prepared'+i);
+       scratchRevBlock.find("#checkedTemp").attr('id','checked'+i);
+       scratchRevBlock.find("#approvedTemp").attr('id','approved'+i)
+       scratchRevBlock.find("#descShortTemp").attr('id','descShort'+i);
+       scratchRevBlock.find("#descLongTemp").attr('id','descLong'+i);
+       //revGroup.push(scratchRevBlock.html());
+       $('#oldRevs').append(scratchRevBlock);            
+    }
+   //put the unchanged template back
+   //revGroup.push(templateRevBlock.html());
+   //$('#oldRevs').append(revGroup.join());
+   $('#oldRevs').append(templateRevBlock);
+})
+
+.on('click','#generateReport', function(){
+    var objReport ={}, wellPressure, closingPressureAdj;
+    //check for errors
+    
+    //diable the button
+    
+    //create the object
+    objReport.author = $('#docAuthor').val();
+    objReport.company = $('#docCompany').val();
+    objReport.docDescription = $('#docNo').val();
+    objReport.docNumber = 
+    objReport.lastModifier = "";
+    objReport.reportType = "Shear Verification Package";
+    objReport.reportSubType = "30 CFR §250.732 (a),(b)";
+    objReport.clientFullLegal = $('#clientFullLegal').val();
+    objReport.clientShortend = "";
+    wellPressure = $('#rigBOPLoc').val() === "Surface" ? $('#masp').val() : $('#mawhp').val();
+    closingPressureAdj = $('#P_adj').val() === '-' ? 0 : $('#P_adj').val();
+    objReport.Well = {name: $('#wellName').val(), location: $('#wellLocation').val(), pressure: wellPressure, waterDepth: $('#h_sw').val(), closingPressureAdjustment: closingPressureAdj, minSealPressure: "What?"};
+    objReport.Rig = {name: $('#rigName').val(), location: $('#rigBOPLoc').val()};
+    if($("#BOP_select>input:checked + label").text() === "Select from list"){
+        objReport.BOP = {MOPFLPS: $('#bop_MOPFLPS').val(), OEM: "uncknown", closingArea: $('#bop_closingarea').val(), openingArea: "", closingRatio: $('#bop_closingratio').val(), model: "unknown", trArea: $('#bop_trarea').val(), supplyPressure: "0", operatorRatedPressure: "0"};  
+    }else{
+        objReport.BOP = {MOPFLPS: $('#bop_MOPFLPS').val(), OEM: $('#OEM_select').val(), closingArea: $('#bop_closingarea').val(), openingArea: "", closingRatio: $('#bop_closingratio').val(), model: $('#BOP_select').val(), trArea: $('#bop_trarea').val(), supplyPressure: "0", operatorRatedPressure: "0"};  
+    }
+    //send to script
+    console.log(JSON.stringify(objReport));
+    //update user
+        //creating
+        //
+        //download
+    
 })
 
 //Remove the pipe from firebase.  Register for all new .fa-trash-o  classes added
