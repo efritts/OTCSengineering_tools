@@ -17,7 +17,9 @@ $active_config= "style=\"border-bottom:3px solid #fff\"";
 $loadscript = "";
 $header_scripts ="";
 $body_end_scripts = "";
-switch ($_GET["page"]) {
+$getPage = filter_input(INPUT_GET,"page") ? filter_input(INPUT_GET,"page",FILTER_SANITIZE_STRING) : "";
+$getSub = filter_input(INPUT_GET,"sub") ? filter_input(INPUT_GET,"sub",FILTER_SANITIZE_STRING) : "";
+switch ($getPage) {
 	case "calcs":
 		$title_name = "Basic_Calculator";
 		$home_page_active = "";
@@ -27,7 +29,7 @@ switch ($_GET["page"]) {
  		$pipe_page_active = "";
  		$project_page_active = "";
 		$forms_page_active = "";
-		switch ($_GET["sub"]){
+		switch ($getSub){
 			case "ssc":
 				$title_name = "Simple Shear Calculator";
 				$loadscript .= "load_form_fields();";  //This will preload the BOP selection by default.	
@@ -56,6 +58,7 @@ switch ($_GET["page"]) {
 	case "pipe":
 		$title_name = "Pipe Index";
 		$home_page_active = "";
+                $basiccalcs_page_active = "";
  		$shear_page_active = "";
  		$BOPindex_page_active ="";
  		$pipe_page_active = $active_config;
@@ -65,6 +68,7 @@ switch ($_GET["page"]) {
 	case "bop":
 		$title_name = "BOP index";
 		$home_page_active = "";
+                $basiccalcs_page_active = "";
  		$shear_page_active = "";
  		$BOPindex_page_active = $active_config;
  		$pipe_page_active = "";
@@ -74,6 +78,7 @@ switch ($_GET["page"]) {
 	case "project":
 		$title_name = "Project Builder";
 		$home_page_active = "";
+                $basiccalcs_page_active = "";
  		$shear_page_active = "";
  		$BOPindex_page_active ="";
  		$pipe_page_active = "";
@@ -83,6 +88,7 @@ switch ($_GET["page"]) {
 	case "updates":
 		$title_name = "Update Log";
 		$home_page_active = $active_config;
+                $basiccalcs_page_active = "";
  		$shear_page_active = "";
  		$BOPindex_page_active ="";
  		$pipe_page_active = "";
@@ -98,7 +104,7 @@ switch ($_GET["page"]) {
  		$pipe_page_active = "";
  		$project_page_active = "";
 		$forms_page_active = $active_config;
-		switch ($_GET["sub"]){
+		switch ($getSub){
 			case "cids":
 			$title_name .= "Client Input Data Sheet";
 			//$loadscript .= "load_form_fields();"; 
@@ -109,10 +115,12 @@ switch ($_GET["page"]) {
 	default:
 		$title_name = "Home";
 		$home_page_active = $active_config;
+                $basiccalcs_page_active = "";
  		$shear_page_active = "";
  		$BOPindex_page_active ="";
  		$pipe_page_active = "";
  		$project_page_active = "";
+                $forms_page_active = "";
 		break;
 }
 //TODO: MOVE TO jQuery section of jfunctions.js

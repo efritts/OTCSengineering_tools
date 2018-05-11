@@ -13,9 +13,9 @@
 <?php 
 
 //change the page content based on page selection.  Page clicked on is given by $_GET["page"] 
-switch ($_GET["page"]) {
+switch ($getPage) {
     case "calcs":
-        switch ($_GET["sub"]) {
+        switch ($getSub) {
             case "ssc":
                 include 'include/functions.php';
                 include 'include/shear.js.php';
@@ -29,7 +29,6 @@ switch ($_GET["page"]) {
                 include 'include/functions.php';
                 include 'include/shear2.js.php';
                 include 'shear_calculator2.html';
-
                 //if $_GET["save"] is set and it's numeric, then run some javascript to fill out the form.
                 if(isset($_GET["save"]) && is_numeric($_GET["save"])){
                     include 'ShearCalculator/load_ssc_save.php'; 				
@@ -44,7 +43,7 @@ switch ($_GET["page"]) {
         }
         break;
     case "bop":
-        switch ($_GET["sub"]) {
+        switch ($getSub) {
             case "Add":
                 echo "<div class=\"w3-container content\"><h1>Add BOP</h1>";
                 include 'form_bop.php';
@@ -67,7 +66,7 @@ switch ($_GET["page"]) {
         }
         break;
     case "pipe":?>
-        <div class="w3-row content">
+        <div class="w3-row content pvt">
                 <div class="w3-col l8 w3-red">Column 75% red</div>
                 <div class="w3-col l4 w3-grey">Column2 - 25% grey</div>
         </div>
@@ -81,7 +80,7 @@ switch ($_GET["page"]) {
         <?php
         break;
     case "forms":
-        switch ($_GET["sub"]) {
+        switch ($getSub) {
             case "cids":
                     include 'include/functions.php';
                     include 'include/shear.js.php';
@@ -97,12 +96,10 @@ switch ($_GET["page"]) {
         ?>
         <div class="w3-container">
         <div class="w3-col m8 l8">
-        <h3>Default page</h3>
-        <p><?php echo $clicked_page; ?></p>
-        <p>On this page we'll have a menu of all the bop's we have on record.</p>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <h3>Offshore Technical Compliance - Solutions</h3>
+            <p>This site contains engineering tools to help evaluate a well.</p>
         </div> 
-        <div class="w3-col m4 l4"><p>Column 2 info.</p></div>
+        <div class="w3-col m4 l4"><!--<p>Column 2 info.</p>--></div>
         </div>
         <?php
         break;

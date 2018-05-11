@@ -119,6 +119,7 @@ $(function() {
 				$("#nav_login").addClass("w3-hide");
 				$("#nav_logout").text("Logout " + email);
 				$("#nav_logout").removeClass("w3-hide");
+                                $(".pvt").removeClass("w3-hide");
 			}
 			else{
 				//TODO: Open modal to send verification email.
@@ -130,12 +131,14 @@ $(function() {
 				$("#login-modal footer").html('<button class="w3-button w3-white w3-medium">Send verification email</button>');
 				$('#login-modal').css("display","block");
 			}
-		}
-		else{
+		}else{
 			console.log('Logged out');
 			$("#nav_logout").addClass("w3-hide");
 			$("#nav_login").removeClass("w3-hide");
-			
+                        //Hide protected content
+                        //if($(".pvt").addClass("w3-hide")){
+                        //    $("#nav_login").click();
+                        //}
 		}
 	});
 	
@@ -208,9 +211,6 @@ function hideshow(x,show,hide){
 		}
 		
 	} 
-	
-	//document.getElementById("test").innerHTML = Object.getOwnPropertyNames(this).filter(function (p){return typeof this[p] === 'function';}).toString();
-	//document.getElementById("test").innerHTML = dropdown.options[dropdown.selectedIndex].value;
 }
 function extractColumn(arr, column) {
 	function reduction(previousValue, currentValue) {
