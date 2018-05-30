@@ -720,10 +720,13 @@ $(document).ready(function() {
 })
 
 .on('click','#generateReport', function(){
-    var objReport ={}, wellPressure, closingPressureAdj;
-    //check for errors
+    var objReport ={}, wellPressure, closingPressureAdj, waterDepth;
+    //ERROR CHECKING
+    //
+    //Check rev is numeric
+    //Check rev date is valid
     
-    //diable the button
+    //disable the button
     
     //create the object
     objReport.author = $('#docAuthor').val();
@@ -735,15 +738,29 @@ $(document).ready(function() {
     objReport.reportSubType = "30 CFR §250.732 (a),(b)";
     objReport.clientFullLegal = $('#clientFullLegal').val();
     objReport.clientShortend = "";
-    wellPressure = $('#rigBOPLoc').val() === "Surface" ? $('#masp').val() : $('#mawhp').val();
-    closingPressureAdj = $('#P_adj').val() === '-' ? 0 : $('#P_adj').val();
-    objReport.Well = {name: $('#wellName').val(), location: $('#wellLocation').val(), pressure: wellPressure, waterDepth: $('#h_sw').val(), closingPressureAdjustment: closingPressureAdj, minSealPressure: "What?"};
+    wellPressure = $('#rigBOPLoc').val() === "surface" ? parseFloat($('#masp').val()) : parseFloat($('#mawhp').val());
+    waterDepth = $('#rigBOPLoc').val() === "surface" ? 0 : parseFloat($('#h_sw').val());
+    closingPressureAdj = !isNumeric($('#P_adj').text()) ? 0 : parseFloat($('#P_adj').val());
+    objReport.Well = {name: $('#wellName').val(), location: $('#wellLocation').val(), pressure: wellPressure, waterDepth: waterDepth, closingPressureAdjustment: closingPressureAdj, minSealPressure: "What?"};
     objReport.Rig = {name: $('#rigName').val(), location: $('#rigBOPLoc').val()};
-    if($("#BOP_select>input:checked + label").text() === "Select from list"){
-        objReport.BOP = {MOPFLPS: $('#bop_MOPFLPS').val(), OEM: "uncknown", closingArea: $('#bop_closingarea').val(), openingArea: "", closingRatio: $('#bop_closingratio').val(), model: "unknown", trArea: $('#bop_trarea').val(), supplyPressure: "0", operatorRatedPressure: "0"};  
+    if($("#BOP_select>input:checked + label").text() !== "Select from list"){
+        objReport.BOP = {MOPFLPS: parseFloat($('#bop_MOPFLPS').val()), OEM: "unknown", closingArea: parseFloat($('#bop_closingarea').val()), openingArea: 0, closingRatio: parseFloat($('#bop_closingratio').val()), model: "unknown", trArea: parseFloat($('#bop_trarea').val()), supplyPressure: 0, operatorRatedPressure: 0};  
     }else{
-        objReport.BOP = {MOPFLPS: $('#bop_MOPFLPS').val(), OEM: $('#OEM_select').val(), closingArea: $('#bop_closingarea').val(), openingArea: "", closingRatio: $('#bop_closingratio').val(), model: $('#BOP_select').val(), trArea: $('#bop_trarea').val(), supplyPressure: "0", operatorRatedPressure: "0"};  
+        objReport.BOP = {MOPFLPS: parseFloat($('#bop_MOPFLPS').val()), OEM: $('#OEM_select').val(), closingArea: parseFloat($('#bop_closingarea').val()), openingArea: 0, closingRatio: parseFloat($('#bop_closingratio').val()), model: $('#BOP_select').val(), trArea: parseFloat($('#bop_trarea').val()), supplyPressure: 0, operatorRatedPressure: 0};  
     }
+    //Revisions
+    objReport.revisions = {};
+    var currentRev = $('#docRev').val() < 10 ? '0'+$('#docRev').val(): $('#docRev').val(); 
+    objReport.revisions[currentRev]={"date": $('#revDate').val(), "descShort" : $('#descShort').val(), "descLong" : $('#descLong').val(), "preparedBy": $('#prepared').val(), "checkedBy": $('#checked').val(), "approvedBy": $('#approved').val()};
+    var oldRev = parseInt(currentRev-1);
+    for ( oldRev; oldRev >= 0; oldRev--){
+        var revStr = oldRev < 10 ? '0'+oldRev: oldRev; 
+        objReport.revisions[revStr]={"date": $('#revDate'+oldRev).val(), "descShort" : $('#descShort'+oldRev).val(), "descLong" : $('#descLong'+oldRev).val(), "preparedBy": $('#prepared'+oldRev).val(), "checkedBy": $('#checked'+oldRev).val(), "approvedBy": $('#approved'+oldRev).val()};
+    }
+    
+    //Pipe Notes
+    objReport.pipeDataSummaryNotes = [];
+    
     //send to script
     console.log(JSON.stringify(objReport));
     //update user

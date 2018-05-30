@@ -309,6 +309,7 @@ function check_html_text(field, defaultvalue) {
 
 function check_value_isNumber(input, decimals, defaultvalue) {
 	//this function only work for fields where a number is expected.  
+        //Output is a string
 	decimals = (typeof decimals !== 'undefined') ? decimals : 0;
 	var value = (typeof defaultvalue !== 'undefined') ? defaultvalue : "-";
 	
@@ -316,7 +317,7 @@ function check_value_isNumber(input, decimals, defaultvalue) {
 		return value;
 	}
 	else {
-		return parseFloat(input).toFixed(decimals);
+		return parseFloat(input).toFixed(decimals);  //toFixed converts number to string.
 	}
 }
 
