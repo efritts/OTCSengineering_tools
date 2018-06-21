@@ -15,9 +15,12 @@
  **KNOWN ISSUES:
  *1) When pipe with strength is added after a Cameron BOP is selected, the Cameron is not shown as an available force.
  */
+
+//TODO: Move below vars into $(document).ready
 var database = firebase.database(),
     dbRefWorksheet = database.ref().child('shearWorksheet'),
     newWorksheet = dbRefWorksheet.push(),
+    fb_tubulars = newWorksheet.child('tubulars'),
     gradeObj = { 
         E75: { min: 75000, max: 105000 },
         L80: { min: 80000, max: 95000 },
@@ -265,7 +268,7 @@ function updateShearPressures(){
 }
 $(document).ready(function() {
     "use strict";
-    var fb_tubulars = newWorksheet.child('tubulars');
+    //REMOVE_var fb_tubulars = newWorksheet.child('tubulars');
 
     //disable the button to get a sharable link until a shear pressure is calculated.
     $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
@@ -707,7 +710,7 @@ $(document).ready(function() {
        scratchRevBlock.find("#revDateTemp").attr('id','revDate'+i);
        scratchRevBlock.find("#preparedTemp").attr('id','prepared'+i);
        scratchRevBlock.find("#checkedTemp").attr('id','checked'+i);
-       scratchRevBlock.find("#approvedTemp").attr('id','approved'+i)
+       scratchRevBlock.find("#approvedTemp").attr('id','approved'+i);
        scratchRevBlock.find("#descShortTemp").attr('id','descShort'+i);
        scratchRevBlock.find("#descLongTemp").attr('id','descLong'+i);
        //revGroup.push(scratchRevBlock.html());
@@ -725,14 +728,22 @@ $(document).ready(function() {
     //
     //Check rev is numeric
     //Check rev date is valid
-    
+    function createReportfromObject(object){
+        var str_json = "json_string="+JSON.stringify(object);
+        $.post("scripts/SVP_Creator.php",function(str_json){
+            console.log("sent object to SVP_Creator");
+        })
+                .done(function(){ console.log("SVP_Creator.php done");})
+                .fail(function(jqXHR, textStatus, errorThrown){ console.log("SVP_Creator.php hit an error: "+errorThrown);});
+                 
+    }
     //disable the button
     
     //create the object
     objReport.author = $('#docAuthor').val();
     objReport.company = $('#docCompany').val();
-    objReport.docDescription = $('#docNo').val();
-    objReport.docNumber = 
+    objReport.docDescription = $('#docDesc').val();
+    objReport.docNumber = $('#docNo').val();
     objReport.lastModifier = "";
     objReport.reportType = "Shear Verification Package";
     objReport.reportSubType = "30 CFR §250.732 (a),(b)";
@@ -757,16 +768,31 @@ $(document).ready(function() {
         var revStr = oldRev < 10 ? '0'+oldRev: oldRev; 
         objReport.revisions[revStr]={"date": $('#revDate'+oldRev).val(), "descShort" : $('#descShort'+oldRev).val(), "descLong" : $('#descLong'+oldRev).val(), "preparedBy": $('#prepared'+oldRev).val(), "checkedBy": $('#checked'+oldRev).val(), "approvedBy": $('#approved'+oldRev).val()};
     }
+
+    //Tubulars
+    objReport.tubulars = {};
+    fb_tubulars.orderByKey().once("value").then(function(snapshot){
+        snapshot.forEach(function(childSnapshot){
+            var tubeKey = childSnapshot.key;
+            //Add and object from each firebase tube entry
+            objReport.tubulars[tubeKey]= childSnapshot.val();
+            //alternatevly, I could specify each key of the object to eliminate the unnecessary keys
+            //objReport.tubulars[tubeKey]={"pipeNo" : childSnapshot.child('pipeNo').val(), "diameter" : childSnapshot.child('diameter').val(), "selectedMethod" : childSnapshot.chile('selectedMethod') };
+        });
+        console.log(JSON.stringify(objReport));
+        createReportfromObject(objReport);
+    });
     
     //Pipe Notes
     objReport.pipeDataSummaryNotes = [];
     
-    //send to script
-    console.log(JSON.stringify(objReport));
-    //update user
-        //creating
+    //send to script - This must be sent after the firebase request is sent because the operations are asynchronous
+    //
+    //console.log(JSON.stringify(objReport));
+    //notify user of progress
+        //creating..
         //
-        //download
+        //download button
     
 })
 
@@ -786,7 +812,7 @@ $(document).ready(function() {
 })
 //When OEM is changed or (the BOP model is changed and it's Cameron OEM), add or remove the cameron force from the pipe database
 .on('change', '#OEM_select, #BOP_select', function(){
-   		var fb_tubulars = newWorksheet.child('tubulars');
+   		
 		fb_tubulars.once('value', function(snapshot) {
 			snapshot.forEach(function(childSnapshot){
 				updateCamForces(childSnapshot);
