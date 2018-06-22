@@ -1,5 +1,10 @@
 <?php
-require_once '../vendor/autoload.php';
+//for testing, REMOVE for production
+    ini_set('display_errors', '1');
+    ini_set('error_reporting', E_ALL);
+//
+$ptr = "../../";
+require_once $ptr.'vendor/autoload.php';
 require 'sections/SVPfunctions.php';
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\Style\Paper;
@@ -184,5 +189,10 @@ $sectionMainContent->addTitle('Appendix A - Shear Test Report', 1);
 $sectionRevPage->addTOC();
 // Saving the document as OOXML file...
 $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
-$objWriter->save('output/helloWorld.docx');
+//TODO get timestamp
+$time = time();
+$fileDocNumber = $reportData->docNumber;
+$fileRev = "R".$reportData->docRev;
+$filename = $fileDocNumber."_".$fileRev."_".$time.".docx";
+$objWriter->save("output/{$filename}");
 ?>

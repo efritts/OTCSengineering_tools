@@ -728,14 +728,12 @@ $(document).ready(function() {
     //
     //Check rev is numeric
     //Check rev date is valid
-    function createReportfromObject(object){
+    function createSVPfromObject(object){
         var str_json = "json_string="+JSON.stringify(object);
-        $.post("scripts/SVP_Creator.php",function(str_json){
-            console.log("sent object to SVP_Creator");
-        })
-                .done(function(){ console.log("SVP_Creator.php done");})
-                .fail(function(jqXHR, textStatus, errorThrown){ console.log("SVP_Creator.php hit an error: "+errorThrown);});
-                 
+        var promiseReport = $.post("scripts/SVP/SVP_Creator.php",function(str_json){
+            //console.log("sent object to SVP_Creator");
+        });
+        return promiseReport;           
     }
     //disable the button
     
@@ -780,7 +778,9 @@ $(document).ready(function() {
             //objReport.tubulars[tubeKey]={"pipeNo" : childSnapshot.child('pipeNo').val(), "diameter" : childSnapshot.child('diameter').val(), "selectedMethod" : childSnapshot.chile('selectedMethod') };
         });
         console.log(JSON.stringify(objReport));
-        createReportfromObject(objReport);
+        createSVPfromObject(objReport)
+            .done(function(){ console.log("SVP_Creator.php done");})
+            .fail(function(jqXHR, textStatus, errorThrown){ console.log("SVP_Creator.php hit an error: "+errorThrown);});;
     });
     
     //Pipe Notes

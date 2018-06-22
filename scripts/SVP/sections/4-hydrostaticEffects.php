@@ -1,5 +1,5 @@
 <?php
-require_once 'vendor/autoload.php';
+require_once $ptr.'vendor/autoload.php';
 use PhpOffice\PhpWord\Shared\Converter;
 
 function addSqInchCell($table){
