@@ -6,8 +6,8 @@ $textShearLetter = $sectionMainContent->addTextRun('psNormal');
 $textShearLetter->addText("OTC Solutions, LLC has performed the shear verification calculations with required supporting documentation. Based on the client input data provided to OTC Solutions the BOP system meets the Code of Federal Regulations requirements per 30 CFR §250.732 (b)");
 
 //Exceptions are provided by the JSON.  Each number corresponds to a specific exception to the report.
-$exceptions = $reportData->exceptions;
-if(!empty($exceptions)){
+if(!empty($reportData->exceptions)){
+    $exceptions = $reportData->exceptions;
     $textShearLetter->addText(" with the following exceptions:");
     foreach($exceptions as $exception){
         switch($exception){
@@ -34,8 +34,8 @@ $textShearLetter2->addText($reportData->Rig->name,'fsNormalBold');
 $textShearLetter2->addText(" for the ");
 $textShearLetter2->addText($reportData->Well->name,'fsNormalBold');
 $textShearLetter2->addText(" well.  The calculations were carried out using ");
-$shearCalculationMethod = $reportData->calculationMethods;  //1 = "the Distortion Energy Theory; 2 = "the methods described by BSEE TAP 463"; 3 = "the methods described by Cameron EB 702D"
-if(!empty($shearCalculationMethod)){
+if(!empty($reportData->calculationMethods)){
+    $shearCalculationMethod = $reportData->calculationMethods;  //1 = "the Distortion Energy Theory; 2 = "the methods described by BSEE TAP 463"; 3 = "the methods described by Cameron EB 702D"
     //if(count($shearCalculationMethod)>1){$conjunction = " and ";}
     //else{$conjunction = "";}
     $x = 1;

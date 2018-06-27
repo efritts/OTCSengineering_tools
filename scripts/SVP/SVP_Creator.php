@@ -1,4 +1,7 @@
 <?php
+//SVP_Creator expects a JSON string as an argument
+//To run from the command line use the following format:
+//  php SVP_Creator.php setup1.json
 //for testing, REMOVE for production
     ini_set('display_errors', '1');
     ini_set('error_reporting', E_ALL);
@@ -9,13 +12,19 @@ require 'sections/SVPfunctions.php';
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\Style\Paper;
 
-//The function will receive a JSON as an argument
-//$JSONdata = file_get_contents('testing/setup1.json');  for testing create a local *.json file
-$JSONdata = $_POST['json_string'];
-  
+//JSON string from HTTP POST or cmd line.
+$JSONdata = defined('STDIN') ? file_get_contents($ptr.'testing/'.$argv[1]) : $_POST['json_string'];
+
+//Exit if the JSON is empty
+if(empty($JSONdata)){ exit("Error: JSON supplied in {$argv[1]} was empty.");}
+
 $reportData = json_decode($JSONdata);
-if($reportData->docRev < 10){$rNumber = "0".$reportData->docRev;}
-else{$rNumber = $reportData->docRev;}
+//if($reportData->docRev < 10){$rNumber = "0".$reportData->docRev;}
+//else{$rNumber = $reportData->docRev;}
+$rNumber = 0;
+ foreach($reportData->revisions as $key => $data){
+     $rNumber = ($key > $rNumber) ? $key : $rNumber;
+ }
 $revisionNumber="Rev ".$rNumber;
 
 //Some common variables
@@ -192,7 +201,7 @@ $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
 //TODO get timestamp
 $time = time();
 $fileDocNumber = $reportData->docNumber;
-$fileRev = "R".$reportData->docRev;
+$fileRev = "R".$rNumber;
 $filename = $fileDocNumber."_".$fileRev."_".$time.".docx";
 $objWriter->save("output/{$filename}");
 ?>

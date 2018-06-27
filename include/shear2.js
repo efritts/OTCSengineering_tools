@@ -406,9 +406,6 @@ $(document).ready(function() {
         //if there's wires unhide the table
         if(newWireNo>1){ $('#tblWire').removeClass('w3-hide');}
         else{$('#tblWire').addClass('w3-hide');}
-
-        //console.log("listener saw : ", newPipeNo-1, " pipes &", newWireNo-1, "wires");
-        //console.log(data.val());
         
         //Generate a new table
         //Get latest snapshot of data after pipeNo update. "data" uses snapshot before pipeNo is updated.  Need to get "newdata"
@@ -495,9 +492,11 @@ $(document).ready(function() {
                 $('#shear_pressures').removeClass('w3-hide');
                 $('#shear_pressures').html(tbl_pressureApprox);
                 $('#startReport').removeClass('w3-hide');
+                $('#generateReport').removeClass('w3-hide');
             }else{
                 $('#shear_pressures').addClass('w3-hide');
                 $('#startReport').addClass('w3-hide');
+                $('#generateReport').addClass('w3-hide');
             }
             $('#approx_forces').html(tbl_forceApprox);
             
@@ -760,11 +759,11 @@ $(document).ready(function() {
     //Revisions
     objReport.revisions = {};
     var currentRev = $('#docRev').val() < 10 ? '0'+$('#docRev').val(): $('#docRev').val(); 
-    objReport.revisions[currentRev]={"date": $('#revDate').val(), "descShort" : $('#descShort').val(), "descLong" : $('#descLong').val(), "preparedBy": $('#prepared').val(), "checkedBy": $('#checked').val(), "approvedBy": $('#approved').val()};
+    objReport.revisions[currentRev]={"number": currentRev, "date": $('#revDate').val(), "descShort" : $('#descShort').val(), "descLong" : $('#descLong').val(), "preparedBy": $('#prepared').val(), "checkedBy": $('#checked').val(), "approvedBy": $('#approved').val()};
     var oldRev = parseInt(currentRev-1);
     for ( oldRev; oldRev >= 0; oldRev--){
         var revStr = oldRev < 10 ? '0'+oldRev: oldRev; 
-        objReport.revisions[revStr]={"date": $('#revDate'+oldRev).val(), "descShort" : $('#descShort'+oldRev).val(), "descLong" : $('#descLong'+oldRev).val(), "preparedBy": $('#prepared'+oldRev).val(), "checkedBy": $('#checked'+oldRev).val(), "approvedBy": $('#approved'+oldRev).val()};
+        objReport.revisions[revStr]={"number": revStr, "date": $('#revDate'+oldRev).val(), "descShort" : $('#descShort'+oldRev).val(), "descLong" : $('#descLong'+oldRev).val(), "preparedBy": $('#prepared'+oldRev).val(), "checkedBy": $('#checked'+oldRev).val(), "approvedBy": $('#approved'+oldRev).val()};
     }
 
     //Tubulars

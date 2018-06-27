@@ -4,7 +4,7 @@ use PhpOffice\PhpWord\Shared\Converter;
 
 $sectionMainContent->addTitle('References', 1);
 
-$references = $reportData->references;
+$references = !empty($reportData->references) ? $reportData->references : [];
 foreach($references as $reference){
     $textrunReference = $sectionMainContent->addTextRun('psLeftTight');
     $textrunReference->addText($reference->Title,'fsNormalItalics');
