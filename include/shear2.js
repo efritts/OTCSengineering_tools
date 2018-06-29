@@ -728,10 +728,8 @@ $(document).ready(function() {
     //Check rev is numeric
     //Check rev date is valid
     function createSVPfromObject(object){
-        var str_json = "json_string="+JSON.stringify(object);
-        var promiseReport = $.post("scripts/SVP/SVP_Creator.php",function(str_json){
-            //console.log("sent object to SVP_Creator");
-        });
+        //var str_json = "json_string="+JSON.stringify(object);
+        var promiseReport = $.post("scripts/SVP/SVP_Creator.php",object);
         return promiseReport;           
     }
     //disable the button
@@ -768,7 +766,7 @@ $(document).ready(function() {
 
     //Tubulars
     objReport.tubulars = {};
-    fb_tubulars.orderByKey().once("value").then(function(snapshot){
+    var addTubulars = fb_tubulars.orderByKey().once("value").then(function(snapshot){
         snapshot.forEach(function(childSnapshot){
             var tubeKey = childSnapshot.key;
             //Add and object from each firebase tube entry
@@ -776,15 +774,37 @@ $(document).ready(function() {
             //alternatevly, I could specify each key of the object to eliminate the unnecessary keys
             //objReport.tubulars[tubeKey]={"pipeNo" : childSnapshot.child('pipeNo').val(), "diameter" : childSnapshot.child('diameter').val(), "selectedMethod" : childSnapshot.chile('selectedMethod') };
         });
-        console.log(JSON.stringify(objReport));
-        createSVPfromObject(objReport)
-            .done(function(){ console.log("SVP_Creator.php done");})
-            .fail(function(jqXHR, textStatus, errorThrown){ console.log("SVP_Creator.php hit an error: "+errorThrown);});;
     });
     
     //Pipe Notes
     objReport.pipeDataSummaryNotes = [];
     
+    
+    addTubulars.then(function(){
+        //console.log(JSON.stringify(objReport));
+        var str_json = "json_string="+JSON.stringify(objReport);
+        var promiseReport = $.post("scripts/SVP/SVP_Creator.php",str_json);
+        promiseReport
+            .done(function(data){ 
+                var fileLocation = 'scripts/SVP/output/'+data;
+                console.log("SVP_Creator.php done. File at: "+fileLocation);
+                //$("#phpError").removeClass("w3-hide").html(data);
+                //Create a download if the file exists
+                $.ajax(fileLocation)
+                    .done(function(){
+                        //file exists.  Create download link
+                        var DL_link = "<a href='"+fileLocation+"' download><i class=\"fa fa-download\" aria-hidden=\"true\"></i></a>";
+                        $("#DL_link").removeClass('w3-hide').html(DL_link);
+                    })
+                    .fail(function(){
+                        //file not exists
+                        console.log('can\'t find '+fileLocation);
+                    });
+            })
+            .fail(function(jqXHR, textStatus, errorThrown){ 
+                $("#phpError").removeClass("w3-hide").html(errorThrown);
+            });
+    });
     //send to script - This must be sent after the firebase request is sent because the operations are asynchronous
     //
     //console.log(JSON.stringify(objReport));

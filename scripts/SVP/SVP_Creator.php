@@ -204,4 +204,6 @@ $fileDocNumber = $reportData->docNumber;
 $fileRev = "R".$rNumber;
 $filename = $fileDocNumber."_".$fileRev."_".$time.".docx";
 $objWriter->save("output/{$filename}");
+
+echo $filename;
 ?>
