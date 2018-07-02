@@ -679,7 +679,7 @@ $(document).ready(function() {
     $('#rigName, #rigBOPLoc').change(function(){
         newWorksheet.update({
             Rig: {
-                name: $('#rigName').val(),
+                //name: $('#rigName').val(),
                 bopLocation: $('#rigBOPLoc').val()
             }
         });
@@ -739,7 +739,7 @@ $(document).ready(function() {
     waterDepth = $('#rigBOPLoc').val() === "surface" ? 0 : parseFloat($('#h_sw').val());
     closingPressureAdj = !isNumeric($('#P_adj').text()) ? 0 : parseFloat($('#P_adj').val());
     objReport.Well = {name: $('#wellName').val(), location: $('#wellLocation').val(), pressure: wellPressure, waterDepth: waterDepth, closingPressureAdjustment: closingPressureAdj, minSealPressure: "What?"};
-    objReport.Rig = {name: $('#rigName').val(), location: $('#rigBOPLoc').val()};
+    objReport.Rig = {name: $('#rigNameprop').val(), location: $('#rigBOPLoc').val()};
     if($("input:radio[name='BOP_select']:checked").val() !== "select"){
         objReport.BOP = {MOPFLPS: parseFloat($('#bop_MOPFLPS').val()), OEM: "unknown", closingArea: parseFloat($('#bop_closingarea').val()), openingArea: 0, closingRatio: parseFloat($('#bop_closingratio').val()), model: "unknown", trArea: parseFloat($('#bop_trarea').val()), supplyPressure: 0, operatorRatedPressure: 0};  
     }else{
