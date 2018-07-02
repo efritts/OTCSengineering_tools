@@ -206,8 +206,8 @@ WELL SECTION
 				<div class="w3-row"><h3>BOP</h3></div>
                 <!-- The user will select the BOP OEM, model, blades or input generic values -->
                 <div class="w3-row ">				
-					<div class="w3-col l3 m4 w3-light-grey"><input type="radio" name="BOP_select" value="select" onclick="BOP_fields()" class="w3-radio w3-border-bottom"/><label>Select from list</label></div>
-					<div class="w3-col l4 m5 w3-light-grey"><input type="radio" name="BOP_select" value="specify" onclick="BOP_fields()" checked class="w3-radio w3-border-bottom"/><label>Specify parameters</label></div>
+					<div class="w3-col l3 m4 w3-light-grey"><input type="radio" name="BOP_select" value="select" id="bopSelect" onclick="BOP_fields()" class="w3-radio w3-border-bottom"/><label for="bopSelect">Select from list</label></div>
+					<div class="w3-col l4 m5 w3-light-grey"><input type="radio" name="BOP_select" value="specify" id="bopSpecify" onclick="BOP_fields()" checked class="w3-radio w3-border-bottom"/><label for="bopSpecify">Specify parameters</label></div>
                 </div>
                 <div id="BOP_values"></div>
 				<br />
@@ -283,7 +283,6 @@ WELL SECTION
 				</div>
                                 <br />
                                 <div class="w3-center w3-btn w3-white w3-border w3-border-blue w3-round w3-padding-4 w3-hide" id="startReport">Start A Report</div>
-				<!--<div class="w3-center"><button class="w3-button w3-blue w3-margin" id="get_link" onclick="getShareLink()">Get Sharable Link</button></div>-->
 				<div class="w3-container" style="word-wrap:break-word;" id="save_link"></div>
 			</div>
 			</div>
@@ -408,7 +407,7 @@ WELL SECTION
                             </div>
                             
                         </div>
-                        <div id="phpError" class="w3-hide w3-padding-16"></div>
+                        <div id="phpError" class="w3-hide w3-padding-16">m</div>
 			<div id="warn_validate" class="w3-modal" onclick="this.style.display='none'">
 				<div class="w3-modal-content w3-animate-zoom">
 					<header class="w3-container w3-red">

@@ -47,7 +47,6 @@ require_once 'sections/wordStyles.php';
 /*
  * BEGIN DOC CREATION
  */
-
 $sectionTitlePg = $phpWord->addSection($styleSectionTitle);
 
 //Add the coverpage image

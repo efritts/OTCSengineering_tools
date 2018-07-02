@@ -268,11 +268,6 @@ function updateShearPressures(){
 }
 $(document).ready(function() {
     "use strict";
-    //REMOVE_var fb_tubulars = newWorksheet.child('tubulars');
-
-    //disable the button to get a sharable link until a shear pressure is calculated.
-    $("#get_link").prop('disabled',true).attr('title',"Pipe, Well, and BOP data are required to get link.");
-       
 /*
  * Form Error Checking
  */
@@ -727,12 +722,8 @@ $(document).ready(function() {
     //
     //Check rev is numeric
     //Check rev date is valid
-    function createSVPfromObject(object){
-        //var str_json = "json_string="+JSON.stringify(object);
-        var promiseReport = $.post("scripts/SVP/SVP_Creator.php",object);
-        return promiseReport;           
-    }
-    //disable the button
+    
+    //TODO: disable the button
     
     //create the object
     objReport.author = $('#docAuthor').val();
@@ -749,10 +740,10 @@ $(document).ready(function() {
     closingPressureAdj = !isNumeric($('#P_adj').text()) ? 0 : parseFloat($('#P_adj').val());
     objReport.Well = {name: $('#wellName').val(), location: $('#wellLocation').val(), pressure: wellPressure, waterDepth: waterDepth, closingPressureAdjustment: closingPressureAdj, minSealPressure: "What?"};
     objReport.Rig = {name: $('#rigName').val(), location: $('#rigBOPLoc').val()};
-    if($("#BOP_select>input:checked + label").text() !== "Select from list"){
+    if($("input:radio[name='BOP_select']:checked").val() !== "select"){
         objReport.BOP = {MOPFLPS: parseFloat($('#bop_MOPFLPS').val()), OEM: "unknown", closingArea: parseFloat($('#bop_closingarea').val()), openingArea: 0, closingRatio: parseFloat($('#bop_closingratio').val()), model: "unknown", trArea: parseFloat($('#bop_trarea').val()), supplyPressure: 0, operatorRatedPressure: 0};  
     }else{
-        objReport.BOP = {MOPFLPS: parseFloat($('#bop_MOPFLPS').val()), OEM: $('#OEM_select').val(), closingArea: parseFloat($('#bop_closingarea').val()), openingArea: 0, closingRatio: parseFloat($('#bop_closingratio').val()), model: $('#BOP_select').val(), trArea: parseFloat($('#bop_trarea').val()), supplyPressure: 0, operatorRatedPressure: 0};  
+        objReport.BOP = {MOPFLPS: parseFloat($('#bop_MOPFLPS').val()), OEM: $('#OEM_select :selected').text(), closingArea: parseFloat($('#bop_closingarea').val()), openingArea: 0, closingRatio: parseFloat($('#bop_closingratio').val()), model: $('#BOP_select :selected').text(), trArea: parseFloat($('#bop_trarea').val()), supplyPressure: 0, operatorRatedPressure: 0};  
     }
     //Revisions
     objReport.revisions = {};
@@ -781,7 +772,7 @@ $(document).ready(function() {
     
     
     addTubulars.then(function(){
-        //console.log(JSON.stringify(objReport));
+        console.log(JSON.stringify(objReport));
         var str_json = "json_string="+JSON.stringify(objReport);
         var promiseReport = $.post("scripts/SVP/SVP_Creator.php",str_json);
         promiseReport
