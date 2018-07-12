@@ -304,6 +304,8 @@ $(document).ready(function() {
         }
     });
     //Test Pipe Box
+    $('#testYes').click(function(){$('#testShearPressureRow').removeClass('w3-hide');});
+    $('#testNo').click(function(){$('#testShearPressureRow').addClass('w3-hide');});
     $('#testPipe').click(function (){
         if($('#testPipe').data('value')){
             $('#testPipe').removeClass('w3-blue').addClass('w3-opacity');

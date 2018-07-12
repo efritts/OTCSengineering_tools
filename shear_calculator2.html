@@ -117,7 +117,25 @@ TUBULARS SECTION
 						<div class="w3-col l3 s4"><input type="number" id="pipe_elong" class="w3-input w3-padding-0"/></div>
 						<div class="w3-col l1 m1 s1 w3-margin-left">%</div>
 					</div>
+                                    <div class="w3-row">
+                                        <div class="w3-col l3 s4">Has been tested?</div>
+                                        <div class="w3-col l9 s8 btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-primary btn-sm">
+                                                <input type="radio" name="testOptions" id="testYes" autocomplete="off">Yes
+                                            </label>
+                                            <label class="btn btn-primary btn-sm active" >
+                                                <input type="radio" name="testOptions" id="testNo" autocomplete="off" checked>No
+                                            </label>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="w3-row w3-hide" id="testShearPressureRow">
+                                        <div class="w3-col l3 m4 s4">Test Pressure</div>
+                                        <div class="w3-col l3 m4 s4"><input type="number" min=0 max=9000 name="testShearPressure" id="testShearPressure" class="w3-input w3-padding-0"/></div>
+                                        <div class="w3-col l1 m1 s1 w3-margin-left">psi</div>
+                                    </div>
 				</div>
+                                
 				<div class="w3-row w3-padding">
 					<div class="w3-col l2 s3"><div id="testPipe" data-value=false class="w3-border w3-border-blue w3-round w3-padding-4 w3-center w3-opacity">Test pipe</div></div>
 					<div class="w3-col l2 s2">&nbsp;</div>
@@ -215,7 +233,6 @@ WELL SECTION
 				<br />
 		
 				</form>
-				<div id="test"></div>
 			</div>
 			
 			<div class="w3-col l4 m4" >
@@ -396,18 +413,13 @@ WELL SECTION
                                         
                                     </div>
                                 </div>
-                                <div class="w3-row">
+                                <div class="w3-row">                                                                      
                                     <div class="w3-right-align w3-col s12">
+                                        <span id="DL_link"></span>
                                         <div class="w3-center w3-btn w3-white w3-border w3-border-blue w3-round w3-padding-4" id="generateReport">Generate Report</div>
                                     </div>
                                 </div>
-                                <div class="w3-row">
-                                    <div class="w3-right-align w3-col s12 w3-hide" id="DL_link">
-                                        
-                                    </div>
-                                </div>
                             </div>
-                            
                         </div>
                         <div id="phpError" class="w3-hide w3-padding-16">m</div>
 			<div id="warn_validate" class="w3-modal" onclick="this.style.display='none'">
