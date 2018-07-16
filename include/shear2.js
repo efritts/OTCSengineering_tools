@@ -311,10 +311,12 @@ $(document).ready(function() {
             $('#testPipe').removeClass('w3-blue').addClass('w3-opacity');
             $('#testPipe').data('value',false);
             $('#testPipe').html('Test Pipe');
+            $('#testShearPressureRow').addClass('w3-hide');
         }else{
            $('#testPipe').addClass('w3-blue').removeClass('w3-opacity');
            $('#testPipe').data('value',true);
            $('#testPipe').html('Test Pipe <i class="fa fa-check" aria-hidden="true"></i> ');
+           $('#testShearPressureRow').removeClass('w3-hide');
         }
     });
     //Show the appropriate inputs for the type for tublular selected
@@ -502,7 +504,7 @@ $(document).ready(function() {
 	
     //Add a pipe to the list to be evaluated.
     $("#addPipe").click(function(){
-        var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, testPipe, F_distEnergy, F_West,
+        var pipeNo, newPipeRow, pipeElong_txt, wire_brkStr, rev_brkStr, newPipedata, pipeGrade, F_distEnergy, F_West,
         bopID, F_CAM, F_CAM_info, preferredEvalMethod, selectedEvalMethod, c3Request,
         pipeArea = null, pipeStrVal = null, ppf = null, isTube = false, evalYS = null,
         tubeType = $('#tube_type').val(),
@@ -512,15 +514,20 @@ $(document).ready(function() {
         pipeWallVal = $('#pipe_wall').val(),
         endConnection = $('#endConnection').val(),
         queryPipeWeight = '',
+        testPipe = $('#testPipe').data('value'),
         forceValues,
         pipe_data = {},
         pipeAddError = false;
+        
         //reset the errors
-        $('#pipe_wall').removeClass("w3-border-red");
-        $('#pipe_od').removeClass("w3-border-red");
-        $('#brStrength').removeClass("w3-border-red");
+        $('#testShearPressure, #pipe_wall, #pipe_od, #brStrength').removeClass("w3-border-red");
 
         //Error checks on tubular form
+        //TODO: Check for shear pressure if test pipe.
+        if(testPipe && $('#testShearPressure').val()=== ""){
+            $('#testShearPressure').addClass("w3-border-red");
+            pipeAddError = true;
+        }
         if(pipeODval === ""){
             //show error
             $('#pipe_od').addClass("w3-border-red");
@@ -568,8 +575,6 @@ $(document).ready(function() {
         }
         rev_brkStr = 100000000 - wire_brkStr;
 
-        //determine if it's a test pipe.
-        testPipe = $('#testPipe').data('value');
 
         //Determine Evaluation strength
         //if strength is selected, then use $('#pipe_minYS').val()
@@ -660,6 +665,7 @@ $(document).ready(function() {
         $('#brStrength').val("");
         $('#pipe_minYS').val("");
         $('#testPipe').removeClass('w3-blue').addClass('w3-opacity').data('value',false).html('Test Pipe');
+        $('#testShearPressureRow').addClass('w3-hide').val("");
     });
     
     /*
