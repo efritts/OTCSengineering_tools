@@ -729,7 +729,7 @@ $(document).ready(function() {
     //ERROR CHECKING
     //
     //Check rev is numeric
-    //Check rev date is valid
+    //Check rev date is valid.  Should be in '9/7/2018' format.
     
     //TODO: disable the button
     

@@ -3,7 +3,7 @@ use PhpOffice\PhpWord\Shared\Converter;
 
 $sectionMainContent->addTitle('Shear Calculation Letter', 1);
 $textShearLetter = $sectionMainContent->addTextRun('psNormal');
-$textShearLetter->addText("OTC Solutions, LLC has performed the shear verification calculations with required supporting documentation. Based on the client input data provided to OTC Solutions the BOP system meets the Code of Federal Regulations requirements per 30 CFR §250.732 (b)");
+$textShearLetter->addText("OTC Solutions, LLC has performed the shear verification calculations with required supporting documentation. Based on the client's data provided to OTC Solutions the BOP system meets the Code of Federal Regulations requirements per 30 CFR §250.732 (b)");
 
 //Exceptions are provided by the JSON.  Each number corresponds to a specific exception to the report.
 if(!empty($reportData->exceptions)){
@@ -24,7 +24,7 @@ if(!empty($reportData->exceptions)){
     }
 }else{
     $textShearLetter->addText(".");
-    $textShearLetter->addTextBreak();
+    //$textShearLetter->addTextBreak();
 }
 $textShearLetter2 = $sectionMainContent->addTextRun('psNormal');
 $textShearLetter2->addText("Please find the attached shear verification calculations and related documents for ");
@@ -61,8 +61,9 @@ if(!empty($reportData->calculationMethods)){
 if($reportData->Rig->location == "subsea"){$maspMAWHPlong = "Maximum Allowable Wellhead Pressure"; $maspMAWHP = "MAWHP";}
 else{$maspMAWHPlong = "Maximum Anticipated Surface Pressure"; $maspMAWHP = "MASP";}
 $textShearLetter2->addText(". Background equations used for the calculations are shown on each table. Based on the client supplied input data and OTC Solutions shear calculations, the most rigid pipe to be used in the well has been verified to require less shear force when compared to actual shear data obtained for the same model BOP shearing equal or more rigid grade pipe. Shear test report provided within. OTC Solutions has used the submitted $maspMAWHPlong ($maspMAWHP) for the calculations and considers this verification valid for any lower $maspMAWHP values. ");
-$textShearLetter2->addTextBreak();
-$textShearLetter2->addText("This letter is issued with the following disclaimers:");
+//$textShearLetter2->addTextBreak();
+$textShearLetter3 = $sectionMainContent->addTextRun('psNormal');
+$textShearLetter3->addText("This letter is issued with the following disclaimers:");
 $sectionMainContent->addListItem("Drill pipe assembly properties are calculated based on uniform OD and wall thickness. No safety factor is applied.",0,'fsSize9',$predefinedMultilevelStyle, 'psLeftTight');
 $sectionMainContent->addListItem("It is the responsibility of the customer and end user to determine the appropriate performance ratings, acceptable use of the drill pipe evaluated, maintain safe operational practices, and to apply a prudent safety factor for the application.",0,'fsSize9',$predefinedMultilevelStyle, 'psLeftTight');
 $sectionMainContent->addListItem("The calculations assume BOP wellbore pressure at Maximum Anticipated Wellhead Pressure. This may also be referred to as MASP at the wellhead.",0,'fsSize9',$predefinedMultilevelStyle, 'psLeftTight');

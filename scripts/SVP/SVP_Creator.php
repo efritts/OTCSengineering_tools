@@ -1,6 +1,6 @@
 <?php
 //SVP_Creator expects a JSON string as an argument
-//To run from the command line use the following format:
+//To run from the command line within the scripts/SVP dir use the following format:
 //  php SVP_Creator.php setup1.json
 //for testing, REMOVE for production
     ini_set('display_errors', '1');
@@ -13,7 +13,7 @@ use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\Style\Paper;
 
 //JSON string from HTTP POST or cmd line.
-$JSONdata = defined('STDIN') ? file_get_contents($ptr.'testing/'.$argv[1]) : $_POST['json_string'];
+$JSONdata = defined('STDIN') ? file_get_contents($argv[1]) : $_POST['json_string'];
 
 //Exit if the JSON is empty
 if(empty($JSONdata)){ exit("Error: JSON supplied in {$argv[1]} was empty.");}
@@ -21,9 +21,14 @@ if(empty($JSONdata)){ exit("Error: JSON supplied in {$argv[1]} was empty.");}
 $reportData = json_decode($JSONdata);
 //if($reportData->docRev < 10){$rNumber = "0".$reportData->docRev;}
 //else{$rNumber = $reportData->docRev;}
-$rNumber = 0;
+$rNumber = 00;
+$releaseDate = "NotSet";
  foreach($reportData->revisions as $key => $data){
-     $rNumber = ($key > $rNumber) ? $key : $rNumber;
+     if($key >= $rNumber){
+        $rNumber = $key;
+        $dateObj = DateTime::createFromFormat('n/j/Y', $data->date);  //Note that date field must look like '9/7/2018' format
+        $releaseDate = $dateObj->format('F j, Y');
+     }
  }
 $revisionNumber="Rev ".$rNumber;
 
@@ -75,7 +80,7 @@ $sectionTitlePg->addText($reportData->Well->name, 'fsSubTitle', $styleParaSubTit
 $sectionTitlePg->addTextBreak(1);
 $sectionTitlePg->addText($reportData->docNumber, 'fsSubTitle', $styleParaSubTitle);
 $sectionTitlePg->addText($revisionNumber, 'fsSubTitle', $styleParaSubTitle);
-$sectionTitlePg->addText('March 22, 2018', 'fsSubTitle', $styleParaSubTitle);
+$sectionTitlePg->addText($releaseDate, 'fsSubTitle', $styleParaSubTitle);
 
 //add the Coverpage OTCSolution image
 $sectionTitlePg->addImage(
